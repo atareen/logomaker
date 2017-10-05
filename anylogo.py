@@ -1,3 +1,7 @@
+"""
+Core module for "anylogo", allows users to draw sequence logos via vector graphics in python.
+"""
+
 from __future__ import division
 import numpy as np
 import scipy as sp
@@ -34,32 +38,56 @@ FONTS = FONT_FILE_DICT.keys()
 FONTS.sort()
 
 
+
 class Box:
+    """ a class for a  box in which a character goes """
+
     def __init__(self, xlb, xub, ylb, yub):
+        """
+        Parameters
+        -----------
+        :parameter float64 xlb: x-axis lower bound
+        :parameter float64 xup: x-axis upper bound
+        :parameter float64 ylb: y-axis lower bound
+        :parameter float64 yup: y-axis upper bound
+        """
+
         self.xlb = xlb
         self.xub = xub
         self.ylb = ylb
         self.yub = yub
         self.x = xlb
         self.y = ylb
-        self.w = xub - xlb
-        self.h = yub - ylb
+        self.w = xub - xlb                  # width
+        self.h = yub - ylb                  # height
         self.bounds = (xlb, xub, ylb, yub)
 
 
 class Character:
+    """ a class that creates a vector graphics character """
+
     def __init__(self, c, x, y, w, h, color,
                  font_name=DEFAULT_FONT,
                  flip=False,
                  shade=1,
                  alpha=1):
+        """
+        Parameters
+        ----------
+        :param char c: the character
+        :param float64 x: x-position of character
+        :param float64 y: y-position of character
+        :param float64 w: width
+        :param float64 h: height
+        """
+
         assert w > 0
         assert h > 0
 
         self.c = c
         self.box = Box(x, x + w, y, y + h)
         self.font_name = font_name
-        self.flip = flip
+        self.flip = flip    # variable that determines whether the character will flipped along the vertical axis; i.e. character reflection about the x-axis
 
         # Set color
         try:
