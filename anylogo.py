@@ -46,10 +46,10 @@ class Box:
         """
         Parameters
         -----------
-        :parameter float64 xlb: x-axis lower bound
-        :parameter float64 xup: x-axis upper bound
-        :parameter float64 ylb: y-axis lower bound
-        :parameter float64 yup: y-axis upper bound
+        :parameter (float64) xlb: x-axis lower bound
+        :parameter (float64) xup: x-axis upper bound
+        :parameter (float64) ylb: y-axis lower bound
+        :parameter (float64) yup: y-axis upper bound
         """
 
         self.xlb = xlb
@@ -74,11 +74,11 @@ class Character:
         """
         Parameters
         ----------
-        :param char c: the character
-        :param float64 x: x-position of character
-        :param float64 y: y-position of character
-        :param float64 w: width
-        :param float64 h: height
+        :param (char)    c: the character
+        :param (float64) x: x-position of character
+        :param (float64) y: y-position of character
+        :param (float64) w: width
+        :param (float64) h: height
         """
 
         assert w > 0
@@ -100,6 +100,13 @@ class Character:
         self.color[3] = alpha
 
     def draw(self, ax):
+        """
+        will draw character on the axis parameter; function knows the coordinates of where the character is to be drawn
+
+        Parameters
+        ----------
+        :param (matplotlib.axes._subplots.AxesSubplot) ax: axes of the subplot
+        """
 
         # Define character bounding box
         bbox = list(self.box.bounds)
@@ -114,10 +121,26 @@ class Character:
 
 # Logo base class
 class Logo:
+    """
+    This base class contains the core functionality for rendering logos of different types.
+    Currently supported logo types are information, probability, and effect.
+    This class formats a collection of characters, including tick marks, logo styles and axis spines
+    """
     def __init__(self, logo_set=False):
+        """
+        Parameters
+        ----------
+        :param (bool) logo_set: variable that registers that logo has been set
+        """
         self.logo_set = logo_set
 
     def draw(self, ax, logo_style):
+        """
+        Parameters
+        ----------
+        :param (matplotlib.axes._subplots.AxesSubplot) ax: axes of the subplot
+        :param (str) logo_style: stylistic properties of the logo; values include 'everything', 'naked', 'rails', 'light_rails'
+        """
         assert self.logo_set, 'Error: cant plot because logo is not set yet.'
 
         # Draw floor
@@ -155,6 +178,7 @@ class Logo:
             ax.axis('off')
 
         elif logo_style == 'rails':
+            # no xticks.
             ax.set_xticks([])
             ax.set_yticks(self.ylim)
             ax.set_ylabel(self.ylabel)
@@ -163,8 +187,8 @@ class Logo:
             ax.spines['top'].set_visible(True)
             ax.spines['bottom'].set_visible(True)
 
-
         elif logo_style == 'light_rails':
+            # no ticks
             ax.set_xticks([])
             ax.set_yticks([])
             ax.spines['left'].set_visible(False)
@@ -172,7 +196,6 @@ class Logo:
             ax.spines['top'].set_visible(True)
             ax.spines['bottom'].set_visible(True)
             [i.set_linewidth(0.5) for i in ax.spines.itervalues()]
-
 
         elif logo_style == 'everything':
 
@@ -189,12 +212,12 @@ class Logo:
             # box
             ax.axis('on')
 
-
         else:
-            assert False, 'Error! Undefined logo_style=%s' % logo_style
+            #assert False, 'Error! Undefined logo_style=%s' % logo_style
+            print 'Error! Undefined logo_style=%s' % logo_style, 'correct values include: everything, naked, rails, light_rails'
 
 
-# Information logo clas
+# Information logo class
 class InformationLogo(Logo):
     def __init__(self, prob_df, bg_df, color_dict, ylabel=None,
                  use_transparency=False,
@@ -287,7 +310,7 @@ class ProbabilityLogo(Logo):
         Logo.__init__(self, logo_set=True)
 
 
-# Effect logo clas
+# Effect logo class
 class EffectLogo(Logo):
     def __init__(self, effect_df, color_dict, ylabel=None,
                  use_transparency=True,
@@ -325,53 +348,6 @@ class EffectLogo(Logo):
         )
         self.yticklabels = ['%d' % y for y in self.yticks]
         self.ylabel = 'effect' if (ylabel is None) else ylabel
-
-        # Register that logo has been set
-        Logo.__init__(self, logo_set=True)
-
-
-# Enrichment logo clas
-class EnrichmentLogo(Logo):
-    def __init__(self, prob_df, bg_df, color_dict,
-                 ylabel=None, use_transparency=True,
-                 font_name=DEFAULT_FONT, floor_line_width=.5):
-        df = prob_df.copy()
-        df.loc[:, :] = np.log2(prob_df.values / bg_df.values)
-        char_list, box = compute_logo_characters(
-            df=df,
-            stack_order='big_on_top',
-            color_dict=color_dict,
-            font_name=font_name,
-            use_transparency=use_transparency,
-            neg_shade=.5,
-            neg_flip=True
-        )
-
-        self.signed_heights_df = df
-        self.floor_line_width = floor_line_width
-        self.font_name = font_name
-        self.prob_df = prob_df.copy()
-        self.bg_df = bg_df.copy()
-        self.box = box
-        self.char_list = char_list
-
-        self.xlim = [box.xlb, box.xub]
-        self.xticks = range(
-            int(np.ceil(self.xlim[0])),
-            int(np.floor(self.xlim[1])) + 1
-        )
-        self.xticklabels = ['%d' % x for x in self.xticks]
-        self.xlabel = 'position'
-
-        self.ylim = [box.ylb, box.yub]
-        self.yticks = range(
-            int(np.ceil(self.ylim[0])),
-            int(np.floor(self.ylim[1])) + 1
-        )
-        while len(self.yticks) >= 6:
-            self.yticks = self.yticks[::2]
-        self.yticklabels = ['%d' % y for y in self.yticks]
-        self.ylabel = '$\log_2$ enrichment' if (ylabel is None) else ylabel
 
         # Register that logo has been set
         Logo.__init__(self, logo_set=True)
@@ -767,13 +743,6 @@ def draw(ax,
                           ylabel=ylabel,
                           font_name=font_name,
                           floor_line_width=floor_line_width)
-
-    elif logo_type == 'enrichment':
-        logo = EnrichmentLogo(prob_df, bg_df, color_dict,
-                              use_transparency=use_transparency,
-                              ylabel=ylabel,
-                              font_name=font_name,
-                              floor_line_width=floor_line_width)
 
     else:
         assert False, 'Error! Unrecognized logo_type %s' % logo_type
