@@ -24,9 +24,12 @@ font_file_list = \
     findSystemFonts(fontpaths=None, fontext='ttf')
 FONT_FILE_DICT = {}
 for font_file in font_file_list:
-    base_name = os.path.basename(font_file)
-    font_name = os.path.splitext(base_name)[0]
-    FONT_FILE_DICT[str(font_name)] = font_file
+    try:
+        base_name = os.path.basename(font_file)
+        font_name = os.path.splitext(base_name)[0]
+        FONT_FILE_DICT[str(font_name)] = font_file
+    except:
+        print("cannot include font: ",font_name)
 FONTS = FONT_FILE_DICT.keys()
 FONTS.sort()
 
