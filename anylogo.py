@@ -300,11 +300,27 @@ class InformationLogo(Logo):
         Logo.__init__(self, logo_set=True)
 
 
-# Probability logo class
 class ProbabilityLogo(Logo):
+    """
+    The probability logo class is similar in functionality to the information logo class with two salient
+    differences: the dataframe passed in to the compute_logo_characters() method is a probability data
+    frame, i.e. rows sum to 1, and the ylimits go from zero to one, as opposed to going upto the
+    bounding box.
+    """
     def __init__(self, prob_df, color_dict, ylabel=None,
                  use_transparency=True,
                  font_name=DEFAULT_FONT, floor_line_width=.5):
+        """
+        Constructor for the probability logo class
+        Parameters
+        ----------
+        :param (pandas dataframe) prob_df: probability data frame, each number is between [0,1] and they all sum to 1.
+        :param (dict) color_dict: mapping between characters and colors
+        :param ylabel
+        :param (bool) use_transparency
+        :param font_name
+        :param floor_line_width: width of the line of the floor
+        """
         df = prob_df.copy()
         assert all(np.ravel(df.values) >= 0)
 
