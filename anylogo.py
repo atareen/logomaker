@@ -226,17 +226,40 @@ class Logo:
 
 class InformationLogo(Logo):
     """
-    Information logo base class
-    Class that renders information sequence logos based on the Kullback-Leibler divergence.
+    Information logo base class; tries to illustrate a probabilistic/generative model of sequences.
+    Class that renders information sequence logos based on the Kullback-Leibler divergence between
+    the observed distribution of bases and the uniform distribution. Uniform can be changed to background
+    if required.
     See: https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
     """
     def __init__(self, prob_df, bg_df, color_dict, ylabel=None,
                  use_transparency=False,
                  font_name=DEFAULT_FONT, floor_line_width=.5):
+        """
+        Constructor that sets up entire InformationLogo class.
+        Parameters
+        ----------
+        :param (pandas dataframe) prob_df: probability data frame, each number is between [0,1] and they all sum to 1.
+        :param (pandas dataframe) bg_df:   background data frame
+        :param (dict) color_dict: mapping between characters and colors
+        :param ylabel
+        :param (bool) use_transparency
+        :param font_name
+        :param floor_line_width: width of the line of the floor
+        """
         df = prob_df.copy()
+        print(type(df))
+        # info_vec is an ndarray of Kullback-Leibler divergence values.
         info_vec = prob_df.values * np.log2(prob_df.values / bg_df.values)
+        # sum up the info_vec data frame and multiply with probability
         df.loc[:, :] = prob_df.values * info_vec.sum(axis=1)[:, np.newaxis]
-        assert all(np.ravel(df.values) >= 0)
+        assert all(np.ravel(df.values) >= 0)    #ensures that heights are positive
+
+        '''
+        pass into compute_logo_characters method the heights of the sequences (via the df dataframe) and
+        the order of stacking, the font name, use_transparency. Compute_logo_characters will return a list
+        character class instances, each of which will have specific locations
+        '''
 
         char_list, box = compute_logo_characters(
             df=df,
@@ -248,7 +271,8 @@ class InformationLogo(Logo):
         assert np.isclose(box.ylb, 0), \
             'Error: box.ylb=%f is not zero.' % box.ylb
 
-        self.signed_heights_df = df
+        # set variables returned by the compute logo characters method to the information logo class instance variables.
+        self.signed_heights_df = df # height of the character as well as the sign
         self.floor_line_width = 0  # floor_line_width
         self.font_name = font_name
         self.prob_df = prob_df.copy()
@@ -276,7 +300,7 @@ class InformationLogo(Logo):
         Logo.__init__(self, logo_set=True)
 
 
-# Probability logo clas
+# Probability logo class
 class ProbabilityLogo(Logo):
     def __init__(self, prob_df, color_dict, ylabel=None,
                  use_transparency=True,
