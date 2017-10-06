@@ -1,5 +1,8 @@
 """
 Core module for "anylogo", allows users to draw sequence logos via vector graphics in python.
+Types of logos currently supported are probability, effect, and information logos.
+Anylogo can convert between probability logos and effect logos; effect logos capture the effect
+of a mutation at a particular location.
 """
 
 from __future__ import division
@@ -20,8 +23,8 @@ from matplotlib.colors import to_rgba
 from matplotlib import font_manager
 
 # Set constants
-SMALL = 1E-6
-DEFAULT_FONT = 'Arial Rounded Bold'
+SMALL = 1E-6    # if character height is less than this number, do not render.
+DEFAULT_FONT = 'Arial Rounded Bold' # default font in which characters are rendered
 
 # Build font_file_dict
 font_file_list = \
@@ -72,6 +75,8 @@ class Character:
                  shade=1,
                  alpha=1):
         """
+        constructor for the character class. Sets up position and graphics variables for character rendering
+
         Parameters
         ----------
         :param (char)    c: the character
@@ -122,7 +127,7 @@ class Character:
 # Logo base class
 class Logo:
     """
-    This base class contains the core functionality for rendering logos of different types.
+    This base class contains the core functionality for styling/rendering logos of different types.
     Currently supported logo types are information, probability, and effect.
     This class formats a collection of characters, including tick marks, logo styles and axis spines
     """
@@ -153,72 +158,78 @@ class Logo:
         # Logo-specific formatting
         ax.set_xlim(self.xlim)
         ax.set_ylim(self.ylim)
+        try:
+            if logo_style == 'classic':
 
-        if logo_style == 'classic':
+                # x axis
+                ax.set_xticks(self.xticks)
+                ax.xaxis.set_tick_params(length=0)
+                ax.set_xticklabels(self.xticklabels, rotation=90)
 
-            # x axis
-            ax.set_xticks(self.xticks)
-            ax.xaxis.set_tick_params(length=0)
-            ax.set_xticklabels(self.xticklabels, rotation=90)
+                # y axis
+                ax.set_yticks(self.yticks)
+                ax.set_yticklabels(self.yticklabels)
+                ax.set_ylabel(self.ylabel)
 
-            # y axis
-            ax.set_yticks(self.yticks)
-            ax.set_yticklabels(self.yticklabels)
-            ax.set_ylabel(self.ylabel)
+                # box
+                ax.spines['left'].set_visible(True)
+                ax.spines['bottom'].set_visible(True)
+                ax.spines['top'].set_visible(False)
+                ax.spines['right'].set_visible(False)
 
-            # box
-            ax.spines['left'].set_visible(True)
-            ax.spines['bottom'].set_visible(True)
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
+            elif logo_style == 'naked':
 
-        elif logo_style == 'naked':
+                # Turn everything off
+                ax.axis('off')
 
-            # Turn everything off
-            ax.axis('off')
+            elif logo_style == 'rails':
+                # no xticks.
+                ax.set_xticks([])
+                ax.set_yticks(self.ylim)
+                ax.set_ylabel(self.ylabel)
+                ax.spines['left'].set_visible(False)
+                ax.spines['right'].set_visible(False)
+                ax.spines['top'].set_visible(True)
+                ax.spines['bottom'].set_visible(True)
 
-        elif logo_style == 'rails':
-            # no xticks.
-            ax.set_xticks([])
-            ax.set_yticks(self.ylim)
-            ax.set_ylabel(self.ylabel)
-            ax.spines['left'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            ax.spines['top'].set_visible(True)
-            ax.spines['bottom'].set_visible(True)
+            elif logo_style == 'light_rails':
+                # no ticks
+                ax.set_xticks([])
+                ax.set_yticks([])
+                ax.spines['left'].set_visible(False)
+                ax.spines['right'].set_visible(False)
+                ax.spines['top'].set_visible(True)
+                ax.spines['bottom'].set_visible(True)
+                [i.set_linewidth(0.5) for i in ax.spines.itervalues()]
 
-        elif logo_style == 'light_rails':
-            # no ticks
-            ax.set_xticks([])
-            ax.set_yticks([])
-            ax.spines['left'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            ax.spines['top'].set_visible(True)
-            ax.spines['bottom'].set_visible(True)
-            [i.set_linewidth(0.5) for i in ax.spines.itervalues()]
+            elif logo_style == 'everything':
 
-        elif logo_style == 'everything':
+                # x axis
+                ax.set_xticks(self.xticks)
+                ax.set_xticklabels(self.xticklabels)
+                ax.set_xlabel(self.xlabel)
 
-            # x axis
-            ax.set_xticks(self.xticks)
-            ax.set_xticklabels(self.xticklabels)
-            ax.set_xlabel(self.xlabel)
+                # y axis
+                ax.set_yticks(self.yticks)
+                ax.set_yticklabels(self.yticklabels)
+                ax.set_ylabel(self.ylabel)
 
-            # y axis
-            ax.set_yticks(self.yticks)
-            ax.set_yticklabels(self.yticklabels)
-            ax.set_ylabel(self.ylabel)
+                # box
+                ax.axis('on')
 
-            # box
-            ax.axis('on')
-
-        else:
-            #assert False, 'Error! Undefined logo_style=%s' % logo_style
-            print 'Error! Undefined logo_style=%s' % logo_style, 'correct values include: everything, naked, rails, light_rails'
+            else:
+                #assert False, 'Error! Undefined logo_style=%s' % logo_style
+                raise ValueError
+        except:
+            print 'Error! Undefined logo_style=%s' % logo_style,', correct values include: everything, naked, rails, light_rails'
 
 
-# Information logo class
 class InformationLogo(Logo):
+    """
+    Information logo base class
+    Class that renders information sequence logos based on the Kullback-Leibler divergence.
+    See: https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+    """
     def __init__(self, prob_df, bg_df, color_dict, ylabel=None,
                  use_transparency=False,
                  font_name=DEFAULT_FONT, floor_line_width=.5):
@@ -312,6 +323,11 @@ class ProbabilityLogo(Logo):
 
 # Effect logo class
 class EffectLogo(Logo):
+    """
+    Base class that renders the effect logo. Quite often the effect of a mutation at a
+    particular location is of interest, this class renders
+
+    """
     def __init__(self, effect_df, color_dict, ylabel=None,
                  use_transparency=True,
                  font_name=DEFAULT_FONT, floor_line_width=.5):
