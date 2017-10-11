@@ -17,13 +17,19 @@ font_file_list = \
 # Build FONT_FILE_DICT
 FONT_FILE_DICT = {}
 for font_file in font_file_list:
-    base_name = os.path.basename(font_file)
-    font_name = os.path.splitext(base_name)[0]
-    FONT_FILE_DICT[str(font_name)] = font_file
+    try:
+        base_name = os.path.basename(font_file)
+        font_name = os.path.splitext(base_name)[0]
+        FONT_FILE_DICT[str(font_name)] = font_file
+    except:
+        print(' cannot add font: ', font_name)
 
 # Get list of font names
 FONTS = FONT_FILE_DICT.keys()
 FONTS.sort()
+
+
+
 
 class Character:
     def __init__(self, c, x, y, w, h, color,

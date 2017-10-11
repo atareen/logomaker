@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from utils import Box, SMALL
 import color
 from character import Character, DEFAULT_FONT
-import data
+import matrix
 import pdb
 
 
@@ -37,14 +37,14 @@ class Logo:
                  yticklabels=None):
 
         # Validate df
-        mat = data.validate_mat(mat)
+        mat = matrix.validate_mat(mat)
 
         # Get background mat
-        bg_mat = data.set_bg_mat(background, mat)
+        bg_mat = matrix.set_bg_mat(background, mat)
 
         if logo_type == 'freq_logo':
             # Transform input mat to freq_mat
-            mat = data.transform_mat(mat, from_type=mat_type, to_type='freq_mat', background=bg_mat)
+            mat = matrix.transform_mat(mat, from_type=mat_type, to_type='freq_mat', background=bg_mat)
 
             # Change default plot settings
             if ylim is None:
@@ -54,7 +54,7 @@ class Logo:
 
         elif logo_type == 'info_logo':
             # Transform input mat to info_mat
-            mat = data.transform_mat(mat, from_type=mat_type, to_type='info_mat', background=bg_mat)
+            mat = matrix.transform_mat(mat, from_type=mat_type, to_type='info_mat', background=bg_mat)
 
             # Get max info value
             self.max_info = max(mat.values.sum(axis=1))
@@ -67,7 +67,7 @@ class Logo:
 
         elif logo_type == 'weight_logo':
             # Transform input mat to weight_mat
-            mat = data.transform_mat(mat, from_type=mat_type, to_type='weight_mat', background=bg_mat)
+            mat = matrix.transform_mat(mat, from_type=mat_type, to_type='weight_mat', background=bg_mat)
 
             # Change default plot settings
             if ylabel is None:
@@ -75,19 +75,19 @@ class Logo:
 
         elif logo_type == 'energy_logo':
             # Transform input mat to weight_mat
-            mat = data.transform_mat(mat, from_type=mat_type, to_type='energy_mat', background=background)
+            mat = matrix.transform_mat(mat, from_type=mat_type, to_type='energy_mat', background=background)
 
             # Change default plot settings
             if ylabel is None:
                 ylabel = '- energy\n($k_B T$)'
 
         elif logo_type is None:
-            mat = data.validate_mat(mat)
+            mat = matrix.validate_mat(mat)
 
         else:
             assert False, 'Error! logo_type %s is invalid'%logo_type
 
-        # Set data
+        # Set matrix
         self.df = mat.copy()
         self.poss = mat.index.copy()
         self.chars = mat.columns.copy()
