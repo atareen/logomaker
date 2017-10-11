@@ -7,7 +7,15 @@ import pandas as pd
 # Logo-generating module
 import logomaker
 
+import sys
+
 plt.ion()
+
+#Logo class methods call
+#mat = logomaker.Logo.loadmat()
+#logomaker module call
+#mat = logomaker.loadmat()
+#print(mat)
 
 # Load energy matrix
 energy_mat = pd.read_csv('crp_fullwt.26.txt',delim_whitespace=True)
@@ -25,7 +33,7 @@ logomaker.Logo(mat=energy_mat, mat_type='energy_mat', font_name='Arial Bold',log
 
 # Plot energy logo
 ax = fig.add_subplot(3,1,3)
-logomaker.Logo(mat=energy_mat, mat_type='energy_mat',logo_type='energy_logo', neg_flip=True,logo_style='everything', font_name='Comic Sans MS Bold', color_scheme='gray').draw()
+logomaker.Logo(mat=energy_mat, mat_type='energy_mat',logo_type='energy_logo', neg_flip=True,logo_styzle='everything', font_name='Comic Sans MS Bold', color_scheme='gray').draw()
 
 #plt.tight_layout()
 plt.savefig('logos.pdf')
