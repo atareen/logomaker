@@ -1,5 +1,5 @@
 import argparse
-import pandas
+import pandas as pd
 
 """
 The class LoadMat is mean to work with LogoMaker.py.
@@ -72,6 +72,14 @@ class LoadMat:
         args = LoadMat.get_commandline_arguments(self)
         # read parameters file name into a conveniently named variable
         parameterFileName = args.parameters_file
+
+        # read the input file. This will have to be surrounded by try except
+        # if input is in fact meant to be read this way
+        inputFileName = args.input_file
+
+        energy_mat = pd.read_csv(inputFileName, delim_whitespace=True)
+        print(energy_mat.head())
+
         try:
             # try opening file
             fileObj = open(parameterFileName)
@@ -119,5 +127,5 @@ class LoadMat:
 
 # run the load matrix class
 LoadMat()
-mat = pandas.DataFrame(params, index=[0])
-print(mat)
+parameters = pd.DataFrame(params, index=[0])
+print(parameters)
