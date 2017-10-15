@@ -1,0 +1,13 @@
+<!doctype html>
+
+<!--
+  {% for table in tables %}
+        {{ table|safe }}
+  {% endfor %}
+-->
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+  <h1>Seq Data</h1>
+  {% for table in tables %}
+    {{ table|safe }}
+  {% endfor %}

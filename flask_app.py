@@ -1,5 +1,6 @@
 from flask import Flask, render_template, make_response, send_file
 import StringIO
+import matrix
 
 import matplotlib.pyplot as plt
 import logomaker
@@ -13,6 +14,9 @@ ax = fig.add_subplot(3,1,1)
 
 logomaker.Logo(mat=mat,mat_type='freq_mat',logo_type='freq_logo').draw()
 
+#print(mat.head().to_html())
+print(mat.head())
+
 #for index, row in mat.head().iterrows():
 #    print row
 
@@ -25,20 +29,29 @@ def index():
 '''
 
 @app.route("/")
-def image():
-    return render_template("index.html",mat=mat)
+def index():
+    #return render_template("index.html",mat=mat)
+    mat_html = matrix.validate_freq_mat(mat)
+    return render_template('index.html', tables=[mat_html.head().to_html(classes='mat')],mat=mat)
 
 @app.route('/fig')
 def fig():
     fig = plt.figure(figsize=[8, 6])
     ax = fig.add_subplot(3, 1, 1)
     logomaker.Logo(mat=mat, mat_type='freq_mat', logo_type='freq_logo').draw()
+
     img = StringIO.StringIO()
     fig.savefig(img)
     img.seek(0)
     return send_file(img,mimetype='image/png')
 
 
+@app.route("/tables")
+def show_tables():
+    #data = mat
+    mat_html = matrix.validate_freq_mat(mat)
+    #data.set_index(['Name'], inplace=True)
+    return render_template('view.html',tables=[mat_html.head().to_html(classes='mat')])
 
 @app.route("/plot")
 def show_plot():
@@ -49,6 +62,7 @@ def show_plot():
     ax = fig.add_subplot(3, 1, 1)
 
     logomaker.Logo(mat=mat, mat_type='freq_mat', logo_type='freq_logo').draw()
+
     ax = fig.add_subplot(3, 1, 2)
     logomaker.Logo(mat=mat, mat_type='energy_mat', font_name='Arial Bold', logo_type='freq_logo',
                    color_scheme='random', logo_style='rails', stack_order='small_on_top').draw()

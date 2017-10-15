@@ -21,6 +21,7 @@ filetype can be fasta or csv, however I am uncertain where to implement the form
 input is the file containing the actual input data (e.g. pwm) which will be used to make the logos
 
 Expected output:
+-- Data Header --
 color_scheme fig_size logo_style  logo_type  resolution       ylabel   ylim
 0      vividis    [8,2]    classic  info_logo      1080.0  Information  [0,2]
 
@@ -28,7 +29,7 @@ color_scheme fig_size logo_style  logo_type  resolution       ylabel   ylim
 """
 
 #globally initalize params dict, this will be returned as a pandas
-# which can be pass into logomaker.py
+# dataframe which can be pass into logomaker.py
 params = {}
 
 
@@ -37,8 +38,8 @@ class LoadMat:
     def get_commandline_arguments(self):
         """
         this method uses argparse to parse command line arguments for the parameters file,
-        and also the input file and input file type. I am uncertain whether it should have
-        any logic for handling input file or filetype.
+        the input file, and also input file type.
+
         parameters
         ----------
         None
@@ -74,7 +75,8 @@ class LoadMat:
         parameterFileName = args.parameters_file
 
         # read the input file. This will have to be surrounded by try except
-        # if input is in fact meant to be read this way
+        # if input is in fact meant to be read this way. I am uncertain whether
+        # it should have any logic for handling input file or filetype.
         inputFileName = args.input_file
 
         energy_mat = pd.read_csv(inputFileName, delim_whitespace=True)
@@ -112,9 +114,11 @@ class LoadMat:
                 # params["ylim"] = list(params["ylim"])
             except (RuntimeError,ValueError) as pe:
                 print('some went wrong parsing the parameters file',pe.message)
+                raise pe
 
         except IOError as e:
             print("Something went wrong reading the parameters file: ",e.strerror, e.filename)
+            raise
 
         # to print parameters, arguments etc. un-comment the following
         #print(params)
@@ -129,3 +133,4 @@ class LoadMat:
 LoadMat()
 parameters = pd.DataFrame(params, index=[0])
 print(parameters)
+#print(parameters.get_values()[row,col])
