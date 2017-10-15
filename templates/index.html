@@ -1,0 +1,23 @@
+<!doctype html>
+
+<!--
+<ul>
+
+    {% for item in food %}
+    <li>{{item}}</li>
+    {% endfor %}
+
+</ul>
+
+-->
+<h2> Input data frame </h2>
+<ul>
+
+    {% for index, row in mat.head().iterrows(): %}
+    <li>{{row}}</li>
+    {% endfor %}
+
+</ul>
+
+
+<img src="{{ url_for('fig') }}">
