@@ -3,6 +3,8 @@ from werkzeug.utils import secure_filename
 import StringIO
 import matrix
 import sys
+import pandas
+import numpy as np
 
 import matplotlib.pyplot as plt
 import logomaker
@@ -64,6 +66,8 @@ def example():
     return dict(myexample="This is an example")
 
 
+uploadMatGlobal = pandas.DataFrame()
+
 # upload file at index.html and move to upload.html
 @app.route('/', methods=['GET', 'POST'])
 def uploaded_file():
@@ -76,18 +80,20 @@ def uploaded_file():
         # surround this with try catch also if the file is of the wrong format or bad data etc.
         uploadMat = logomaker.load_mat(f.filename, 'fasta', mat_type='freq_mat')
         uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
+
+        global uploadMatGlobal
+        uploadMatGlobal = uploadMat
+
         # the mat variable in here gets passed onto returned template, e.g. upload.html in this instance
-        return render_template('upload.html',tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat,logoType='freq_logo',matType='freq_mat')
+        return render_template('upload.html',tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat,logoType='weight_logo',matType='freq_mat')
 
-
-@app.route('/uploadedFig/<logoType>')
-def uploadedFig(logoType):
+@app.route('/uploadedFig/<matType>/<logoType>')
+def uploadedFig(matType,logoType):
     fig = plt.figure(figsize=[8, 6])
     ax = fig.add_subplot(3, 1, 1)
-    #logomaker.Logo(mat=argMat, mat_type='freq_mat', logo_type='freq_logo').draw()
-    #logomaker.Logo(mat=argMat,mat_type='freq_mat').draw()
+    #logomaker.Logo(mat=uploadMatGlobal,mat_type='freq_mat',logo_type='info_logo').draw()
+    logomaker.Logo(mat=uploadMatGlobal, mat_type=matType, logo_type=logoType).draw()
 
-    logomaker.Logo(mat=matStatic,mat_type='freq_mat',logo_type=logoType).draw()
     img = StringIO.StringIO()
     fig.savefig(img)
     img.seek(0)

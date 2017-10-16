@@ -14,11 +14,13 @@
         file when the file is uploaded.
 
 -->
+<img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType) }}">
 
-<img src="{{ url_for('uploadedFig',logoType='info_logo') }}">
 
+<!--
 <p>{{matPassedToUpload}}</p>
 <p>{{logoType}}</p>
 <p>{{matType}}</p>
+-->
 
-   </body>
+</body>
