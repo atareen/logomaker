@@ -465,7 +465,7 @@ def load_fasta(file_name, mat_type='counts_mat'):
     counts_mat = counts_mat.rename(columns=lambda colName: 'val_'+colName)
 
     # Name index
-    counts_mat.index.name = 'pos'
+    #counts_mat.index.name = 'pos'
 
     if mat_type=='freq_mat' or mat_type=='frequency':
         #print(" printing frequency matrix: \n")

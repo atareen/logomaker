@@ -1,0 +1,24 @@
+<!doctype html>
+   <body>
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+  <h1>Uploaded Seq Data</h1>
+  {% for table in tables %}
+    {{ table|safe }}
+  {% endfor %}
+
+<p> Rendering figure after upload</p>
+    <!--
+        the following method routes to uploadedFig defined in flask_app
+        the argMat is filled via "mat"; mat is passed in to the upload.html
+        file when the file is uploaded.
+
+-->
+
+<img src="{{ url_for('uploadedFig',argMat=matPassedToUpload) }}">
+
+<p>{{matPassedToUpload}}</p>
+<p>{{logoType}}</p>
+<p>{{matType}}</p>
+
+   </body>
