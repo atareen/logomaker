@@ -17,8 +17,6 @@ ax = fig.add_subplot(3,1,1)
 #logomaker.Logo(mat=mat,mat_type='freq_mat',logo_type='info_logo',color_scheme='random').draw()
 logomaker.Logo(mat=mat,mat_type='freq_mat',logo_type='freq_logo').draw()
 
-print(mat.head())
-
 plt.show()
 
 #plt.tight_layout()

@@ -65,14 +65,17 @@ def fig():
 def example():
     return dict(myexample="This is an example")
 
-
+# global variable fix to unicode/panda conversion from python to template
 uploadMatGlobal = pandas.DataFrame()
+
+uploadedFileName = ''
 
 # upload file at index.html and move to upload.html
 @app.route('/', methods=['GET', 'POST'])
 def uploaded_file():
     # surround with try catch if post fails, handle exception
     if request.method == 'POST':
+    #if request.method == 'POST' and len(str(request.files))>1:
         f = request.files['file']
         f.save(secure_filename(f.filename))
 
@@ -84,8 +87,12 @@ def uploaded_file():
         global uploadMatGlobal
         uploadMatGlobal = uploadMat
 
+        global uploadedFileName
+        uploadedFileName = f.filename
+
         # the mat variable in here gets passed onto returned template, e.g. upload.html in this instance
-        return render_template('upload.html',tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat,logoType='weight_logo',matType='freq_mat')
+        return render_template('upload.html',tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat,matType='freq_mat',logoType='weight_logo')
+
 
 @app.route('/uploadedFig/<matType>/<logoType>')
 def uploadedFig(matType,logoType):
@@ -98,6 +105,13 @@ def uploadedFig(matType,logoType):
     fig.savefig(img)
     img.seek(0)
     return send_file(img,mimetype='image/png')
+
+@app.route('/updateLogo', methods=['GET', 'POST'])
+def foo():
+    if request.method == 'POST':
+        uploadMat = logomaker.load_mat(uploadedFileName, 'fasta', mat_type='freq_mat')
+        uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
+        return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo')
 
 
 
