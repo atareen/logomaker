@@ -80,14 +80,14 @@ def uploaded_file():
         return render_template('upload.html',tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat,logoType='freq_logo',matType='freq_mat')
 
 
-@app.route('/uploadedFig/<argMat>')
-def uploadedFig(argMat):
+@app.route('/uploadedFig/<logoType>')
+def uploadedFig(logoType):
     fig = plt.figure(figsize=[8, 6])
     ax = fig.add_subplot(3, 1, 1)
     #logomaker.Logo(mat=argMat, mat_type='freq_mat', logo_type='freq_logo').draw()
     #logomaker.Logo(mat=argMat,mat_type='freq_mat').draw()
 
-    logomaker.Logo(mat=matStatic,mat_type='freq_mat',logo_type='info_logo').draw()
+    logomaker.Logo(mat=matStatic,mat_type='freq_mat',logo_type=logoType).draw()
     img = StringIO.StringIO()
     fig.savefig(img)
     img.seek(0)
