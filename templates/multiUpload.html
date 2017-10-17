@@ -36,10 +36,6 @@
     {{ table|safe }}
   {% endfor %}
 
-<p>Testing</p>
-{{params['logo_type']}}
-<p>End Testing</p>
-
 <form action="/editParam" method="post">
 Param name: <input type="text" name="logoType" value="info_logo">
 <input type="submit" value="Submit">

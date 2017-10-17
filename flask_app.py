@@ -193,7 +193,7 @@ def updateLogo():
         uploadMat = logomaker.load_mat(uploadedFileName, 'fasta', mat_type='freq_mat')
         uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
         #return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo')
-        return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo')
+        return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo',colorScheme='classic')
 
 
 # press button on upload.html to update logo type
@@ -288,4 +288,4 @@ def show_plot():
 if __name__ == "__main__":
     #other option
     #app.run(port=8080, debug=True)
-    app.run()
+    app.run(debug=True)
