@@ -3,7 +3,7 @@ logo_type: info_logo
 # description of parameter 2
 logo_style: classic
 # description of parameter 3
-color_scheme: Blues
+color_scheme: vividis
 # description of parameter 4
 ylim: [0,2]
 # description of parameter 5

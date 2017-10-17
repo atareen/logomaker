@@ -37,6 +37,7 @@ def index():
 allowed_file = set(['txt', 'fasta'])
 
 # upload multiple files
+# how to distinguish between params file and input data
 @app.route('/uploadMultiple', methods=['GET', 'POST'])
 def upload_file():
 
@@ -52,6 +53,16 @@ def upload_file():
             flash(message)
         print(files)
 
+        # parse parameters file
+        # parseParams returns a params dict
+        params_dict = parseParams(files[1].filename)
+        #convert params dict to pandas dataframe for displaying
+        params = pandas.DataFrame(params_dict, index=[0])
+        params_html = params.head().to_html()
+        print(params.head())
+
+        #print(params.get_values()[0][3])
+
         # print("f: ",f)
         # surround this with try catch also if the file is of the wrong format or bad data etc.
         uploadMat = logomaker.load_mat(files[0].filename, 'fasta', mat_type='freq_mat')
@@ -63,14 +74,9 @@ def upload_file():
         global uploadedFileName
         uploadedFileName = files[0].filename
 
-
-        # parse parameters file
-        params = parseParams(files[1].filename)
-        params_html = params.head().to_html()
-        print(params.head())
-
         # if one file uploaded
-        if len(files)==1:
+        # handle the case of more than 2 files uploaded
+        if len(files) == 1:
 
             # status message displayed to the user
             #return redirect(url_for('index',showStatus=True))
@@ -86,7 +92,8 @@ def upload_file():
         else:
             #return render_template('multiUpload.html',paramsTable =[params_html])
             # fill parameters here ultimately with params file
-            return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],paramsTable =[params_html],matPassedToUpload=uploadMat, matType='freq_mat', logoType='weight_logo')
+            #return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],params=params,paramsTable =[params_html],matPassedToUpload=uploadMat, matType='freq_mat', logoType='weight_logo')
+            return render_template('multiUpload.html',logoType=params_dict['logo_type'], tables=[uploaded_mat_html.head().to_html(classes='mat')],params=params, paramsTable=[params_html], matPassedToUpload=uploadMat,matType='freq_mat')
 
 '''
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
@@ -237,9 +244,9 @@ def parseParams(parameterFileName):
     except IOError as e:
         print("Something went wrong reading the parameters file: ",e.strerror, e.filename)
 
-    param_df = pandas.DataFrame(params, index=[0])
-    #return params
-    return param_df
+    #param_df = pandas.DataFrame(params, index=[0])
+    return params
+    #return param_df
 
 
 '''
