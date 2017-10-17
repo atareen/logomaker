@@ -18,7 +18,11 @@
     {{ table|safe }}
   {% endfor %}
 
-
+<!--
+display status message after uploading file
+keep this here in case needed for file by file
+upload
+-->
 <p>
     {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -30,10 +34,13 @@
                     //document.write(Date());
                     document.write(messages[i]);
                 }
+
             </script>
         {% endif %}
     {% endwith %}
 </p>
+
+
 
 <form action = "/" method = "POST" enctype = "multipart/form-data">
     <input type = "file" name = "file" />

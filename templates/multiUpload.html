@@ -2,10 +2,31 @@
    <body>
 
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
-  <h1>Uploaded Seq Data</h1>
-<!--
-  {% for table in tables %}
-    {{ table|safe }}
+
+<!-- display status message after uploading file -->
+<h2>Files Uploaded</h2>
+<p>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <script>
+                var messages = {{ messages | safe }};
+                // display uploaded files as a list
+                document.write("<ul>")
+                for (var i=0; i<messages.length; i++)
+                {
+                    document.write("<li>"+messages[i]+"</li>");
+                }
+                document.write("</ul>")
+
+            </script>
+        {% endif %}
+    {% endwith %}
+</p>
+
+<h2>Input Params</h2>
+<p>
+  {% for params in paramsTable %}
+    {{ params|safe }}
   {% endfor %}
--->
+</p>
 </body>

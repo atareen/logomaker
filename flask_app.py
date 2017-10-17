@@ -4,7 +4,6 @@ import flask
 from werkzeug.utils import secure_filename
 import StringIO
 import matrix
-import sys
 import pandas
 
 
@@ -43,10 +42,18 @@ def upload_file():
     if request.method == 'POST':
         files = request.files.getlist('uploadedFile[]')
         print(len(files))
-        for uploadedFile in files:
-            upload(uploadedFile.filename)
-            uploadedFile.save(secure_filename(uploadedFile.filename))
+        for uploadFile in files:
+            upload(uploadFile.filename)
+            uploadFile.save(secure_filename(uploadFile.filename))
+
+            message =str(uploadFile.filename)+"\n"
+            flash(message)
         print(files)
+
+        # parse parameters file
+        params = parseParams(files[1].filename)
+        params_html = params.head().to_html()
+        print(params.head())
 
         # if one file uploaded
         if len(files)==1:
@@ -58,11 +65,12 @@ def upload_file():
 
             #parse parameters file
             params = parseParams(files[0].filename)
-            params_html = params.to_html(classes='mat')
+            params_html = params.head().to_html(classes='mat')
             print(params.head())
-            return redirect(url_for('index'))
+            #return redirect(url_for('index'))
+            return render_template('multiUpload.html',paramsTable =[params_html])
         else:
-            return render_template('multiUpload.html')
+            return render_template('multiUpload.html',paramsTable =[params_html])
 
 '''
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
