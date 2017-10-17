@@ -61,7 +61,6 @@ def upload_file():
         params_html = params.head().to_html()
         print(params.head())
 
-        #print(params.get_values()[0][3])
 
         # print("f: ",f)
         # surround this with try catch also if the file is of the wrong format or bad data etc.
@@ -93,7 +92,9 @@ def upload_file():
             #return render_template('multiUpload.html',paramsTable =[params_html])
             # fill parameters here ultimately with params file
             #return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],params=params,paramsTable =[params_html],matPassedToUpload=uploadMat, matType='freq_mat', logoType='weight_logo')
-            return render_template('multiUpload.html',logoType=params_dict['logo_type'], tables=[uploaded_mat_html.head().to_html(classes='mat')],params=params, paramsTable=[params_html], matPassedToUpload=uploadMat,matType='freq_mat')
+            return render_template('multiUpload.html', logoType=params_dict['logo_type'],colorScheme=params_dict['color_scheme'],
+                                   tables=[uploaded_mat_html.head().to_html(classes='mat')], params=params,
+                                   paramsTable=[params_html], matPassedToUpload=uploadMat, matType='freq_mat')
 
 '''
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
@@ -147,6 +148,7 @@ uploadedFileName = ''
 
 
 # upload file at index.html and move to upload.html
+# this method draws without the params file
 @app.route('/', methods=['GET', 'POST'])
 def uploaded_file():
     # surround with try catch if post fails, handle exception
@@ -172,12 +174,12 @@ def uploaded_file():
 
 
 # display the uploaded figure at upload.html after file has been uploaded
-@app.route('/uploadedFig/<matType>/<logoType>')
-def uploadedFig(matType,logoType):
+@app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>')
+def uploadedFig(matType,logoType,argColorScheme):
     fig = plt.figure(figsize=[8, 6])
     ax = fig.add_subplot(3, 1, 1)
     #logomaker.Logo(mat=uploadMatGlobal,mat_type='freq_mat',logo_type='info_logo').draw()
-    logomaker.Logo(mat=uploadMatGlobal, mat_type=matType, logo_type=logoType).draw()
+    logomaker.Logo(mat=uploadMatGlobal, mat_type=matType, logo_type=logoType,color_scheme=str(argColorScheme)).draw()
 
     img = StringIO.StringIO()
     fig.savefig(img)

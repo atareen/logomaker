@@ -47,8 +47,8 @@
 <form action="/updateLogo" method="post">
     <button type="submit" value="Do Something" >Change to Info logo</button>
 </form>
-
-<img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType) }}">
+<!-- Draw the logo here -->
+<img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme) }}">
 
 
 
