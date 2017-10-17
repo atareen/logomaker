@@ -19,17 +19,36 @@
   {% endfor %}
 
 
-<p>{{myexample}}</p>
+<p>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <script>
+                var messages = {{ messages | safe }};
+                for (var i=0; i<messages.length; i++)
+                {
+                    //alert(messages[i]);
+                    //document.write(Date());
+                    document.write(messages[i]);
+                }
+            </script>
+        {% endif %}
+    {% endwith %}
+</p>
 
 <form action = "/" method = "POST" enctype = "multipart/form-data">
     <input type = "file" name = "file" />
     <input type = "submit"/>
 </form>
+
 <p>Multi-file stuff</p>
-<form action="/foo" method=post enctype=multipart/form-data>
+<form action="/uploadMultiple" method=post enctype=multipart/form-data>
     <input type=file name="uploadedFile[]" multiple>
     <input type=submit value=Upload>
+    <!-- <button type=button value=Uploads onclick="document.getElementById('demo').innerHTML = Date()">Upload</button> -->
 </form>
+
+
+
 
 <img src="{{ url_for('fig') }}">
 

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, make_response, send_file, request
+from flask import Flask, render_template, redirect, send_file, request,url_for,flash
 import flask
 
 from werkzeug.utils import secure_filename
@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import logomaker
 
 app = Flask(__name__)
-
+app.secret_key = 'some_secret'
 
 matStatic = logomaker.load_mat('crp_sites.fasta', 'fasta',mat_type='frequency')
 '''
@@ -36,14 +36,28 @@ def index():
 
 allowed_file = set(['txt', 'fasta'])
 
-@app.route('/foo', methods=['GET', 'POST'])
+# upload multiple files
+@app.route('/uploadMultiple', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
         files = request.files.getlist('uploadedFile[]')
+        print(len(files))
         for uploadedFile in files:
             upload(uploadedFile.filename)
             uploadedFile.save(secure_filename(uploadedFile.filename))
-        return 'It worked'
+        print(files)
+        # if one file uploaded
+        if len(files)==1:
+            #return redirect(url_for('index',showStatus=True))
+            flash('Successfully Upload 1 file')
+            return redirect(url_for('index'))
+        else:
+            return render_template('multiUpload.html')
+
+
+@app.context_processor
+def displayUploadStatus(displayMessage=''):
+    return dict(statusMessage=displayMessage)
 
 def upload(filename):
     filename = 'https://localhost/' + filename
@@ -78,10 +92,6 @@ def fig():
     return send_file(img,mimetype='image/png')
 
 
-@app.context_processor
-def example():
-    return dict(myexample="This is an example")
-
 # global variable fix to unicode/panda conversion from python to template
 uploadMatGlobal = pandas.DataFrame()
 uploadedFileName = ''
@@ -113,6 +123,7 @@ def uploaded_file():
         return render_template('upload.html',tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat,matType='freq_mat',logoType='weight_logo')
 
 
+# display the uploaded figure at upload.html after file has been uploaded
 @app.route('/uploadedFig/<matType>/<logoType>')
 def uploadedFig(matType,logoType):
     fig = plt.figure(figsize=[8, 6])
@@ -125,25 +136,16 @@ def uploadedFig(matType,logoType):
     img.seek(0)
     return send_file(img,mimetype='image/png')
 
+# press button on upload.html to update logo type
 @app.route('/updateLogo', methods=['GET', 'POST'])
-def foo():
+def updateLogo():
     if request.method == 'POST':
         uploadMat = logomaker.load_mat(uploadedFileName, 'fasta', mat_type='freq_mat')
         uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
         return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo')
 
 
-
 '''
-@app.route("/tables")
-def show_tables():
-    #data = mat
-    mat_html = matrix.validate_freq_mat(mat)
-    #data.set_index(['Name'], inplace=True)
-    return render_template('view.html',tables=[mat_html.head().to_html(classes='mat')])
-'''
-
-
 @app.route("/plot")
 def show_plot():
 
@@ -170,6 +172,9 @@ def show_plot():
     response=make_response(png_output.getvalue())
     response.headers['Content-Type'] = 'image/png'
     return response
+'''
 
 if __name__ == "__main__":
+    #other option
+    #app.run(port=8080, debug=True)
     app.run()
