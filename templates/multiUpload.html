@@ -3,6 +3,7 @@
 
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
 
+
 <!-- display status message after uploading file -->
 <h2>Files Uploaded</h2>
 <p>
@@ -29,4 +30,25 @@
     {{ params|safe }}
   {% endfor %}
 </p>
+
+<h2>Uploaded Seq Data</h2>
+  {% for table in tables %}
+    {{ table|safe }}
+  {% endfor %}
+
+<p> Rendering figure after upload</p>
+    <!--
+        the following method routes to uploadedFig defined in flask_app
+        the argMat is filled via "mat"; mat is passed in to the upload.html
+        file when the file is uploaded.
+
+-->
+<form action="/updateLogo" method="post">
+    <button type="submit" value="Do Something" >Change to Info logo</button>
+</form>
+
+<img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType) }}">
+
+
+
 </body>

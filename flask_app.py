@@ -39,6 +39,8 @@ allowed_file = set(['txt', 'fasta'])
 # upload multiple files
 @app.route('/uploadMultiple', methods=['GET', 'POST'])
 def upload_file():
+
+    # upload files in the post
     if request.method == 'POST':
         files = request.files.getlist('uploadedFile[]')
         print(len(files))
@@ -49,6 +51,18 @@ def upload_file():
             message =str(uploadFile.filename)+"\n"
             flash(message)
         print(files)
+
+        # print("f: ",f)
+        # surround this with try catch also if the file is of the wrong format or bad data etc.
+        uploadMat = logomaker.load_mat(files[0].filename, 'fasta', mat_type='freq_mat')
+        uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
+
+        global uploadMatGlobal
+        uploadMatGlobal = uploadMat
+
+        global uploadedFileName
+        uploadedFileName = files[0].filename
+
 
         # parse parameters file
         params = parseParams(files[1].filename)
@@ -70,7 +84,9 @@ def upload_file():
             #return redirect(url_for('index'))
             return render_template('multiUpload.html',paramsTable =[params_html])
         else:
-            return render_template('multiUpload.html',paramsTable =[params_html])
+            #return render_template('multiUpload.html',paramsTable =[params_html])
+            # fill parameters here ultimately with params file
+            return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],paramsTable =[params_html],matPassedToUpload=uploadMat, matType='freq_mat', logoType='weight_logo')
 
 '''
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
@@ -167,7 +183,8 @@ def updateLogo():
     if request.method == 'POST':
         uploadMat = logomaker.load_mat(uploadedFileName, 'fasta', mat_type='freq_mat')
         uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
-        return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo')
+        #return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo')
+        return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo')
 
 
 
