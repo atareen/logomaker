@@ -25,6 +25,11 @@
     <input type = "file" name = "file" />
     <input type = "submit"/>
 </form>
+<p>Multi-file stuff</p>
+<form action="/foo" method=post enctype=multipart/form-data>
+    <input type=file name="uploadedFile[]" multiple>
+    <input type=submit value=Upload>
+</form>
 
 <img src="{{ url_for('fig') }}">
 

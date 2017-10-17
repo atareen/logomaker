@@ -1,10 +1,12 @@
 from flask import Flask, render_template, make_response, send_file, request
+import flask
+
 from werkzeug.utils import secure_filename
 import StringIO
 import matrix
 import sys
 import pandas
-import numpy as np
+
 
 import matplotlib.pyplot as plt
 import logomaker
@@ -31,6 +33,21 @@ print(mat.head())
 def index():
     return render_template("index.html",mat=mat)
 '''
+
+allowed_file = set(['txt', 'fasta'])
+
+@app.route('/foo', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        files = request.files.getlist('uploadedFile[]')
+        for uploadedFile in files:
+            upload(uploadedFile.filename)
+            uploadedFile.save(secure_filename(uploadedFile.filename))
+        return 'It worked'
+
+def upload(filename):
+    filename = 'https://localhost/' + filename
+
 
 @app.route("/")
 def index():
@@ -67,8 +84,9 @@ def example():
 
 # global variable fix to unicode/panda conversion from python to template
 uploadMatGlobal = pandas.DataFrame()
-
 uploadedFileName = ''
+
+
 
 # upload file at index.html and move to upload.html
 @app.route('/', methods=['GET', 'POST'])
@@ -77,6 +95,7 @@ def uploaded_file():
     if request.method == 'POST':
     #if request.method == 'POST' and len(str(request.files))>1:
         f = request.files['file']
+        # secure filename cleans the name of the uploaded file
         f.save(secure_filename(f.filename))
 
         #print("f: ",f)
