@@ -36,13 +36,21 @@
     {{ table|safe }}
   {% endfor %}
 
+<p>Testing</p>
+{{params['logo_type']}}
+<p>End Testing</p>
+
+<form action="/editParam" method="post">
+Param name: <input type="text" name="logoType" value="info_logo">
+<input type="submit" value="Submit">
+</form>
 
 <p> Rendering figure after upload</p>
     <!--
         the following method routes to uploadedFig defined in flask_app
         the argMat is filled via "mat"; mat is passed in to the upload.html
         file when the file is uploaded.
-
+        This is a server call
 -->
 <form action="/updateLogo" method="post">
     <button type="submit" value="Do Something" >Change to Info logo</button>

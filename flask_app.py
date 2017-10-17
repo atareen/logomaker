@@ -93,7 +93,7 @@ def upload_file():
             # fill parameters here ultimately with params file
             #return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],params=params,paramsTable =[params_html],matPassedToUpload=uploadMat, matType='freq_mat', logoType='weight_logo')
             return render_template('multiUpload.html', logoType=params_dict['logo_type'],colorScheme=params_dict['color_scheme'],
-                                   tables=[uploaded_mat_html.head().to_html(classes='mat')], params=params,
+                                   tables=[uploaded_mat_html.head().to_html(classes='mat')], params=params_dict,
                                    paramsTable=[params_html], matPassedToUpload=uploadMat, matType='freq_mat')
 
 '''
@@ -196,6 +196,11 @@ def updateLogo():
         return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo')
 
 
+# press button on upload.html to update logo type
+@app.route('/editParam', methods=['GET', 'POST'])
+def editParam():
+    if request.method == 'POST':
+        return "Edit param under dev"
 
 def parseParams(parameterFileName):
 

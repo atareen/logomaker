@@ -1,5 +1,5 @@
 # description of parameter 1
-logo_type: info_logo
+logo_type: freq_logo
 # description of parameter 2
 logo_style: classic
 # description of parameter 3
