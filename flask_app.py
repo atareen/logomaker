@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import logomaker
 
 app = Flask(__name__)
+# figure out what reasonable value for secret key should be
 app.secret_key = 'some_secret'
 
 matStatic = logomaker.load_mat('crp_sites.fasta', 'fasta',mat_type='frequency')
@@ -46,14 +47,30 @@ def upload_file():
             upload(uploadedFile.filename)
             uploadedFile.save(secure_filename(uploadedFile.filename))
         print(files)
+
         # if one file uploaded
         if len(files)==1:
+
+            # status message displayed to the user
             #return redirect(url_for('index',showStatus=True))
-            flash('Successfully Upload 1 file')
+            message = 'Successfully Upload file: '+str(files[0].filename)
+            flash(message)
+
+            #parse parameters file
+            params = parseParams(files[0].filename)
+            params_html = params.to_html(classes='mat')
+            print(params.head())
             return redirect(url_for('index'))
         else:
             return render_template('multiUpload.html')
 
+'''
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+  <h2>Input Params</h2>
+  {% for params in paramsTable %}
+    {{ params|safe }}
+  {% endfor %}
+'''
 
 @app.context_processor
 def displayUploadStatus(displayMessage=''):
@@ -143,6 +160,61 @@ def updateLogo():
         uploadMat = logomaker.load_mat(uploadedFileName, 'fasta', mat_type='freq_mat')
         uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
         return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo')
+
+
+
+def parseParams(parameterFileName):
+
+    """
+    helper function that will parse the upload parameters file
+    so that the parameters can be displayed on screen
+
+    parameters
+    ----------
+    :parameter parameters_filename (str): name of file containing parameters
+
+    """
+    params = {}
+    # try read parameters file
+    try:
+        # try opening file
+        fileObj = open(parameterFileName)
+
+        """ the following snippet tries to read parameters from file into a dict called params """
+        try:
+            for line in fileObj:
+                # removing leading and trailing whitespace
+                line = line.strip()
+                # ignore comments in the parameters file
+                if not line.startswith("#"):
+                    # split lines by colon separator
+                    key_value = line.split(":")
+                    # print lists only of format key-value, i.e. ignore inputs \
+                    # with multiple values for the same key:{value_1,value_2}
+                    if len(key_value) == 2:
+                        params[key_value[0].strip()] = key_value[1].strip()
+
+            """ 
+            parse read-in parameters correctly, i.e. change the value of the appropriate 
+            key to the appropriate type
+            """
+            params["logo_type"] = str(params["logo_type"])
+            params["logo_style"] = str(params["logo_style"])
+            params["color_scheme"] = str(params["color_scheme"])
+            params["ylabel"] = str(params["ylabel"])
+            params["resolution"] = float(params["resolution"])
+            # need additional care for conversion to lists
+            # params["fig_size"] = list(params["fig_size"])
+            # params["ylim"] = list(params["ylim"])
+        except (RuntimeError,ValueError) as pe:
+            print('some went wrong parsing the parameters file',pe.message)
+
+    except IOError as e:
+        print("Something went wrong reading the parameters file: ",e.strerror, e.filename)
+
+    param_df = pandas.DataFrame(params, index=[0])
+    #return params
+    return param_df
 
 
 '''
