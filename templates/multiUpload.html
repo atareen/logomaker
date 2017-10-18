@@ -1,9 +1,13 @@
 <!doctype html>
    <body>
 
+
+<!-- show uploaded input text in a text area that's editable -->
+<h2>Input Data</h2>
+<textarea rows="100" cols="50" id="aboutDescription" style="resize: none;">{% for row in range(inputDataLength) %}{{ displayInput[row][0] }}{% endfor %}</textarea>
+
+
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
-
-
 <!-- display status message after uploading file -->
 <h2>Files Uploaded</h2>
 <p>
@@ -38,7 +42,7 @@
 
 <form action="/editParam" method="post">
 Param name: <input type="text" name="logoType" value="info_logo">
-<input type="submit" value="Submit">
+<input type="submit" value="Update Logo">
 </form>
 
 <p> Rendering figure after upload</p>

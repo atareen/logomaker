@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 import StringIO
 import matrix
 import pandas
+import re
 
 
 import matplotlib.pyplot as plt
@@ -46,12 +47,13 @@ def upload_file():
         files = request.files.getlist('uploadedFile[]')
         print(len(files))
         for uploadFile in files:
-            upload(uploadFile.filename)
+            #upload(uploadFile.filename)
             uploadFile.save(secure_filename(uploadFile.filename))
-
+            # status message for user, render on multiupload
             message =str(uploadFile.filename)+"\n"
             flash(message)
-        print(files)
+
+        print(files[1])
 
         # parse parameters file
         # parseParams returns a params dict
@@ -59,8 +61,21 @@ def upload_file():
         #convert params dict to pandas dataframe for displaying
         params = pandas.DataFrame(params_dict, index=[0])
         params_html = params.head().to_html()
-        print(params.head())
+        #print(params.head())
 
+
+        with open(files[0].filename, 'r') as f:
+            #rawInput = [line.split("\t") for line in f]
+            rawInput = f.readlines()
+
+        displayInput = []
+        inputDataLength = len(rawInput)
+
+        for x in range(inputDataLength):
+            displayInput.append(rawInput[x].split(" "))
+            #displayInput.append(rawInput[x])
+
+        print(displayInput)
 
         # print("f: ",f)
         # surround this with try catch also if the file is of the wrong format or bad data etc.
@@ -94,7 +109,8 @@ def upload_file():
             #return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],params=params,paramsTable =[params_html],matPassedToUpload=uploadMat, matType='freq_mat', logoType='weight_logo')
             return render_template('multiUpload.html', logoType=params_dict['logo_type'],colorScheme=params_dict['color_scheme'],
                                    tables=[uploaded_mat_html.head().to_html(classes='mat')], params=params_dict,
-                                   paramsTable=[params_html], matPassedToUpload=uploadMat, matType='freq_mat')
+                                   paramsTable=[params_html], matPassedToUpload=uploadMat, matType='freq_mat',
+                                   inputDataLength=inputDataLength,displayInput=displayInput)
 
 '''
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
@@ -107,9 +123,6 @@ def upload_file():
 @app.context_processor
 def displayUploadStatus(displayMessage=''):
     return dict(statusMessage=displayMessage)
-
-def upload(filename):
-    filename = 'https://localhost/' + filename
 
 
 @app.route("/")
@@ -288,4 +301,4 @@ def show_plot():
 if __name__ == "__main__":
     #other option
     #app.run(port=8080, debug=True)
-    app.run(debug=True)
+    app.run()
