@@ -19,17 +19,19 @@ table.dataframe, .dataframe th, .dataframe td {
     color: white;
 }
 
+.inline-div {
+    display:inline-block;
+}
+.inline-txtarea {
+    resize: none;
+    border : 2px solid red;
+    height:100px;
+    resize: none;
+    overflow-x: scroll;
+    overflow-y: scroll;
+}
+
 tr:nth-child(odd)		{ background-color:#eee; }
 tr:nth-child(even)	{ background-color:#fff; }
 
 tr:hover            { background-color: #ffff99;}
-
-#aboutDescription
-{
-  height: 100px;
-  max-height: 100px;
-  overflow-x: scroll;
-  overflow-y: scroll;
-  label {display:block;}
-  textarea { display:block;}
-}

@@ -65,19 +65,25 @@ def upload_file():
 
 
         with open(files[0].filename, 'r') as f:
-            #rawInput = [line.split("\t") for line in f]
             rawInput = f.readlines()
 
         displayInput = []
         inputDataLength = len(rawInput)
 
         for x in range(inputDataLength):
-            displayInput.append(rawInput[x].split(" "))
-            #displayInput.append(rawInput[x])
+            #displayInput.append(rawInput[x].split(" "))
+            displayInput.append(rawInput[x].split('    '))
 
-        print(displayInput)
+        with open(files[1].filename, 'r') as p:
+            rawParams = p.read()
 
-        # print("f: ",f)
+        displayParams = []
+        paramsLength = len(rawParams)
+
+        for index in range(paramsLength):
+            displayParams.append(rawParams[index].split('    '))
+
+
         # surround this with try catch also if the file is of the wrong format or bad data etc.
         uploadMat = logomaker.load_mat(files[0].filename, 'fasta', mat_type='freq_mat')
         uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
@@ -110,7 +116,8 @@ def upload_file():
             return render_template('multiUpload.html', logoType=params_dict['logo_type'],colorScheme=params_dict['color_scheme'],
                                    tables=[uploaded_mat_html.head().to_html(classes='mat')], params=params_dict,
                                    paramsTable=[params_html], matPassedToUpload=uploadMat, matType='freq_mat',
-                                   inputDataLength=inputDataLength,displayInput=displayInput)
+                                   inputDataLength=inputDataLength,displayInput=displayInput,
+                                   paramsLength=paramsLength,displayParams=displayParams)
 
 '''
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
@@ -264,9 +271,9 @@ def parseParams(parameterFileName):
     except IOError as e:
         print("Something went wrong reading the parameters file: ",e.strerror, e.filename)
 
+    # the following will change your dict to a pandas df
     #param_df = pandas.DataFrame(params, index=[0])
     return params
-    #return param_df
 
 
 '''
