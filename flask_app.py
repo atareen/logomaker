@@ -32,6 +32,20 @@ print(mat.head())
 
 allowed_file = set(['txt', 'fasta'])
 
+
+# global variable fix to unicode/panda conversion from python to template
+# new globals
+uploadData = ''
+inputDataLength = 0
+displayInput = []
+
+
+# old globals, may get rid of them
+uploadMatGlobal = pandas.DataFrame()
+uploadedFileName = ''
+
+
+
 # upload multiple files
 # how to distinguish between params file and input data
 @app.route('/uploadMultiple', methods=['GET', 'POST'])
@@ -163,9 +177,7 @@ def fig():
     return send_file(img,mimetype='image/png')
 
 
-# global variable fix to unicode/panda conversion from python to template
-uploadMatGlobal = pandas.DataFrame()
-uploadedFileName = ''
+
 
 
 
@@ -188,34 +200,35 @@ def uploaded_file():
         uploadMat = logomaker.load_mat(f.filename, 'fasta', mat_type='freq_mat')
         uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
 
-        with open(f.filename, 'r') as fileVar:
-            rawInput = fileVar.readlines()
-
-        displayInput = []
-        inputDataLength = len(rawInput)
-
-        for x in range(inputDataLength):
-            # displayInput.append(rawInput[x].split(" "))
-            displayInput.append(rawInput[x].split('    '))
-
         global uploadMatGlobal
         uploadMatGlobal = uploadMat
 
         global uploadedFileName
         uploadedFileName = f.filename
 
+        with open(f.filename, 'r') as fileVar:
+            rawInput = fileVar.readlines()
+
+        #displayInput = []
+
+        global inputDataLength
+        inputDataLength = len(rawInput)
+
+        global displayInput
+        for x in range(inputDataLength):
+            # displayInput.append(rawInput[x].split(" "))
+            displayInput.append(rawInput[x].split('    '))
+
+
+        # keep uploaded data to display after logo updates
+        global uploadData
+        uploadData = displayInput
+
         # the mat variable in here gets passed onto returned template, e.g. upload.html in this instance
     return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],
                            matPassedToUpload=uploadMat, matType='freq_mat', logoType='weight_logo',
-                           colorScheme='classic', inputDataLength=inputDataLength, displayInput=displayInput)
+                           colorScheme='classic',inputDataLength=inputDataLength, displayInput=displayInput)
 
-'''
-<div class="inline-div">
-    <h2 align="center">Input Data</h2>
-    <textarea cols="50" class="inline-txtarea">{% for row in range(inputDataLength) %}{{ displayInput[row][0] }}{% endfor %}</textarea>
-</div>
-
-'''
 
 # display the uploaded figure at upload.html after file has been uploaded
 @app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>')
@@ -237,7 +250,9 @@ def updateLogo():
     if request.method == 'POST':
         uploadMat = logomaker.load_mat(uploadedFileName, 'fasta', mat_type='freq_mat')
         uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
-        return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo',colorScheme=updatedText)
+        return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],
+                               matPassedToUpload=uploadMat, matType='freq_mat', logoType=updatedText,
+                               colorScheme='classic',inputDataLength=inputDataLength, displayInput=displayInput)
         #return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo',colorScheme='classic')
 
 
