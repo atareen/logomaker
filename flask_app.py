@@ -15,7 +15,6 @@ app = Flask(__name__)
 # figure out what reasonable value for secret key should be
 app.secret_key = 'some_secret'
 
-matStatic = logomaker.load_mat('crp_sites.fasta', 'fasta',mat_type='frequency')
 '''
 fig = plt.figure(figsize=[8,6])
 ax = fig.add_subplot(3,1,1)
@@ -36,8 +35,14 @@ allowed_file = set(['txt', 'fasta'])
 # global variable fix to unicode/panda conversion from python to template
 # new globals
 uploadData = ''
-inputDataLength = 0
 displayInput = []
+
+inputDataLength = 0
+displayParams = []
+paramsLength = 0
+
+mat_type = 'freq_mat'
+
 
 
 # old globals, may get rid of them
@@ -152,9 +157,9 @@ def displayUploadStatus(displayMessage=''):
 def index():
     #return render_template("index.html",mat=mat)
     #mat_html = matrix.validate_freq_mat(mat)
-    mat_html = matrix.validate_freq_mat(logomaker.load_mat('crp_sites.fasta', 'fasta', mat_type='frequency'))
+    #mat_html = matrix.validate_freq_mat(logomaker.load_mat('crp_sites.fasta', 'fasta', mat_type='frequency'))
     #return render_template('index.html', tables=[mat_html.head().to_html(classes='mat')],mat=mat)
-    return render_template('index.html', tables=[mat_html.head().to_html(classes='mat')], mat=logomaker.load_mat('crp_sites.fasta', 'fasta',mat_type='frequency'))
+    return render_template('index.html')
 
 
 '''
@@ -163,7 +168,7 @@ def index():
 
 <p>{{ url_for('fig') }}</p>
 -->
-'''
+
 
 @app.route('/fig')
 def fig():
@@ -175,7 +180,7 @@ def fig():
     fig.savefig(img)
     img.seek(0)
     return send_file(img,mimetype='image/png')
-
+'''
 
 
 
@@ -224,10 +229,41 @@ def uploaded_file():
         global uploadData
         uploadData = displayInput
 
+        global mat_type
         # the mat variable in here gets passed onto returned template, e.g. upload.html in this instance
-    return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],
-                           matPassedToUpload=uploadMat, matType='freq_mat', logoType='weight_logo',
-                           colorScheme='classic',inputDataLength=inputDataLength, displayInput=displayInput)
+        return render_template('upload.html', matType='freq_mat', logoType='weight_logo',
+                           colorScheme='classic', inputDataLength=inputDataLength, displayInput=displayInput)
+
+
+# method only for parameters
+@app.route('/uploadParams',methods=['GET','POST'])
+def parametersUpload():
+
+    # surround with try catch if post fails, handle exception
+    if request.method == 'POST':
+
+        # if request.method == 'POST' and len(str(request.files))>1:
+        f = request.files['file']
+        # secure filename cleans the name of the uploaded file
+        f.save(secure_filename(f.filename))
+
+        message = str(f.filename)
+        flash(message)
+
+        with open(f.filename, 'r') as p:
+            rawParams = p.read()
+
+        #displayParams = []
+        global paramsLength
+        paramsLength = len(rawParams)
+
+        global displayParams
+        for index in range(paramsLength):
+            displayParams.append(rawParams[index].split('    '))
+
+        print('about to attempt redirect')
+
+        return flask.redirect(flask.url_for('/'))
 
 
 # display the uploaded figure at upload.html after file has been uploaded

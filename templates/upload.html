@@ -25,6 +25,13 @@ resolution: 1080
 fig_size: [8,2]</textarea>
 </div>
 
+<p>Upload Params File</p>
+<form action = "/uploadParams" method = "POST" enctype = "multipart/form-data">
+    <input type = "file" name = "file" />
+    <input type = "submit"/>
+</form>
+<p>End upload params</p>
+
 <form action="/updateLogo" id="textform" method="post">
     <textarea name="paramsText">info_logo</textarea>
     <input type="submit" value="Send">
