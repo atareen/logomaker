@@ -9,6 +9,9 @@
 </div>
 <div class="inline-div">
 <h2 align="center">Parameter Values</h2>
+    {% if paramsLength is defined %}
+        <textarea cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] }}{% endfor %}</textarea>
+    {% else %}
     <textarea cols="50" class="inline-txtarea"># description of parameter 1
 logo_type: info_logo
 # description of parameter 2
@@ -23,6 +26,7 @@ ylabel: Information
 resolution: 1080
 # description of parameter 7
 fig_size: [8,2]</textarea>
+    {% endif %}
 </div>
 
 <p>Upload Params File</p>

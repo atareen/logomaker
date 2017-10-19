@@ -270,7 +270,7 @@ def parametersUpload():
         #return flask.redirect(flask.url_for('/'))
         return render_template('upload.html', matType=mat_type, logoType=logo_type,
                                colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
-                               paramsLength=paramsLength)
+                               paramsLength=paramsLength,displayParams=displayParams)
 
 
 # display the uploaded figure at upload.html after file has been uploaded
@@ -305,7 +305,8 @@ def updateLogo():
                            inputDataLength=inputDataLength, displayInput=displayInput)
         else:
             return render_template('upload.html', matType=mat_type, logoType=updatedText, colorScheme=color_scheme,
-                               inputDataLength=inputDataLength, displayInput=displayInput, paramsLength=paramsLength)
+                                   inputDataLength=inputDataLength, displayInput=displayInput,
+                                   paramsLength=paramsLength, displayParams=displayParams)
 
 
 
