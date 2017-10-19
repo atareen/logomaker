@@ -6,6 +6,8 @@ import StringIO
 import matrix
 import pandas
 import re
+import sys
+import os
 
 
 import matplotlib.pyplot as plt
@@ -239,7 +241,7 @@ def uploaded_file():
                            colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput)
 
 
-# method only for parameters
+# method only for uploading parameters
 @app.route('/uploadParams',methods=['GET','POST'])
 def parametersUpload():
 
@@ -265,13 +267,18 @@ def parametersUpload():
         for index in range(paramsLength):
             displayParams.append(rawParams[index].split('    '))
 
-        print('about to attempt redirect')
 
-        #return flask.redirect(flask.url_for('/'))
-        return render_template('upload.html', matType=mat_type, logoType=logo_type,
+        #make params dictionary from uploaded file
+        params = parseParams(f.filename)
+
+
+        #return render_template('upload.html', matType=mat_type, logoType=logo_type,
+        #                       colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
+        #                       paramsLength=paramsLength,displayParams=displayParams)
+
+        return render_template('upload.html', matType=mat_type, logoType=params['logo_type'],
                                colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
-                               paramsLength=paramsLength,displayParams=displayParams)
-
+                               paramsLength=paramsLength,displayParams=displayParams,params=params)
 
 # display the uploaded figure at upload.html after file has been uploaded
 @app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>')
@@ -286,10 +293,32 @@ def uploadedFig(matType,logoType,argColorScheme):
     img.seek(0)
     return send_file(img,mimetype='image/png')
 
+
+
 # press button on upload.html to update logo type
 @app.route('/updateLogo', methods=['GET', 'POST'])
 def updateLogo():
+
     updatedText = request.form['paramsText']
+
+    # make updates to the params box
+    tempParamFileName = "tempParams.txt"
+    with open(tempParamFileName, "w") as text_file:
+        text_file.write(updatedText)
+
+    updatedParams = parseParams(tempParamFileName)
+    print("logo_type: ",updatedParams['logo_type'])
+
+
+    with open(tempParamFileName, 'r') as p:
+        rawParams = p.read()
+
+    global paramsLength
+    paramsLength = len(rawParams)
+
+    global displayParams
+    for index in range(paramsLength):
+        displayParams.append(rawParams[index].split('    '))
 
     # keep the value of logo type updated
     # so it doesn't change when parameters
@@ -297,14 +326,16 @@ def updateLogo():
     global logo_type
     logo_type = updatedText
 
+    os.remove(tempParamFileName)
+
     if request.method == 'POST':
 
         # if params not uploaded by user, then don't pass to upload.html
         if paramsLength == 0:
-            return render_template('upload.html', matType=mat_type, logoType=updatedText, colorScheme=color_scheme,
+            return render_template('upload.html', matType=mat_type, logoType=updatedParams['logo_type'], colorScheme=color_scheme,
                            inputDataLength=inputDataLength, displayInput=displayInput)
         else:
-            return render_template('upload.html', matType=mat_type, logoType=updatedText, colorScheme=color_scheme,
+            return render_template('upload.html', matType=mat_type, logoType=updatedParams['logo_type'], colorScheme=color_scheme,
                                    inputDataLength=inputDataLength, displayInput=displayInput,
                                    paramsLength=paramsLength, displayParams=displayParams)
 

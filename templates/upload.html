@@ -13,11 +13,11 @@
         <textarea cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] }}{% endfor %}</textarea>
     {% else %}
     <textarea cols="50" class="inline-txtarea"># description of parameter 1
-logo_type: info_logo
+logo_type: weight_logo
 # description of parameter 2
 logo_style: classic
 # description of parameter 3
-color_scheme: Oranges
+color_scheme: classic
 # description of parameter 4
 ylim: [0,2]
 # description of parameter 5
@@ -29,6 +29,7 @@ fig_size: [8,2]</textarea>
     {% endif %}
 </div>
 
+
 <p>Upload Params File</p>
 <form action = "/uploadParams" method = "POST" enctype = "multipart/form-data">
     <input type = "file" name = "file" />
@@ -36,10 +37,18 @@ fig_size: [8,2]</textarea>
 </form>
 <p>End upload params</p>
 
+
+<p> Testing editing from param box </p>
+
+
 <form action="/updateLogo" id="textform" method="post">
-    <textarea name="paramsText">info_logo</textarea>
-    <input type="submit" value="Send">
+    {% if paramsLength is defined %}
+        <textarea  name="paramsText" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] }}{% endfor %}</textarea>
+        <input type="submit" value="Send">
+    {% endif %}
+
 </form>
+<p> End Testing editing from param box </p>
 
 <p> Rendering figure after upload</p>
     <!--
@@ -48,27 +57,13 @@ fig_size: [8,2]</textarea>
         file when the file is uploaded.
 
 -->
+<!--  argColorScheme=colorScheme, the right side exists in the template, the left side will be passed to uploadedFig -->
 <img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme) }}">
 
-<form action="/updateLogo" method="post">
-    <button type="submit" value="Do Something" >Change to Info logo</button>
-</form>
 
 <form action="{{url_for('updateLogoD',argColorScheme='Blues')}}" method="post">
     <button type="submit" value="Do Something" >Change to Info logo D</button>
 </form>
 
-{% if paramsLength is defined %}
-<p> params length is defined: {{paramsLength}}</p>
-{% else %}
-<p> params length is not defined</p>
-{% endif %}
-
-
-<!--
-<p>{{matPassedToUpload}}</p>
-<p>{{logoType}}</p>
-<p>{{matType}}</p>
--->
 
 </body>
