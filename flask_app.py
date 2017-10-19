@@ -29,11 +29,6 @@ print(mat.head())
 
 #plt.show()
 
-'''
-@app.route('/')
-def index():
-    return render_template("index.html",mat=mat)
-'''
 
 allowed_file = set(['txt', 'fasta'])
 
@@ -127,6 +122,13 @@ def upload_file():
   {% endfor %}
 '''
 
+@app.route('/updateParams', methods=['POST'])
+def submit_textarea():
+    updatedText = request.form['paramsText']
+    print(updatedText)
+    return updatedText
+    #return format(request.form["paramsText"])
+
 @app.context_processor
 def displayUploadStatus(displayMessage=''):
     return dict(statusMessage=displayMessage)
@@ -190,7 +192,7 @@ def uploaded_file():
         uploadedFileName = f.filename
 
         # the mat variable in here gets passed onto returned template, e.g. upload.html in this instance
-        return render_template('upload.html',tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat,matType='freq_mat',logoType='weight_logo')
+        return render_template('upload.html',tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat,matType='freq_mat',logoType='weight_logo',colorScheme='classic')
 
 
 # display the uploaded figure at upload.html after file has been uploaded
@@ -209,18 +211,23 @@ def uploadedFig(matType,logoType,argColorScheme):
 # press button on upload.html to update logo type
 @app.route('/updateLogo', methods=['GET', 'POST'])
 def updateLogo():
+    updatedText = request.form['paramsText']
     if request.method == 'POST':
         uploadMat = logomaker.load_mat(uploadedFileName, 'fasta', mat_type='freq_mat')
         uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
-        #return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo')
-        return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo',colorScheme='classic')
+        return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo',colorScheme=updatedText)
+        #return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo',colorScheme='classic')
 
 
 # press button on upload.html to update logo type
-@app.route('/editParam', methods=['GET', 'POST'])
-def editParam():
+@app.route('/updateLogoD/<argColorScheme>', methods=['GET', 'POST'])
+def updateLogoD(argColorScheme):
     if request.method == 'POST':
-        return "Edit param under dev"
+        uploadMat = logomaker.load_mat(uploadedFileName, 'fasta', mat_type='freq_mat')
+        uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
+        return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo',colorScheme=argColorScheme)
+        #return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo',colorScheme='classic')
+
 
 def parseParams(parameterFileName):
 

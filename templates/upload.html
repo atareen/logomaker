@@ -14,10 +14,19 @@
         file when the file is uploaded.
 
 -->
-<img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType) }}">
+<img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme) }}">
 
 <form action="/updateLogo" method="post">
     <button type="submit" value="Do Something" >Change to Info logo</button>
+</form>
+
+<form action="{{url_for('updateLogoD',argColorScheme='Blues')}}" method="post">
+    <button type="submit" value="Do Something" >Change to Info logo D</button>
+</form>
+
+<form action="/updateLogo" id="textform" method="post">
+    <textarea name="paramsText">Hello World!</textarea>
+    <input type="submit" value="Send">
 </form>
 
 

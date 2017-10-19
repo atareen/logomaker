@@ -3,9 +3,6 @@
 
 
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
-<!-- show uploaded input text in a text area that's editable -->
-<!-- <h2>Input Data</h2> -->
-<!-- <textarea rows="100" cols="50" id="aboutDescription" style="resize: none;">{% for row in range(inputDataLength) %}{{ displayInput[row][0] }}{% endfor %}</textarea> -->
 
 <!-- textarea side by side, the 0 after the row represents column number -->
 <div class="inline-div">
@@ -38,22 +35,11 @@
     {% endwith %}
 </p>
 
-<h2>Input Params</h2>
-<p>
-  {% for params in paramsTable %}
-    {{ params|safe }}
-  {% endfor %}
-</p>
-
-<h2>Uploaded Seq Data</h2>
-  {% for table in tables %}
-    {{ table|safe }}
-  {% endfor %}
-
-<form action="/editParam" method="post">
-Param name: <input type="text" name="logoType" value="info_logo">
-<input type="submit" value="Update Logo">
+<form action="updateParams" id="textform" method="post">
+    <textarea name="paramsText">Hello World!</textarea>
+    <input type="submit" value="Send">
 </form>
+
 
 <p> Rendering figure after upload</p>
     <!--
