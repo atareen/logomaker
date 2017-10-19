@@ -54,7 +54,11 @@ fig_size: [8,2]</textarea>
     <button type="submit" value="Do Something" >Change to Info logo D</button>
 </form>
 
-
+{% if paramsLength is defined %}
+<p> params length is defined: {{paramsLength}}</p>
+{% else %}
+<p> params length is not defined</p>
+{% endif %}
 
 
 <!--

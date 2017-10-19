@@ -42,6 +42,8 @@ displayParams = []
 paramsLength = 0
 
 mat_type = 'freq_mat'
+logo_type = 'weight_logo'
+color_scheme = 'classic'
 
 
 
@@ -230,9 +232,11 @@ def uploaded_file():
         uploadData = displayInput
 
         global mat_type
+        global logo_type
+        global color_scheme
         # the mat variable in here gets passed onto returned template, e.g. upload.html in this instance
-        return render_template('upload.html', matType='freq_mat', logoType='weight_logo',
-                           colorScheme='classic', inputDataLength=inputDataLength, displayInput=displayInput)
+        return render_template('upload.html', matType=mat_type, logoType=logo_type,
+                           colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput)
 
 
 # method only for parameters
@@ -263,7 +267,10 @@ def parametersUpload():
 
         print('about to attempt redirect')
 
-        return flask.redirect(flask.url_for('/'))
+        #return flask.redirect(flask.url_for('/'))
+        return render_template('upload.html', matType=mat_type, logoType=logo_type,
+                               colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
+                               paramsLength=paramsLength)
 
 
 # display the uploaded figure at upload.html after file has been uploaded
@@ -283,13 +290,23 @@ def uploadedFig(matType,logoType,argColorScheme):
 @app.route('/updateLogo', methods=['GET', 'POST'])
 def updateLogo():
     updatedText = request.form['paramsText']
+
+    # keep the value of logo type updated
+    # so it doesn't change when parameters
+    # are uploaded
+    global logo_type
+    logo_type = updatedText
+
     if request.method == 'POST':
-        uploadMat = logomaker.load_mat(uploadedFileName, 'fasta', mat_type='freq_mat')
-        uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
-        return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],
-                               matPassedToUpload=uploadMat, matType='freq_mat', logoType=updatedText,
-                               colorScheme='classic',inputDataLength=inputDataLength, displayInput=displayInput)
-        #return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo',colorScheme='classic')
+
+        # if params not uploaded by user, then don't pass to upload.html
+        if paramsLength == 0:
+            return render_template('upload.html', matType=mat_type, logoType=updatedText, colorScheme=color_scheme,
+                           inputDataLength=inputDataLength, displayInput=displayInput)
+        else:
+            return render_template('upload.html', matType=mat_type, logoType=updatedText, colorScheme=color_scheme,
+                               inputDataLength=inputDataLength, displayInput=displayInput, paramsLength=paramsLength)
+
 
 
 # press button on upload.html to update logo type
