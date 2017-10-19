@@ -58,12 +58,12 @@ fig_size: [8,2]</textarea>
 
 -->
 <!--  argColorScheme=colorScheme, the right side exists in the template, the left side will be passed to uploadedFig -->
+{% if paramsUploaded is defined %}
+<img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme,paramsDict=paramsUploaded) }}">
+{% else %}
 <img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme) }}">
+{% endif %}
 
-
-<form action="{{url_for('updateLogoD',argColorScheme='Blues')}}" method="post">
-    <button type="submit" value="Do Something" >Change to Info logo D</button>
-</form>
 
 
 </body>

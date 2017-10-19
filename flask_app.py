@@ -278,15 +278,29 @@ def parametersUpload():
 
         return render_template('upload.html', matType=mat_type, logoType=params['logo_type'],
                                colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
-                               paramsLength=paramsLength,displayParams=displayParams,params=params)
+                               paramsLength=paramsLength,displayParams=displayParams,paramsUploaded=params)
 
+
+import ast
 # display the uploaded figure at upload.html after file has been uploaded
 @app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>')
-def uploadedFig(matType,logoType,argColorScheme):
+@app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>/<paramsDict>')
+def uploadedFig(matType,logoType,argColorScheme,paramsDict={}):
     fig = plt.figure(figsize=[8, 6])
     ax = fig.add_subplot(3, 1, 1)
     #logomaker.Logo(mat=uploadMatGlobal,mat_type='freq_mat',logo_type='info_logo').draw()
-    logomaker.Logo(mat=uploadMatGlobal, mat_type=matType, logo_type=logoType,color_scheme=str(argColorScheme)).draw()
+
+
+
+    # if no parameters file uploaded
+    if bool(paramsDict) is False:
+        logomaker.Logo(mat=uploadMatGlobal, mat_type=matType, logo_type=logoType,color_scheme=str(argColorScheme)).draw()
+    #otherwise if parameters file uploaded
+    elif bool(paramsDict) is True:
+        paramsDict = ast.literal_eval(paramsDict)
+        logomaker.Logo(mat=uploadMatGlobal, mat_type=matType, logo_type=str(paramsDict['logo_type']),
+                      color_scheme=paramsDict['color_scheme'],logo_style=paramsDict['logo_style']).draw()
+
 
     img = StringIO.StringIO()
     fig.savefig(img)
@@ -339,16 +353,6 @@ def updateLogo():
                                    inputDataLength=inputDataLength, displayInput=displayInput,
                                    paramsLength=paramsLength, displayParams=displayParams)
 
-
-
-# press button on upload.html to update logo type
-@app.route('/updateLogoD/<argColorScheme>', methods=['GET', 'POST'])
-def updateLogoD(argColorScheme):
-    if request.method == 'POST':
-        uploadMat = logomaker.load_mat(uploadedFileName, 'fasta', mat_type='freq_mat')
-        uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
-        return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo',colorScheme=argColorScheme)
-        #return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat, matType='freq_mat', logoType='info_logo',colorScheme='classic')
 
 
 def parseParams(parameterFileName):
