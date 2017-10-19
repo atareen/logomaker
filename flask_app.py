@@ -180,10 +180,23 @@ def uploaded_file():
         # secure filename cleans the name of the uploaded file
         f.save(secure_filename(f.filename))
 
+        message = str(f.filename)
+        flash(message)
+
         #print("f: ",f)
         # surround this with try catch also if the file is of the wrong format or bad data etc.
         uploadMat = logomaker.load_mat(f.filename, 'fasta', mat_type='freq_mat')
         uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
+
+        with open(f.filename, 'r') as fileVar:
+            rawInput = fileVar.readlines()
+
+        displayInput = []
+        inputDataLength = len(rawInput)
+
+        for x in range(inputDataLength):
+            # displayInput.append(rawInput[x].split(" "))
+            displayInput.append(rawInput[x].split('    '))
 
         global uploadMatGlobal
         uploadMatGlobal = uploadMat
@@ -192,8 +205,17 @@ def uploaded_file():
         uploadedFileName = f.filename
 
         # the mat variable in here gets passed onto returned template, e.g. upload.html in this instance
-        return render_template('upload.html',tables=[uploaded_mat_html.head().to_html(classes='mat')],matPassedToUpload=uploadMat,matType='freq_mat',logoType='weight_logo',colorScheme='classic')
+    return render_template('upload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],
+                           matPassedToUpload=uploadMat, matType='freq_mat', logoType='weight_logo',
+                           colorScheme='classic', inputDataLength=inputDataLength, displayInput=displayInput)
 
+'''
+<div class="inline-div">
+    <h2 align="center">Input Data</h2>
+    <textarea cols="50" class="inline-txtarea">{% for row in range(inputDataLength) %}{{ displayInput[row][0] }}{% endfor %}</textarea>
+</div>
+
+'''
 
 # display the uploaded figure at upload.html after file has been uploaded
 @app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>')
