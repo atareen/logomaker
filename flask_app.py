@@ -43,8 +43,11 @@ inputDataLength = 0
 displayParams = []
 paramsLength = 0
 
+userParametersUploaded = False
+
 mat_type = 'freq_mat'
 logo_type = 'weight_logo'
+logo_style = 'classic'
 color_scheme = 'classic'
 
 
@@ -275,6 +278,9 @@ def parametersUpload():
         paramsTest = load_parameters(file_name=f.filename)
 
 
+        global userParametersUploaded
+        userParametersUploaded = True
+
         #return render_template('upload.html', matType=mat_type, logoType=logo_type,
         #                       colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
         #                       paramsLength=paramsLength,displayParams=displayParams)
@@ -322,7 +328,10 @@ def uploadedFig(matType,logoType,argColorScheme,paramsDict={}):
     img.seek(0)
     return send_file(img,mimetype='image/png')
 
-
+# if I edit the default values of parameters, hit redraw, and then upload new parameters, the
+# default parameters don't get erased. I am right now returning early if userParametersUploaded
+# is false but that's not the best of of doing this. Handle the case where default values are
+# edited, redrawn, and then new paramter file is upload; make sure old values are overwritten
 
 # press button on upload.html to update logo type
 @app.route('/updateLogo', methods=['GET', 'POST'])
@@ -335,9 +344,23 @@ def updateLogo():
     with open(tempParamFileName, "w") as text_file:
         text_file.write(updatedText)
 
-    #updatedParams = parseParams(tempParamFileName)
+    updatedParamsTest = parseParams(tempParamFileName)
+
+    if userParametersUploaded is False:
+        # keep the value of logo type updated
+        # so it doesn't change when parameters
+        # are uploaded
+        global logo_type
+        logo_type = updatedParamsTest['logo_type']
+
+        global color_scheme
+        color_scheme = updatedParamsTest['color_scheme']
+        os.remove(tempParamFileName)
+        return render_template('upload.html', matType=mat_type, logoType=logo_type, colorScheme=color_scheme,
+                               inputDataLength=inputDataLength, displayInput=displayInput)
+
     updatedParams = load_parameters(tempParamFileName)
-    print("logo_type: ",updatedParams['logo_type'])
+    #print("logo_type: ",updatedParams['logo_type'])
 
 
     with open(tempParamFileName, 'r') as p:
@@ -350,19 +373,30 @@ def updateLogo():
     for index in range(paramsLength):
         displayParams.append(rawParams[index].split('    '))
 
+    '''
     # keep the value of logo type updated
     # so it doesn't change when parameters
     # are uploaded
     global logo_type
-    logo_type = updatedText
+    logo_type = updatedParamsTest['logo_type']
 
+    global color_scheme
+    color_scheme = updatedParamsTest['color_scheme']
+    '''
     os.remove(tempParamFileName)
+
+    print("printing1: ", userParametersUploaded)
+    print("printing2: ", updatedParamsTest)
 
     if request.method == 'POST':
 
         # if params not uploaded by user, then don't pass to upload.html
-        if paramsLength == 0:
-            return render_template('upload.html', matType=mat_type, logoType=updatedParams['logo_type'], colorScheme=color_scheme,
+        # this is not robust at all, check if user has uploaded some parameters
+        # via a variable that's true when upload parameters button is hit and
+        # false other wise
+        #if paramsLength <= 68:
+        if userParametersUploaded is False:
+            return render_template('upload.html', matType=mat_type, logoType=logo_type, colorScheme=color_scheme,
                            inputDataLength=inputDataLength, displayInput=displayInput)
         else:
             return render_template('upload.html', matType=mat_type, logoType=updatedParams['logo_type'], colorScheme=updatedParams['color_scheme'],
@@ -406,11 +440,17 @@ def parseParams(parameterFileName):
             parse read-in parameters correctly, i.e. change the value of the appropriate 
             key to the appropriate type
             """
-            params["logo_type"] = str(params["logo_type"])
-            params["logo_style"] = str(params["logo_style"])
-            params["color_scheme"] = str(params["color_scheme"])
-            params["ylabel"] = str(params["ylabel"])
-            params["resolution"] = float(params["resolution"])
+
+            if "logo_type" in params:
+                params["logo_type"] = str(params["logo_type"])
+            if "logo_style" in params:
+                params["logo_style"] = str(params["logo_style"])
+            if "color_scheme" in params:
+                params["color_scheme"] = str(params["color_scheme"])
+            if "ylabel" in params:
+                params["ylabel"] = str(params["ylabel"])
+            if "resolution" in params:
+                params["resolution"] = float(params["resolution"])
             # need additional care for conversion to lists
             # params["fig_size"] = list(params["fig_size"])
             # params["ylim"] = list(params["ylim"])

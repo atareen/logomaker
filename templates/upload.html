@@ -19,11 +19,14 @@
         <input type="submit" value="Redraw logo">
     </form>
     {% else %}
-    <textarea cols="50" class="inline-txtarea">
+    <form action="/updateLogo" id="textform0" method="post">
+    <textarea name="paramsText" cols="50" class="inline-txtarea">
 mat_type:{{matType}}
 logo_type:{{logoType}}
 color_scheme:{{colorScheme}}
     </textarea>
+    <input type="submit" value="Redraw logo">
+    </form>
     {% endif %}
 </div>
 
@@ -32,6 +35,28 @@ color_scheme:{{colorScheme}}
     <input type = "submit" value="Upload Parameter File"/>
 </form>
 
+<div class="inline-div">
+    <h1 align="center">Log</h1>
+    <textarea cols="100" class="inline-txtarea">
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <script>
+            var messages = {{ messages | safe }};
+            for (var i=0; i<messages.length; i++)
+            {
+                //alert(messages[i]);
+                //document.write(Date());
+                document.write(messages[i]);
+            }
+
+        </script>
+    {% endif %}
+{% endwith %}
+
+
+    </textarea>
+</div>
 
 <p> Rendering figure after upload</p>
     <!--
