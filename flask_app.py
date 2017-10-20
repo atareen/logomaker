@@ -10,6 +10,9 @@ import sys
 import os
 
 
+
+
+
 import matplotlib.pyplot as plt
 import logomaker
 
@@ -206,9 +209,20 @@ def uploaded_file():
 
 
         f = request.files['file']
-        if not allowed_file(f.filename):
-            flash(" File type not supported: %s " % (f.filename))
+
+        # display flash message if filetype not supported
+        if not allowed_file(f.filename) and len(f.filename) is not 0:
+            print(f.filename)
+            flash(" File type not supported:  "+str(f.filename))
+            #flash(" File type not supported ")
             return render_template('index.html')
+
+
+        #if button pressed without any uploaded
+        if len(f.filename) is 0:
+            flash(" Please select a file to upload ")
+            return render_template('index.html')
+
 
         # secure filename cleans the name of the uploaded file
         f.save(secure_filename(f.filename))
@@ -593,4 +607,5 @@ def load_parameters(file_name, print_params=False, print_warnings=False):
 if __name__ == "__main__":
     #other option
     #app.run(port=8080, debug=True)
-    app.run(debug=True,use_reloader=True)
+    #app.run(debug=True,use_reloader=True)
+    app.run()
