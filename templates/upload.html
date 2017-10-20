@@ -16,7 +16,7 @@
 {% if paramsLength is defined %}
     <form action="/updateLogo" id="textform1" method="post">
         <textarea name="paramsText" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] }}{% endfor %}</textarea>
-        <input type="submit" value="Send">
+        <input type="submit" value="Redraw logo">
     </form>
     {% else %}
     <textarea cols="50" class="inline-txtarea">
@@ -27,13 +27,10 @@ color_scheme:{{colorScheme}}
     {% endif %}
 </div>
 
-
-<p>Upload Params File</p>
 <form action = "/uploadParams" method = "POST" enctype = "multipart/form-data">
     <input type = "file" name = "file" />
-    <input type = "submit"/>
+    <input type = "submit" value="Upload Parameter File"/>
 </form>
-<p>End upload params</p>
 
 
 <p> Rendering figure after upload</p>
