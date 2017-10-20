@@ -232,7 +232,6 @@ def uploaded_file():
             # displayInput.append(rawInput[x].split(" "))
             displayInput.append(rawInput[x].split('    '))
 
-
         # keep uploaded data to display after logo updates
         global uploadData
         uploadData = displayInput

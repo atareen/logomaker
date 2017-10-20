@@ -55,7 +55,7 @@ color_scheme:{{colorScheme}}
 </p>
 </div>
 
-<p> Rendering figure after upload</p>
+<p> Rendering figure after upload (click to download)</p>
     <!--
         the following method routes to uploadedFig defined in flask_app
         the argMat is filled via "mat"; mat is passed in to the upload.html
@@ -64,9 +64,13 @@ color_scheme:{{colorScheme}}
 -->
 <!--  argColorScheme=colorScheme, the right side exists in the template, the left side will be passed to uploadedFig -->
 {% if paramsUploaded is defined %}
+<a href="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme,paramsDict=paramsUploaded) }}" download="logo.png">
 <img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme,paramsDict=paramsUploaded) }}">
+</a>
 {% else %}
+<a href="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme) }}" download="logo.png">
 <img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme) }}">
+</a>
 {% endif %}
 
 
