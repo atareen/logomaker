@@ -187,7 +187,8 @@ def fig():
 '''
 
 
-
+# when I click submit, this funciton gets called. I should render the default parameters used to generate the plot in the parameter values window as a dict
+# this dict should later be combined with the update function
 
 
 # upload file at index.html and move to upload.html
@@ -364,7 +365,7 @@ def updateLogo():
             return render_template('upload.html', matType=mat_type, logoType=updatedParams['logo_type'], colorScheme=color_scheme,
                            inputDataLength=inputDataLength, displayInput=displayInput)
         else:
-            return render_template('upload.html', matType=mat_type, logoType=updatedParams['logo_type'], colorScheme=color_scheme,
+            return render_template('upload.html', matType=mat_type, logoType=updatedParams['logo_type'], colorScheme=updatedParams['color_scheme'],
                                    inputDataLength=inputDataLength, displayInput=displayInput,
                                    paramsLength=paramsLength, displayParams=displayParams)
 

@@ -8,24 +8,22 @@
     <textarea cols="50" class="inline-txtarea">{% for row in range(inputDataLength) %}{{ displayInput[row][0] }}{% endfor %}</textarea>
 </div>
 <div class="inline-div">
+{% if paramsLength is defined %}
 <h2 align="center">Parameter Values</h2>
-    {% if paramsLength is defined %}
-        <textarea cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] }}{% endfor %}</textarea>
+{% else %}
+<h2 align="center">Default Parameter Values</h2>
+{% endif %}
+{% if paramsLength is defined %}
+    <form action="/updateLogo" id="textform1" method="post">
+        <textarea name="paramsText" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] }}{% endfor %}</textarea>
+        <input type="submit" value="Send">
+    </form>
     {% else %}
-    <textarea cols="50" class="inline-txtarea"># description of parameter 1
-logo_type: weight_logo
-# description of parameter 2
-logo_style: classic
-# description of parameter 3
-color_scheme: classic
-# description of parameter 4
-ylim: [0,2]
-# description of parameter 5
-ylabel: Information
-# description of parameter 6
-resolution: 1080
-# description of parameter 7
-fig_size: [8,2]</textarea>
+    <textarea cols="50" class="inline-txtarea">
+mat_type:{{matType}}
+logo_type:{{logoType}}
+color_scheme:{{colorScheme}}
+    </textarea>
     {% endif %}
 </div>
 
@@ -37,18 +35,6 @@ fig_size: [8,2]</textarea>
 </form>
 <p>End upload params</p>
 
-
-<p> Testing editing from param box </p>
-
-
-<form action="/updateLogo" id="textform" method="post">
-    {% if paramsLength is defined %}
-        <textarea  name="paramsText" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] }}{% endfor %}</textarea>
-        <input type="submit" value="Send">
-    {% endif %}
-
-</form>
-<p> End Testing editing from param box </p>
 
 <p> Rendering figure after upload</p>
     <!--
