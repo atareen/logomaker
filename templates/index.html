@@ -6,21 +6,6 @@ display status message after uploading file
 keep this here in case needed for file by file
 upload
 -->
-<p>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <script>
-                var messages = {{ messages | safe }};
-                for (var i=0; i<messages.length; i++)
-                {
-                    //alert(messages[i]);
-                    //document.write(Date());
-                    document.write(messages[i]);
-                }
-            </script>
-        {% endif %}
-    {% endwith %}
-</p>
 
 
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
@@ -38,16 +23,26 @@ upload
     <h2 align="center">Parameter Values</h2>
     <textarea cols="50" class="inline-txtarea"></textarea>
 </div>
+<br>
+<div class="inline-div">
+    <h1 align="center">Log</h1>
+<p>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <script>
+                var messages = {{ messages | safe }};
+                for (var i=0; i<messages.length; i++)
+                {
+                    //alert(messages[i]);
+                    //document.write(Date());
+                    document.write(messages[i]);
+                }
 
-<!--
-<p>Upload Input File and Parameters File</p>
-<form action="/uploadMultiple" method=post enctype=multipart/form-data>
-    <input type=file name="uploadedFile[]" multiple>
-    <input type=submit value=Upload>
-    <button type=button value=Uploads onclick="document.getElementById('demo').innerHTML = Date()">Upload</button>
-</form>
--->
-
+            </script>
+        {% endif %}
+    {% endwith %}
+</p>
+</div>
 
 
 
