@@ -36,6 +36,8 @@ print(mat.head())
 
 ALLOWED_EXTENSIONS = set(['txt', 'fasta'])
 
+ALLOWED_PARAM_EXTENSIONS = set(['txt'])
+
 
 # global variable fix to unicode/panda conversion from python to template
 # new globals
@@ -62,6 +64,10 @@ uploadedFileName = ''
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def allowed_param_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_PARAM_EXTENSIONS
 
 # upload multiple files
 # how to distinguish between params file and input data
@@ -280,6 +286,22 @@ def parametersUpload():
 
         # if request.method == 'POST' and len(str(request.files))>1:
         f = request.files['file']
+
+        #if button pressed without any uploaded
+        if len(f.filename) is 0:
+            flash(" Please select a parameters file to upload ")
+            return render_template('upload.html', matType=mat_type, logoType=logo_type,
+                               colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput)
+
+        # if not right extension
+        if not allowed_param_file(f.filename) and len(f.filename) is not 0:
+            print(f.filename)
+            flash(" parameters must have .txt extension ")
+            return render_template('upload.html', matType=mat_type, logoType=logo_type,
+                               colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput)
+
+
+
         # secure filename cleans the name of the uploaded file
         f.save(secure_filename(f.filename))
 
@@ -311,7 +333,7 @@ def parametersUpload():
         #return render_template('upload.html', matType=mat_type, logoType=logo_type,
         #                       colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
         #                       paramsLength=paramsLength,displayParams=displayParams)
-
+        flash(" Logo redrawn with uploaded parameters")
         return render_template('upload.html', matType=mat_type, logoType=params['logo_type'],
                                colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
                                #paramsLength=paramsLength,displayParams=displayParams,paramsUploaded=params)
@@ -374,6 +396,8 @@ def updateLogo():
     #updatedParamsTest = parseParams(tempParamFileName)
     updatedParamsTest = load_parameters(tempParamFileName)
 
+    # the user hasn't uploaded parameters
+    # if they have this will be skipped
     if userParametersUploaded is False:
         # keep the value of logo type updated
         # so it doesn't change when parameters
@@ -384,6 +408,7 @@ def updateLogo():
         global color_scheme
         color_scheme = updatedParamsTest['color_scheme']
         os.remove(tempParamFileName)
+        flash(" Logo redrawn with default parameters")
         return render_template('upload.html', matType=mat_type, logoType=logo_type, colorScheme=color_scheme,
                                inputDataLength=inputDataLength, displayInput=displayInput)
 
@@ -427,6 +452,7 @@ def updateLogo():
             return render_template('upload.html', matType=mat_type, logoType=logo_type, colorScheme=color_scheme,
                            inputDataLength=inputDataLength, displayInput=displayInput)
         else:
+            flash(" Logo redrawn with uploaded parameters")
             return render_template('upload.html', matType=mat_type, logoType=updatedParams['logo_type'], colorScheme=updatedParams['color_scheme'],
                                    inputDataLength=inputDataLength, displayInput=displayInput,
                                    paramsLength=paramsLength, displayParams=displayParams)
