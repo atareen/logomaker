@@ -270,6 +270,8 @@ def parametersUpload():
 
         #make params dictionary from uploaded file
         params = parseParams(f.filename)
+        # Justin's method
+        paramsTest = load_parameters(file_name=f.filename)
 
 
         #return render_template('upload.html', matType=mat_type, logoType=logo_type,
@@ -278,7 +280,8 @@ def parametersUpload():
 
         return render_template('upload.html', matType=mat_type, logoType=params['logo_type'],
                                colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
-                               paramsLength=paramsLength,displayParams=displayParams,paramsUploaded=params)
+                               #paramsLength=paramsLength,displayParams=displayParams,paramsUploaded=params)
+                               paramsLength=paramsLength, displayParams=displayParams, paramsUploaded=paramsTest)
 
 
 import ast
@@ -286,18 +289,29 @@ import ast
 @app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>')
 @app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>/<paramsDict>')
 def uploadedFig(matType,logoType,argColorScheme,paramsDict={}):
-    fig = plt.figure(figsize=[8, 6])
-    ax = fig.add_subplot(3, 1, 1)
+
     #logomaker.Logo(mat=uploadMatGlobal,mat_type='freq_mat',logo_type='info_logo').draw()
 
 
 
     # if no parameters file uploaded
     if bool(paramsDict) is False:
+
+        fig = plt.figure(figsize=[8, 6])
+        ax = fig.add_subplot(3, 1, 1)
+
         logomaker.Logo(mat=uploadMatGlobal, mat_type=matType, logo_type=logoType,color_scheme=str(argColorScheme)).draw()
+
     #otherwise if parameters file uploaded
     elif bool(paramsDict) is True:
+
+        # need to do this to convert params to dict
+        # flask returns params as unicode instead of dict
         paramsDict = ast.literal_eval(paramsDict)
+
+        fig = plt.figure(figsize=paramsDict['fig_size'])
+        ax = fig.add_subplot(3, 1, 1)
+
         logomaker.Logo(mat=uploadMatGlobal, mat_type=matType, logo_type=str(paramsDict['logo_type']),
                       color_scheme=paramsDict['color_scheme'],logo_style=paramsDict['logo_style']).draw()
 
@@ -320,7 +334,8 @@ def updateLogo():
     with open(tempParamFileName, "w") as text_file:
         text_file.write(updatedText)
 
-    updatedParams = parseParams(tempParamFileName)
+    #updatedParams = parseParams(tempParamFileName)
+    updatedParams = load_parameters(tempParamFileName)
     print("logo_type: ",updatedParams['logo_type'])
 
 
@@ -437,6 +452,88 @@ def show_plot():
     response.headers['Content-Type'] = 'image/png'
     return response
 '''
+
+
+def load_parameters(file_name, print_params=False, print_warnings=False):
+    """
+    Fills a dictionary with parameters parsed from specified file.
+    Arg:
+        file_name (str): Name of file containing parameter assignments
+    Return:
+        params_dict (dict): Dictionary containing parameter assignments
+            parsed from parameters file
+    """
+
+    # Create dictionary to hold results
+    params_dict = {}
+
+    # Create regular expression for parsing parameter file lines
+    pattern = re.compile('^\s*(?P<param_name>[\w]+)\s*:\s*(?P<param_value>.*)$')
+
+    # Quit if file_name is not specified
+    if file_name is None:
+        return params_dict
+
+    # Open parameters file
+    try:
+        file_obj = open(file_name, 'r')
+    except IOError:
+        print('Error: could not open file %s for reading.' % file_name)
+        raise IOError
+
+    # Process each line of file and store resulting parameter values
+    # in params_dict
+    params_dict = {}
+    prefix = '' # This is needed to parse multi-line files
+    for line in file_obj:
+
+        # removing leading and trailing whitespace
+        line = prefix + line.strip()
+
+        # Ignore lines that are empty or start with comment
+        if (len(line) == 0) or line.startswith('#'):
+            continue
+
+        # Record current line plus a space in prefix, then continue to next
+        # if line ends in a "\"
+        if line[-1] == '\\':
+            prefix += line[:-1] + ' '
+            continue
+
+        # Otherwise, clean prefix and continue with this parsing
+        else:
+            prefix = ''
+
+        # Parse line using pattern
+        match = re.match(pattern, line)
+
+        # If line matches, record parameter name and value
+        if match:
+            param_name = match.group('param_name')
+            param_value_str = match.group('param_value')
+
+            # Evaluate parameter value as Python literal
+            try:
+                params_dict[param_name] = ast.literal_eval(param_value_str)
+                if print_params:
+                    print('[set] %s = %s' % (param_name, param_value_str))
+
+            except ValueError:
+                if print_warnings:
+                    print(('Warning: could not set parameter "%s" because ' +
+                          'could not interpret "%s" as literal.') %
+                          (param_name, param_value_str))
+            except SyntaxError:
+                if print_warnings:
+                    print(('Warning: could not set parameter "%s" because ' +
+                          'of a syntax error in "%s".') %
+                          (param_name, param_value_str))
+
+
+        elif print_warnings:
+            print('Warning: could not parse line "%s".' % line)
+
+    return params_dict
 
 if __name__ == "__main__":
     #other option
