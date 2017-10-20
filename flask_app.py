@@ -348,7 +348,8 @@ def updateLogo():
     with open(tempParamFileName, "w") as text_file:
         text_file.write(updatedText)
 
-    updatedParamsTest = parseParams(tempParamFileName)
+    #updatedParamsTest = parseParams(tempParamFileName)
+    updatedParamsTest = load_parameters(tempParamFileName)
 
     if userParametersUploaded is False:
         # keep the value of logo type updated
@@ -389,8 +390,8 @@ def updateLogo():
     '''
     os.remove(tempParamFileName)
 
-    print("printing1: ", userParametersUploaded)
-    print("printing2: ", updatedParamsTest)
+    #print("printing1: ", userParametersUploaded)
+    #print("printing2: ", updatedParamsTest)
 
     if request.method == 'POST':
 
@@ -583,4 +584,4 @@ def load_parameters(file_name, print_params=False, print_warnings=False):
 if __name__ == "__main__":
     #other option
     #app.run(port=8080, debug=True)
-    app.run()
+    app.run(debug=True,use_reloader=True)
