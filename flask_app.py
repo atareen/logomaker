@@ -31,7 +31,7 @@ print(mat.head())
 #plt.show()
 
 
-allowed_file = set(['txt', 'fasta'])
+ALLOWED_EXTENSIONS = set(['txt', 'fasta'])
 
 
 # global variable fix to unicode/panda conversion from python to template
@@ -56,7 +56,9 @@ color_scheme = 'classic'
 uploadMatGlobal = pandas.DataFrame()
 uploadedFileName = ''
 
-
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # upload multiple files
 # how to distinguish between params file and input data
@@ -201,7 +203,13 @@ def uploaded_file():
     # surround with try catch if post fails, handle exception
     if request.method == 'POST':
     #if request.method == 'POST' and len(str(request.files))>1:
+
+
         f = request.files['file']
+        if not allowed_file(f.filename):
+            flash(" File type not supported: %s " % (f.filename))
+            return render_template('index.html')
+
         # secure filename cleans the name of the uploaded file
         f.save(secure_filename(f.filename))
 
@@ -282,6 +290,7 @@ def parametersUpload():
         paramsTest = load_parameters(file_name=f.filename)
 
 
+        # flag variable that tells server if user upload custom parameters
         global userParametersUploaded
         userParametersUploaded = True
 
