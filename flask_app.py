@@ -71,8 +71,8 @@ def upload_file():
             #upload(uploadFile.filename)
             uploadFile.save(secure_filename(uploadFile.filename))
             # status message for user, render on multiupload
-            message =str(uploadFile.filename)+"\n"
-            flash(message)
+            #message =str(uploadFile.filename)+"\n"
+            #flash(message)
 
         print(files[1])
 
@@ -121,8 +121,8 @@ def upload_file():
 
             # status message displayed to the user
             #return redirect(url_for('index',showStatus=True))
-            message = 'Successfully Upload file: '+str(files[0].filename)
-            flash(message)
+            #message = 'Successfully Upload file: '+str(files[0].filename)
+            #flash(message)
 
             #parse parameters file
             params = parseParams(files[0].filename)
@@ -205,8 +205,8 @@ def uploaded_file():
         # secure filename cleans the name of the uploaded file
         f.save(secure_filename(f.filename))
 
-        message = str(f.filename)
-        flash(message)
+        #message = str(f.filename)
+        #flash(message)
 
         #print("f: ",f)
         # surround this with try catch also if the file is of the wrong format or bad data etc.
@@ -240,6 +240,11 @@ def uploaded_file():
         global mat_type
         global logo_type
         global color_scheme
+
+        if userParametersUploaded is False:
+            status_upload_w_default_params = "Uploaded "+str(uploadedFileName) + " with Default parameters \n"
+            flash(status_upload_w_default_params)
+
         # the mat variable in here gets passed onto returned template, e.g. upload.html in this instance
         return render_template('upload.html', matType=mat_type, logoType=logo_type,
                            colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput)
@@ -257,8 +262,8 @@ def parametersUpload():
         # secure filename cleans the name of the uploaded file
         f.save(secure_filename(f.filename))
 
-        message = str(f.filename)
-        flash(message)
+        #message = str(f.filename)
+        #flash(message)
 
         with open(f.filename, 'r') as p:
             rawParams = p.read()

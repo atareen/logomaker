@@ -37,25 +37,22 @@ color_scheme:{{colorScheme}}
 
 <div class="inline-div">
     <h1 align="center">Log</h1>
-    <textarea cols="100" class="inline-txtarea">
+<p>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <script>
+                var messages = {{ messages | safe }};
+                for (var i=0; i<messages.length; i++)
+                {
+                    //alert(messages[i]);
+                    //document.write(Date());
+                    document.write(messages[i]);
+                }
 
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-        <script>
-            var messages = {{ messages | safe }};
-            for (var i=0; i<messages.length; i++)
-            {
-                //alert(messages[i]);
-                //document.write(Date());
-                document.write(messages[i]);
-            }
-
-        </script>
-    {% endif %}
-{% endwith %}
-
-
-    </textarea>
+            </script>
+        {% endif %}
+    {% endwith %}
+</p>
 </div>
 
 <p> Rendering figure after upload</p>
