@@ -147,6 +147,9 @@ def uploaded_file():
         global logo_type
         global color_scheme
 
+        global userParametersUploaded
+        userParametersUploaded = False
+
         if userParametersUploaded is False:
             status_upload_w_default_params = "Uploaded "+str(uploadedFileName) + " with Default parameters \n"
             flash(status_upload_w_default_params)
@@ -238,12 +241,11 @@ def uploadedFig(matType,logoType,argColorScheme,paramsDict=None,argMat=None):
         logomaker.Logo(mat=uploadMatGlobal, mat_type=matType, logo_type=logoType,color_scheme=str(argColorScheme)).draw()
 
     # otherwise if parameters file uploaded
-    elif bool(paramsDict) is True:
+    elif bool(paramsDict) is True and userParametersUploaded is True:
 
         # need to do this to convert params to dict
         # flask returns params as unicode instead of dict
         paramsDict = ast.literal_eval(paramsDict)
-        print(" params dict is converted from html")
         fig = plt.figure(figsize=paramsDict['fig_size'])
         ax = fig.add_subplot(3, 1, 1)
 
