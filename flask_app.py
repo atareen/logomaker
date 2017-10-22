@@ -17,21 +17,8 @@ import matplotlib.pyplot as plt
 import logomaker
 
 app = Flask(__name__)
-# figure out what reasonable value for secret key should be
-app.secret_key = 'some_secret'
-
-'''
-fig = plt.figure(figsize=[8,6])
-ax = fig.add_subplot(3,1,1)
-logomaker.Logo(mat=mat,mat_type='freq_mat',logo_type='freq_logo').draw()
-#print(mat.head().to_html())
-print(mat.head())
-'''
-
-#for index, row in mat.head().iterrows():
-#    print row
-
-#plt.show()
+# session key. Use random key to invalidate old sessions
+app.secret_key = os.urandom(32)
 
 
 ALLOWED_EXTENSIONS = set(['txt', 'fasta'])
@@ -69,95 +56,6 @@ def allowed_param_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_PARAM_EXTENSIONS
 
-# upload multiple files
-# how to distinguish between params file and input data
-@app.route('/uploadMultiple', methods=['GET', 'POST'])
-def upload_file():
-
-    # upload files in the post
-    if request.method == 'POST':
-        files = request.files.getlist('uploadedFile[]')
-        print(len(files))
-        for uploadFile in files:
-            #upload(uploadFile.filename)
-            uploadFile.save(secure_filename(uploadFile.filename))
-            # status message for user, render on multiupload
-            #message =str(uploadFile.filename)+"\n"
-            #flash(message)
-
-        print(files[1])
-
-        # parse parameters file
-        # parseParams returns a params dict
-        params_dict = parseParams(files[1].filename)
-        #convert params dict to pandas dataframe for displaying
-        params = pandas.DataFrame(params_dict, index=[0])
-        params_html = params.head().to_html()
-        #print(params.head())
-
-
-        with open(files[0].filename, 'r') as f:
-            rawInput = f.readlines()
-
-        displayInput = []
-        inputDataLength = len(rawInput)
-
-        for x in range(inputDataLength):
-            #displayInput.append(rawInput[x].split(" "))
-            displayInput.append(rawInput[x].split('    '))
-
-        with open(files[1].filename, 'r') as p:
-            rawParams = p.read()
-
-        displayParams = []
-        paramsLength = len(rawParams)
-
-        for index in range(paramsLength):
-            displayParams.append(rawParams[index].split('    '))
-
-
-        # surround this with try catch also if the file is of the wrong format or bad data etc.
-        uploadMat = logomaker.load_mat(files[0].filename, 'fasta', mat_type='freq_mat')
-        uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
-
-        global uploadMatGlobal
-        uploadMatGlobal = uploadMat
-
-        global uploadedFileName
-        uploadedFileName = files[0].filename
-
-        # if one file uploaded
-        # handle the case of more than 2 files uploaded
-        if len(files) == 1:
-
-            # status message displayed to the user
-            #return redirect(url_for('index',showStatus=True))
-            #message = 'Successfully Upload file: '+str(files[0].filename)
-            #flash(message)
-
-            #parse parameters file
-            params = parseParams(files[0].filename)
-            params_html = params.head().to_html(classes='mat')
-            print(params.head())
-            #return redirect(url_for('index'))
-            return render_template('multiUpload.html',paramsTable =[params_html])
-        else:
-            #return render_template('multiUpload.html',paramsTable =[params_html])
-            # fill parameters here ultimately with params file
-            #return render_template('multiUpload.html', tables=[uploaded_mat_html.head().to_html(classes='mat')],params=params,paramsTable =[params_html],matPassedToUpload=uploadMat, matType='freq_mat', logoType='weight_logo')
-            return render_template('multiUpload.html', logoType=params_dict['logo_type'],colorScheme=params_dict['color_scheme'],
-                                   tables=[uploaded_mat_html.head().to_html(classes='mat')], params=params_dict,
-                                   paramsTable=[params_html], matPassedToUpload=uploadMat, matType='freq_mat',
-                                   inputDataLength=inputDataLength,displayInput=displayInput,
-                                   paramsLength=paramsLength,displayParams=displayParams)
-
-'''
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
-  <h2>Input Params</h2>
-  {% for params in paramsTable %}
-    {{ params|safe }}
-  {% endfor %}
-'''
 
 @app.route('/updateParams', methods=['POST'])
 def submit_textarea():
@@ -173,32 +71,8 @@ def displayUploadStatus(displayMessage=''):
 
 @app.route("/")
 def index():
-    #return render_template("index.html",mat=mat)
-    #mat_html = matrix.validate_freq_mat(mat)
-    #mat_html = matrix.validate_freq_mat(logomaker.load_mat('crp_sites.fasta', 'fasta', mat_type='frequency'))
-    #return render_template('index.html', tables=[mat_html.head().to_html(classes='mat')],mat=mat)
     return render_template('index.html')
 
-
-'''
-<!--
-<img src="{{ url_for('fig') }}">
-
-<p>{{ url_for('fig') }}</p>
--->
-
-
-@app.route('/fig')
-def fig():
-    fig = plt.figure(figsize=[8, 6])
-    ax = fig.add_subplot(3, 1, 1)
-    logomaker.Logo(mat=matStatic, mat_type='freq_mat', logo_type='freq_logo').draw()
-
-    img = StringIO.StringIO()
-    fig.savefig(img)
-    img.seek(0)
-    return send_file(img,mimetype='image/png')
-'''
 
 
 # when I click submit, this funciton gets called. I should render the default parameters used to generate the plot in the parameter values window as a dict
@@ -230,6 +104,8 @@ def uploaded_file():
             return render_template('index.html')
 
 
+        print(f.filename)
+
         # secure filename cleans the name of the uploaded file
         f.save(secure_filename(f.filename))
 
@@ -239,7 +115,6 @@ def uploaded_file():
         #print("f: ",f)
         # surround this with try catch also if the file is of the wrong format or bad data etc.
         uploadMat = logomaker.load_mat(f.filename, 'fasta', mat_type='freq_mat')
-        uploaded_mat_html = matrix.validate_freq_mat(uploadMat)
 
         global uploadMatGlobal
         uploadMatGlobal = uploadMat
@@ -256,6 +131,8 @@ def uploaded_file():
         inputDataLength = len(rawInput)
 
         global displayInput
+        # clear list for new input uploads
+        del displayInput[:]
         for x in range(inputDataLength):
             # displayInput.append(rawInput[x].split(" "))
             displayInput.append(rawInput[x].split('    '))
@@ -273,8 +150,9 @@ def uploaded_file():
             flash(status_upload_w_default_params)
 
         # the mat variable in here gets passed onto returned template, e.g. upload.html in this instance
-        return render_template('upload.html', matType=mat_type, logoType=logo_type,
-                           colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput)
+    return render_template('upload.html', matType=mat_type, logoType=logo_type,
+                           colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
+                           uploadMat=uploadMat)
 
 
 # method only for uploading parameters
@@ -287,7 +165,7 @@ def parametersUpload():
         # if request.method == 'POST' and len(str(request.files))>1:
         f = request.files['file']
 
-        #if button pressed without any uploaded
+        # if button pressed without any uploaded
         if len(f.filename) is 0:
             flash(" Please select a parameters file to upload ")
             return render_template('upload.html', matType=mat_type, logoType=logo_type,
@@ -300,18 +178,12 @@ def parametersUpload():
             return render_template('upload.html', matType=mat_type, logoType=logo_type,
                                colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput)
 
-
-
         # secure filename cleans the name of the uploaded file
         f.save(secure_filename(f.filename))
-
-        #message = str(f.filename)
-        #flash(message)
 
         with open(f.filename, 'r') as p:
             rawParams = p.read()
 
-        #displayParams = []
         global paramsLength
         paramsLength = len(rawParams)
 
@@ -325,10 +197,11 @@ def parametersUpload():
         # Justin's method
         paramsTest = load_parameters(file_name=f.filename)
 
-
         # flag variable that tells server if user upload custom parameters
         global userParametersUploaded
         userParametersUploaded = True
+
+        print('Upload params: ',userParametersUploaded)
 
         #return render_template('upload.html', matType=mat_type, logoType=logo_type,
         #                       colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
@@ -337,18 +210,21 @@ def parametersUpload():
         return render_template('upload.html', matType=mat_type, logoType=params['logo_type'],
                                colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
                                #paramsLength=paramsLength,displayParams=displayParams,paramsUploaded=params)
-                               paramsLength=paramsLength, displayParams=displayParams, paramsUploaded=paramsTest)
+                               paramsLength=paramsLength, displayParams=displayParams, paramsUploaded=paramsTest,
+                               uploadMat=uploadMatGlobal)
 
 
 import ast
 # display the uploaded figure at upload.html after file has been uploaded
 @app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>')
 @app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>/<paramsDict>')
-def uploadedFig(matType,logoType,argColorScheme,paramsDict={}):
+@app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>/<paramsDict>/<argMat>')
+def uploadedFig(matType,logoType,argColorScheme,paramsDict={},argMat=None):
 
-    #logomaker.Logo(mat=uploadMatGlobal,mat_type='freq_mat',logo_type='info_logo').draw()
 
+    print("Mat: ",argMat)
 
+    print('I am now here')
 
     # if no parameters file uploaded
     if bool(paramsDict) is False:
@@ -358,7 +234,7 @@ def uploadedFig(matType,logoType,argColorScheme,paramsDict={}):
 
         logomaker.Logo(mat=uploadMatGlobal, mat_type=matType, logo_type=logoType,color_scheme=str(argColorScheme)).draw()
 
-    #otherwise if parameters file uploaded
+    # otherwise if parameters file uploaded
     elif bool(paramsDict) is True:
 
         # need to do this to convert params to dict
@@ -376,6 +252,7 @@ def uploadedFig(matType,logoType,argColorScheme,paramsDict={}):
     fig.savefig(img)
     img.seek(0)
     return send_file(img,mimetype='image/png')
+
 
 # if I edit the default values of parameters, hit redraw, and then upload new parameters, the
 # default parameters don't get erased. I am right now returning early if userParametersUploaded
@@ -423,6 +300,8 @@ def updateLogo():
     paramsLength = len(rawParams)
 
     global displayParams
+    del displayParams[:]
+
     for index in range(paramsLength):
         displayParams.append(rawParams[index].split('    '))
 
@@ -630,8 +509,13 @@ def load_parameters(file_name, print_params=False, print_warnings=False):
 
     return params_dict
 
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('generic.html'), 500
+
+
 if __name__ == "__main__":
     #other option
     #app.run(port=8080, debug=True)
     #app.run(debug=True,use_reloader=True)
-    app.run()
+    app.run(debug=True)

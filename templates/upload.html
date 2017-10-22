@@ -42,7 +42,7 @@ color_scheme:'{{colorScheme}}'
 </form>
 
 <div class="inline-div">
-    <h1 align="left">Log</h1>
+    <h1 align="left">Feedback</h1>
 <p>
     {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -70,14 +70,16 @@ color_scheme:'{{colorScheme}}'
 -->
 <!--  argColorScheme=colorScheme, the right side exists in the template, the left side will be passed to uploadedFig -->
 {% if paramsUploaded is defined %}
-<a href="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme,paramsDict=paramsUploaded) }}" download="logo.png">
-<img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme,paramsDict=paramsUploaded) }}">
+<p> hab here </p>
+<a href="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme,paramsDict=paramsUploaded,argMat=uploadMat) }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme,paramsDict=paramsUploaded,argMat=uploadMat) }}">
 </a>
 {% else %}
-<a href="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme) }}" download="logo.png">
-<img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme) }}">
+<a href="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme,argMat=uploadMat) }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme,argMat=uploadMat) }}">
 </a>
 {% endif %}
+
 
 
 

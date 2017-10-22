@@ -375,42 +375,43 @@ def load_mat(inputdata_filename, inputdata_filetype, mat_type='counts', paramete
             print(" Something went wrong with the input file ",e)
             raise e
 
-    # read parameters file
-    try:
-        # try opening file
-        fileObj = open(parameterFileName)
-
-        """ the following snippet tries to read parameters from file into a dict called params """
+    # read parameters file if passed
+    if parameters_filename is not 'none':
         try:
-            for line in fileObj:
-                # removing leading and trailing whitespace
-                line = line.strip()
-                # ignore comments in the parameters file
-                if not line.startswith("#"):
-                    # split lines by colon separator
-                    key_value = line.split(":")
-                    # print lists only of format key-value, i.e. ignore inputs \
-                    # with multiple values for the same key:{value_1,value_2}
-                    if len(key_value) == 2:
-                        params[key_value[0].strip()] = key_value[1].strip()
+            # try opening file
+            fileObj = open(parameterFileName)
 
-            """ 
-            parse read-in parameters correctly, i.e. change the value of the appropriate 
-            key to the appropriate type
-            """
-            params["logo_type"] = str(params["logo_type"])
-            params["logo_style"] = str(params["logo_style"])
-            params["color_scheme"] = str(params["color_scheme"])
-            params["ylabel"] = str(params["ylabel"])
-            params["resolution"] = float(params["resolution"])
-            # need additional care for conversion to lists
-            # params["fig_size"] = list(params["fig_size"])
-            # params["ylim"] = list(params["ylim"])
-        except (RuntimeError,ValueError) as pe:
-            print('some went wrong parsing the parameters file',pe.message)
+            """ the following snippet tries to read parameters from file into a dict called params """
+            try:
+                for line in fileObj:
+                    # removing leading and trailing whitespace
+                    line = line.strip()
+                    # ignore comments in the parameters file
+                    if not line.startswith("#"):
+                        # split lines by colon separator
+                        key_value = line.split(":")
+                        # print lists only of format key-value, i.e. ignore inputs \
+                        # with multiple values for the same key:{value_1,value_2}
+                        if len(key_value) == 2:
+                            params[key_value[0].strip()] = key_value[1].strip()
 
-    except IOError as e:
-        print("Something went wrong reading the parameters file: ",e.strerror, e.filename)
+                """ 
+                parse read-in parameters correctly, i.e. change the value of the appropriate 
+                key to the appropriate type
+                """
+                params["logo_type"] = str(params["logo_type"])
+                params["logo_style"] = str(params["logo_style"])
+                params["color_scheme"] = str(params["color_scheme"])
+                params["ylabel"] = str(params["ylabel"])
+                params["resolution"] = float(params["resolution"])
+                # need additional care for conversion to lists
+                # params["fig_size"] = list(params["fig_size"])
+                # params["ylim"] = list(params["ylim"])
+            except (RuntimeError,ValueError) as pe:
+                print('some went wrong parsing the parameters file',pe.message)
+
+        except IOError as e:
+            print("Something went wrong reading the parameters file: ",e.strerror, e.filename)
 
     param_df = pandas.DataFrame(params, index=[0])
     return mat

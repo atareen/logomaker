@@ -7,7 +7,7 @@ import sys
 
 #plt.ion()
 
-mat = logomaker.load_mat('crp_sites.fasta', 'fasta',mat_type='counts')
+mat = logomaker.load_mat('sample.fasta', 'fasta',mat_type='counts')
 #mat = logomaker.load_mat('crp_sites.fasta', 'fasta',mat_type='count')
 
 fig = plt.figure(figsize=[8,6])
@@ -17,9 +17,9 @@ ax = fig.add_subplot(3,1,1)
 #logomaker.Logo(mat=mat,mat_type='freq_mat',logo_type='info_logo',color_scheme='random').draw()
 logomaker.Logo(mat=mat,mat_type='freq_mat',logo_type='freq_logo').draw()
 
-plt.show()
+#plt.show()
 
-#plt.tight_layout()
+plt.tight_layout()
 plt.savefig('logo_temp.pdf')
 
 sys.exit()
