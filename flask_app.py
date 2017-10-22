@@ -229,8 +229,8 @@ import ast
 def uploadedFig(matType,logoType,argColorScheme,paramsDict=None,argMat=None):
 
 
-    print("uploaded fig: ",matType,logoType,argColorScheme)
-    print("uploaded fig2: ",paramsDict)
+
+    print("uploaded fig, paramsUpload: ",userParametersUploaded)
 
     # if no parameters file uploaded
     if bool(paramsDict) is False:
