@@ -20,18 +20,18 @@
 <h2 align="center">Default Parameter Values</h2>
 {% endif %}
 {% if paramsLength is defined %}
-    <form action="/updateLogo" id="textform1" method="post">
+    <form action="/updateLogo" id="textform1" method="POST">
         <textarea name="paramsText" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] }}{% endfor %}</textarea>
         <input type="submit" value="Redraw logo">
     </form>
     {% else %}
-    <form action="/updateLogo" id="textform0" method="post">
+    <form action="/updateLogo" id="textform0" method="POST">
     <textarea name="paramsText" cols="50" class="inline-txtarea">
 mat_type:'{{matType}}'
 logo_type:'{{logoType}}'
 color_scheme:'{{colorScheme}}'
     </textarea>
-    <input type="submit" value="Redraw logo">
+    <input type="submit" value="Update logo">
     </form>
     {% endif %}
 </div>
@@ -68,9 +68,10 @@ color_scheme:'{{colorScheme}}'
         file when the file is uploaded.
 
 -->
+
+
 <!--  argColorScheme=colorScheme, the right side exists in the template, the left side will be passed to uploadedFig -->
 {% if paramsUploaded is defined %}
-<p> hab here </p>
 <a href="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme,paramsDict=paramsUploaded,argMat=uploadMat) }}" download="logo.png">
 <img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme,paramsDict=paramsUploaded,argMat=uploadMat) }}">
 </a>
@@ -79,7 +80,6 @@ color_scheme:'{{colorScheme}}'
 <img src="{{ url_for('uploadedFig',matType=matType,logoType=logoType,argColorScheme=colorScheme,argMat=uploadMat) }}">
 </a>
 {% endif %}
-
 
 
 

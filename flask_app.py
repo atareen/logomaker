@@ -36,6 +36,8 @@ displayParams = []
 paramsLength = 0
 
 userParametersUploaded = False
+paramsTest = {}
+
 
 mat_type = 'freq_mat'
 logo_type = 'weight_logo'
@@ -192,9 +194,10 @@ def parametersUpload():
             displayParams.append(rawParams[index].split('    '))
 
 
-        #make params dictionary from uploaded file
+        # make params dictionary from uploaded file
         params = parseParams(f.filename)
         # Justin's method
+        global paramsTest
         paramsTest = load_parameters(file_name=f.filename)
 
         # flag variable that tells server if user upload custom parameters
@@ -207,11 +210,12 @@ def parametersUpload():
         #                       colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
         #                       paramsLength=paramsLength,displayParams=displayParams)
         flash(" Logo redrawn with uploaded parameters")
+        print('just hit upload parameters')
         return render_template('upload.html', matType=mat_type, logoType=params['logo_type'],
                                colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
                                #paramsLength=paramsLength,displayParams=displayParams,paramsUploaded=params)
                                paramsLength=paramsLength, displayParams=displayParams, paramsUploaded=paramsTest,
-                               uploadMat=uploadMatGlobal)
+                               uploadMat=uploadMatGlobal,userParamsUploaded=userParametersUploaded)
 
 
 import ast
@@ -219,12 +223,11 @@ import ast
 @app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>')
 @app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>/<paramsDict>')
 @app.route('/uploadedFig/<matType>/<logoType>/<argColorScheme>/<paramsDict>/<argMat>')
-def uploadedFig(matType,logoType,argColorScheme,paramsDict={},argMat=None):
+def uploadedFig(matType,logoType,argColorScheme,paramsDict=None,argMat=None):
 
 
-    print("Mat: ",argMat)
-
-    print('I am now here')
+    print("uploaded fig: ",matType,logoType,argColorScheme)
+    print("uploaded fig2: ",paramsDict)
 
     # if no parameters file uploaded
     if bool(paramsDict) is False:
@@ -240,7 +243,7 @@ def uploadedFig(matType,logoType,argColorScheme,paramsDict={},argMat=None):
         # need to do this to convert params to dict
         # flask returns params as unicode instead of dict
         paramsDict = ast.literal_eval(paramsDict)
-
+        print(" params dict is converted from html")
         fig = plt.figure(figsize=paramsDict['fig_size'])
         ax = fig.add_subplot(3, 1, 1)
 
@@ -260,7 +263,8 @@ def uploadedFig(matType,logoType,argColorScheme,paramsDict={},argMat=None):
 # edited, redrawn, and then new paramter file is upload; make sure old values are overwritten
 
 # press button on upload.html to update logo type
-@app.route('/updateLogo', methods=['GET', 'POST'])
+#@app.route('/updateLogo', methods=['GET', 'POST'])
+@app.route('/updateLogo', methods=['POST'])
 def updateLogo():
 
     updatedText = request.form['paramsText']
@@ -317,8 +321,9 @@ def updateLogo():
     '''
     os.remove(tempParamFileName)
 
-    #print("printing1: ", userParametersUploaded)
-    #print("printing2: ", updatedParamsTest)
+    print("printing1: ", userParametersUploaded)
+    # updateParamsTest contains all the uploaded parameter values
+    print("printing3: ", type(updatedParams))
 
     if request.method == 'POST':
 
@@ -332,10 +337,19 @@ def updateLogo():
                            inputDataLength=inputDataLength, displayInput=displayInput)
         else:
             flash(" Logo redrawn with uploaded parameters")
+            print("Just Hit update parameters...",updatedParams)
+            paramsTest = updatedParams
+            '''
             return render_template('upload.html', matType=mat_type, logoType=updatedParams['logo_type'], colorScheme=updatedParams['color_scheme'],
                                    inputDataLength=inputDataLength, displayInput=displayInput,
-                                   paramsLength=paramsLength, displayParams=displayParams)
-
+                                   paramsLength=paramsLength, displayParams=displayParams,
+                                   figSize=updatedParams['fig_size'],userParamsUploaded=userParametersUploaded,
+                                   paramsUploaded=updatedParams)
+            '''
+            return render_template('upload.html', matType=mat_type, logoType=updatedParams['logo_type'],
+                                   colorScheme=updatedParams['color_scheme'], inputDataLength=inputDataLength, displayInput=displayInput,
+                                   paramsLength=paramsLength, displayParams=displayParams, paramsUploaded=paramsTest,
+                                   uploadMat=uploadMatGlobal, userParamsUploaded=userParametersUploaded)
 
 
 def parseParams(parameterFileName):
@@ -518,4 +532,4 @@ if __name__ == "__main__":
     #other option
     #app.run(port=8080, debug=True)
     #app.run(debug=True,use_reloader=True)
-    app.run(debug=True)
+    app.run()
