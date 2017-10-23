@@ -202,8 +202,6 @@ def uploadedFig(argMat=None):
         global style_file
         print(" I have not uploaded parameters ",style_file)
 
-
-
         logo = logomaker.make_styled_logo(style_file=style_file, matrix=uploadMatGlobal)
         # Draw logos
         fig, ax_list = plt.subplots(figsize=[8, 2])
