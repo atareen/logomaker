@@ -2,8 +2,6 @@
    <body>
 
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
-
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
 <form action = "/" method = "POST" enctype = "multipart/form-data">
     <input type = "file" name = "file" />
     <input type = "submit" value="Re-Upload and Draw"/>
@@ -72,23 +70,35 @@ color_scheme:'{{colorScheme}}'
 
 <!--  argColorScheme=colorScheme, the right side exists in the template, the left side will be passed to uploadedFig -->
 
-{% if userParamsUploaded==True %}
+{% if (userParamsUploaded==True) and (updatedParams is not defined) %}
 <a href="{{ url_for('uploadedFig') }}" download="logo.png">
 <img src="{{ url_for('uploadedFig') }}">
 </a>
+{% elif (userParamsUploaded==True) and (updatedParams==True) %}
+<a href="{{ url_for('uploadedFig',argMat=uploadMat,refresh=updatedParams) }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',argMat=uploadMat,refresh=updatedParams) }}">
 {% else %}
 <a href="{{ url_for('uploadedFig',argMat=uploadMat) }}" download="logo.png">
 <img src="{{ url_for('uploadedFig',argMat=uploadMat) }}">
 </a>
 {% endif %}
 
-
-{% if userParamsUploaded==True %}
-<p> Hab true </p>
-{% else %}
-<p> Hab false </p>
+{#
+{% if updatedParams is defined %}
+<a href="{{ url_for('uploadedFig',argMat=uploadMat) }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',argMat=uploadMat,refresh=updatedParams) }}">
+</a>
 {% endif %}
+#}
 
+
+
+{#
+<a href="{{ url_for('uploadedFig',argMat=uploadMat) }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',argMat=uploadMat) }}">
+<p>test bool</p>
+</a>
+#}
 
 
 <form action="/" method="get">

@@ -15,7 +15,7 @@ import logomaker
 
 app = Flask(__name__)
 # session key. Use random key to invalidate old sessions
-app.secret_key = os.urandom(32)
+app.secret_key = os.urandom(64)
 
 
 ALLOWED_EXTENSIONS = set(['txt', 'fasta'])
@@ -154,8 +154,7 @@ def uploaded_file():
             flash(status_upload_w_default_params)
 
         # the mat variable in here gets passed onto returned template, e.g. upload.html in this instance
-    return render_template('upload.html', matType=mat_type, logoType=logo_type,
-                           colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
+    return render_template('upload.html', inputDataLength=inputDataLength, displayInput=displayInput,
                            uploadMat=uploadMat)
 
 
@@ -163,24 +162,24 @@ import ast
 # display the uploaded figure at upload.html after file has been uploaded
 @app.route('/uploadedFig')
 @app.route('/uploadedFig/<argMat>')
-def uploadedFig(argMat=None):
+@app.route('/uploadedFig/<argMat>/<refresh>')
+def uploadedFig(argMat=None,refresh=None):
 
     global userParametersUploaded
     print("uploaded fig, paramsUpload: ",userParametersUploaded)
-    print("argMat: ",argMat)
+    #print("argMat: ",argMat)
 
     # if no parameters file uploaded
     if userParametersUploaded is False:
 
-        print(" I have not uploaded parameters")
+        print(" Draw Fig: I have not uploaded parameters")
         # ADDITION (iia)
+
         # if no params uploaded, empty style file
         style_fileTemp = 'parameters_file.txt'
         with open(style_fileTemp, 'w') as f:
             f.write("")
 
-        # Make frequency logo
-        # logo2 = logomaker.make_logo(counts_mat)
         logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=uploadMatGlobal)
         # END ADDITION (iia)
 
@@ -200,7 +199,7 @@ def uploadedFig(argMat=None):
 
         # ADDITION (iib)
         global style_file
-        print(" I have not uploaded parameters ",style_file)
+        print(" Draw Fig: I have uploaded parameters ",style_file)
 
         logo = logomaker.make_styled_logo(style_file=style_file, matrix=uploadMatGlobal)
         # Draw logos
@@ -270,13 +269,52 @@ def parametersUpload():
         #                       colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
         #                       paramsLength=paramsLength,displayParams=displayParams)
         flash(" Logo redrawn with uploaded parameters")
-        print('just hit upload parameters with filename ',style_file)
-        return render_template('upload.html', matType=mat_type,
+        print('Upload Params: Just hit upload parameters with filename ',style_file)
+        return render_template('upload.html',
                                inputDataLength=inputDataLength, displayInput=displayInput,
                                paramsLength=paramsLength, displayParams=displayParams,
                                uploadMat=uploadMatGlobal,userParamsUploaded=userParametersUploaded)
 
 
+# press button on upload.html to update logo type
+#@app.route('/updateLogo', methods=['GET', 'POST'])
+@app.route('/updateLogo', methods=['POST'])
+def updateLogo():
+
+    if request.method == 'POST':
+
+        updatedText = request.form['paramsText']
+
+        # make updates to the params box
+        tempParamFileName = "updatedParams.txt"
+        with open(tempParamFileName, "w") as text_file:
+            text_file.write(updatedText)
+
+        global style_file
+        style_file = tempParamFileName
+
+        with open(tempParamFileName, 'r') as p:
+            rawParams = p.read()
+
+        global paramsLength
+        paramsLength = len(rawParams)
+
+        global displayParams
+        del displayParams[:]
+
+        for index in range(paramsLength):
+            displayParams.append(rawParams[index].split('    '))
+
+
+        flash(" Logo redrawn with updated parameters")
+        updatedParams = True
+
+        print('Update Params: Just hit update parameters with filename ', style_file)
+        return render_template('upload.html',
+                               inputDataLength=inputDataLength, displayInput=displayInput,
+                               paramsLength=paramsLength, displayParams=displayParams,
+                               uploadMat=uploadMatGlobal,userParamsUploaded=userParametersUploaded,
+                               style_file=style_file,updatedParams=updatedParams)
 
 
 
