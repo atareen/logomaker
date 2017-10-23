@@ -1,0 +1,98 @@
+<!doctype html>
+   <body>
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+<form action = "/" method = "POST" enctype = "multipart/form-data">
+    <input type = "file" name = "file" />
+    <input type = "submit" value="Re-Upload and Draw"/>
+</form>
+
+<div class="inline-div">
+    <h2 align="center">Uploaded Data</h2>
+    <textarea cols="50" class="inline-txtarea">{% for row in range(inputDataLength) %}{{ displayInput[row][0] }}{% endfor %}</textarea>
+</div>
+<div class="inline-div">
+{% if paramsLength is defined %}
+<h2 align="center">Parameter Values</h2>
+{% else %}
+<h2 align="center">Default Parameter Values</h2>
+{% endif %}
+{% if paramsLength is defined %}
+    <form action="/updateLogo" id="textform1" method="POST">
+        <textarea name="paramsText" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] }}{% endfor %}</textarea>
+        <input type="submit" value="Redraw logo">
+    </form>
+    {% else %}
+    <form action="/updateLogo" id="textform0" method="POST">
+    <textarea name="paramsText" cols="50" class="inline-txtarea">
+mat_type:'{{matType}}'
+logo_type:'{{logoType}}'
+color_scheme:'{{colorScheme}}'
+    </textarea>
+    <input type="submit" value="Update logo">
+    </form>
+    {% endif %}
+</div>
+
+<form action = "/uploadParams" method = "POST" enctype = "multipart/form-data">
+    <input type = "file" name = "file" />
+    <input type = "submit" value="Upload Parameter File"/>
+</form>
+
+<div class="inline-div">
+    <h1 align="left">Feedback</h1>
+<p>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <script>
+                var messages = {{ messages | safe }};
+                for (var i=0; i<messages.length; i++)
+                {
+                    //alert(messages[i]);
+                    //document.write(Date());
+                    document.write(messages[i]);
+                }
+
+            </script>
+        {% endif %}
+    {% endwith %}
+</p>
+</div>
+
+<p> Rendering figure after upload (click to download)</p>
+    <!--
+        the following method routes to uploadedFig defined in flask_app
+        the argMat is filled via "mat"; mat is passed in to the upload.html
+        file when the file is uploaded.
+
+-->
+
+
+<!--  argColorScheme=colorScheme, the right side exists in the template, the left side will be passed to uploadedFig -->
+
+{% if userParamsUploaded==True %}
+<a href="{{ url_for('uploadedFig') }}" download="logo.png">
+<img src="{{ url_for('uploadedFig') }}">
+</a>
+{% else %}
+<a href="{{ url_for('uploadedFig',argMat=uploadMat) }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',argMat=uploadMat) }}">
+</a>
+{% endif %}
+
+
+{% if userParamsUploaded==True %}
+<p> Hab true </p>
+{% else %}
+<p> Hab false </p>
+{% endif %}
+
+
+
+<form action="/" method="get">
+<button name="subject" type="submit" value="">Back to Home Page</button>
+</form>
+
+</body>

@@ -1,11 +1,8 @@
 
 logo_type : 'probability'
 below_flip : True
-foo bar
-virus : eval(x=5)
-highlight_edgewidth : 1
-colors : 'classic'
-highlight_colors: 'classic'
-highlight_sequence : 'ATTAATGTGAGTTAGCTCACTCATTA'
-vpad : .05
-width : .90
+width : .9
+axes_style : 'rails'
+use_transparency : False
+stack_order : 'small_on_top'
+use_transparency : True

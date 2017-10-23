@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 from matplotlib.transforms import Bbox
 from matplotlib.colors import to_rgba
-import matplotlib as mpl
 import pdb
 
 # From logomaker package
@@ -17,11 +16,31 @@ import character
 import color
 import data
 
-from validate import validate_parameter, validate_mat
+# Valid values for matrix_type and logo_type
+LOGOMAKER_TYPES = [None, 'counts', 'probability', 'enrichment', 'energy',
+                   'information']
+
+# Character lists
+DNA = list('ACGT')
+RNA = list('ACGU')
+dna = [c.lower() for c in DNA]
+rna = [c.lower() for c in DNA]
+PROTEIN = list('RKDENQSGHTAPYVMCLFIW')
+protein = [c.lower() for c in PROTEIN]
+PROTEIN_STOP = PROTEIN + ['*']
+protein_stop = protein + ['*']
+
+# Character transformations dictionaries
+to_DNA = {'a': 'A', 'c': 'C', 'g': 'G', 't': 'T', 'U': 'T', 'u': 'T'}
+to_dna = {'A': 'a', 'C': 'c', 'G': 'g', 'T': 't', 'U': 't', 'u': 't'}
+to_RNA = {'a': 'A', 'c': 'C', 'g': 'G', 't': 'U', 'T': 'U', 'u': 'U'}
+to_rna = {'A': 'a', 'C': 'c', 'G': 'g', 'T': 'u', 't': 'u', 'U': 'u'}
+to_PROTEIN = dict(zip(protein, PROTEIN))
+to_protein = dict(zip(PROTEIN, protein))
 
 from data import load_alignment
 
-def make_logo(matrix=None,
+def make_logo(matrix,
               matrix_type=None,
               logo_type=None,
               background=None,
@@ -29,25 +48,15 @@ def make_logo(matrix=None,
               energy_gamma=1.0,
               energy_units='a.u.',
               enrichment_logbase=2,
-              enrichment_centering=True,
               information_units='bits',
-              occurance_threshold=0,
-              figsize=None,
-              save_to_file=None,
-              draw_now=False,
               colors='blue',
               characters=None,
-              ignore_characters='.-',
-              sequence_type=None,
-              uniform_stretch=False,
-              max_stretched_character=None,
               alpha=1.,
               edgecolors='none',
               edgewidth=0.,
               boxcolors='white',
               boxalpha=0.,
               positions=None,
-              first_position_is_1=True,
               use_positions=None,
               use_position_range=None,
               highlight_sequence=None,
@@ -60,7 +69,6 @@ def make_logo(matrix=None,
               hpad=0.,
               vpad=0.,
               axes_style='classic',
-              axes_fontsize=None,
               font_family=None,
               font_weight=None,
               font_file=None,
@@ -74,8 +82,7 @@ def make_logo(matrix=None,
               below_flip=True,
               baseline_width=.5,
               vline_width=1,
-              vline_color='gray',
-              show_vlines=False,
+              vline_color='black',
               width=1,
               xlim=None,
               xticks=None,
@@ -87,10 +94,7 @@ def make_logo(matrix=None,
               ylim=None,
               yticks=None,
               yticklabels=None,
-              ylabel=None,
-              show_binary_yaxis=False,
-              title=None,
-              rcparams={}):
+              ylabel=None):
     """
     Description:
 
@@ -299,44 +303,25 @@ def make_logo(matrix=None,
         ylabel (string): Overrides value determined by "logo_type".
     """
 
-    #
-    # Validate all function parameters
-    #
-    names, vargs, kwargs, default_values = inspect.getargspec(make_logo)
-    user_values = [eval(name) for name in names]
+    # Validate matrix
+    matrix = data.validate_mat(matrix)
 
-    assert len(names)==len(default_values), \
-        'len(names)==%d does not match len(default_values)==%d' %\
-        (len(names), len(default_values))
+    # Check logo_type
+    if not (logo_type in LOGOMAKER_TYPES):
+        print 'Warning: invalid logo_type = %s. Using None.' % repr(logo_type)
+        logo_type = None
 
-    for name, user_value, default_value in \
-            zip(names, user_values, default_values):
-
-        # Validate parameter value
-        valid_value = validate_parameter(name, user_value, default_value)
-
-        # Set parameter value equal to the valid value
-        exec("%s = valid_value" % name)
-
-    # Set matrix_type to value given in matrix object if appropriate
-    if matrix_type is None:
-        if 'logomaker_type' in matrix.__dict__:
+    # Set matrix_type if it is None but matrix.logomaker_type is set
+    if (matrix_type is None) and ('logomaker_type' in matrix.__dict__):
+        if matrix.logomaker_type in LOGOMAKER_TYPES:
             matrix_type = matrix.logomaker_type
-    matrix_type = validate_parameter('matrix_type', matrix_type, None)
 
-    # If matrix_type is counts, remove positions with too few counts
-    if matrix_type == 'counts':
-        position_counts = matrix.values.sum(axis=1)
-        max_counts = position_counts.max()
-        positions_to_keep = position_counts >= occurance_threshold * max_counts
-        matrix = matrix.loc[positions_to_keep, :]
-        matrix.logomaker_type = 'counts'
-        matrix = validate_mat(matrix)
-
-    # Set logo_type equal to matrix_type if is currently None
-    if logo_type is None:
-        logo_type = matrix_type
-    logo_type = validate_parameter('logo_type', logo_type, None)
+            # If logo_type is not specified, default to matrix_type
+            if logo_type is None:
+                logo_type = matrix_type
+        else:
+            print 'Warning: invalid matrix.logomaker_type = %s.' % \
+                  repr(matrix.logomaker_type) +' Using matrix_type = None.'
 
     # Get background matrix
     bg_mat = data.set_bg_mat(background, matrix)
@@ -349,7 +334,6 @@ def make_logo(matrix=None,
         'pseudocount': pseudocount,
         'energy_gamma': energy_gamma,
         'enrichment_logbase': enrichment_logbase,
-        'enrichment_centering': enrichment_centering,
         'information_units': information_units
     }
 
@@ -395,18 +379,14 @@ def make_logo(matrix=None,
         # Change default plot settings
         if ylabel is None:
             if enrichment_logbase == 2:
-                ylabel = '$\log_2$ enrichment'
+                ylabel = '$\log_2$\nenrichment'
             elif enrichment_logbase == 10:
-                ylabel = '$\log_{10}$ enrichment'
+                ylabel = '$\log_{10}$\nenrichment'
             elif enrichment_logbase == np.e:
-                ylabel = '$\ln$ enrichment'
+                ylabel = '$\ln $\nenrichment'
             else:
                 assert False, 'Error: invalid choice of enrichment_logbase=%f'\
                               % enrichment_logbase
-
-            # Only add centering if user hasn't defined a ylabel
-            if enrichment_centering:
-                ylabel = 'centered\n' + ylabel
 
     elif logo_type == 'energy':
         # Transform input matrix to weight_mat
@@ -446,92 +426,60 @@ def make_logo(matrix=None,
     logo.background = background
     logo.bg_mat = bg_mat
 
-    # Set RC parameters
-    for key, value in rcparams.items():
-        mpl.rcParams[key] = value
-
-    # If user specifies a figure size, make figure and axis,
-    # draw logo, then return all three
-    if figsize is not None:
-
-        fig, ax = plt.subplots(figsize=figsize)
-        logo.draw(ax)
-        if save_to_file:
-            fig.savefig(save_to_file)
-        plt.draw()
-
-        return logo, ax, fig
-
-    # If draw_now, get current axes, draw logo, and return both
-    elif draw_now:
-        ax = plt.gca()
-        logo.draw(ax)
-
-        return logo, ax
-
-    # Otherwise, just return logo to user
-    else:
-        return logo
+    # Return Logo instance to user
+    return logo
 
 
 # Logo base class
 class Logo:
     def __init__(self,
                  matrix,
-                 colors,
-                 characters,
-                 ignore_characters,
-                 sequence_type,
-                 uniform_stretch,
-                 max_stretched_character,
-                 alpha,
-                 edgecolors,
-                 edgewidth,
-                 boxcolors,
-                 boxalpha,
-                 positions,
-                 first_position_is_1,
-                 use_positions,
-                 use_position_range,
-                 highlight_sequence,
-                 highlight_colors,
-                 highlight_alpha,
-                 highlight_edgecolors,
-                 highlight_edgewidth,
-                 highlight_boxcolors,
-                 highlight_boxalpha,
-                 hpad,
-                 vpad,
-                 axes_style,
-                 font_family,
-                 font_weight,
-                 font_file,
-                 font_style,
-                 font_properties,
-                 stack_order,
-                 use_transparency,
-                 max_alpha_val,
-                 below_shade,
-                 below_alpha,
-                 below_flip,
-                 baseline_width,
-                 vline_width,
-                 vline_color,
-                 show_vlines,
-                 width,
-                 xlim,
-                 xticks,
-                 xtick_spacing,
-                 xtick_anchor,
-                 xtick_format,
-                 xticklabels,
-                 xlabel,
-                 ylim,
-                 yticks,
-                 yticklabels,
-                 ylabel,
-                 show_binary_yaxis,
-                 title):
+                 colors='blue',
+                 characters=None,
+                 alpha=1.,
+                 edgecolors='none',
+                 edgewidth=0.,
+                 boxcolors='white',
+                 boxalpha=0.,
+                 positions=None,
+                 use_positions=None,
+                 use_position_range=None,
+                 highlight_sequence=None,
+                 highlight_colors='tomato',
+                 highlight_alpha=1,
+                 highlight_edgecolors='none',
+                 highlight_edgewidth=1,
+                 highlight_boxcolors=None,
+                 highlight_boxalpha=None,
+                 hpad=0.,
+                 vpad=0.,
+                 axes_style='classic',
+                 font_family=None,
+                 font_weight=None,
+                 font_file=None,
+                 font_style=None,
+                 font_properties=None,
+                 stack_order='big_on_top',
+                 use_transparency=False,
+                 max_alpha_val=None,
+                 below_shade=1.,
+                 below_alpha=1.,
+                 below_flip=True,
+                 baseline_width=.5,
+                 vline_width=1,
+                 vline_color='black',
+                 width=1,
+                 xlim=None,
+                 xticks=None,
+                 xtick_spacing=None,
+                 xtick_anchor=0,
+                 xtick_format=None,
+                 xticklabels=None,
+                 xlabel='position',
+                 ylim=None,
+                 yticks=None,
+                 yticklabels=None,
+                 ylabel=None):
 
         # Record user font input
         self.in_font_file = font_file
@@ -552,33 +500,31 @@ class Logo:
                                                   weight=self.in_font_weight,
                                                   fname=self.in_font_file,
                                                   style=self.in_font_style)
+        # Set data
+        self.in_df = matrix.copy()
 
-        # Set matrix data after filtering by columns
-        self.df = data.filter_columns(matrix=matrix,
-                                      sequence_type=sequence_type,
-                                      characters=characters,
-                                      ignore_characters=ignore_characters)
-
-
-        # Get list of characters
+        # Characters:
+        # Restrict to provided characters if string or list of characters
+        # Transform to provided characters if dictionary
+        self.in_characters = characters
+        if self.in_characters is None:
+            self.df = self.in_df.copy()
+        elif isinstance(self.in_characters, dict):
+            self.df = self.in_df.rename(columns=self.in_characters)
+        elif isinstance(self.in_characters, (str, unicode, list, np.array)):
+            characters = list(self.in_characters)
+            self.df = self.in_df[characters]
+        else:
+            assert False, 'Error: cant interpret characters %s.' % \
+                          repr(self.in_characters)
         self.chars = np.array([str(c) for c in self.df.columns])
 
         # Set positions
-        self.L = len(self.df)
-
-        # If user provides position values, use these
         if positions is not None:
             self.df['pos'] = positions
             self.df.set_index('pos', inplace=True, drop=True)
-
-        # Otherwise, if numbering positions from 1, do this
-        elif first_position_is_1:
-            positions = range(1, self.L+1)
-            self.df['pos'] = positions
-            self.df.set_index('pos', inplace=True, drop=True)
-
-        # Set final positions
         self.poss = self.df.index.copy()
+        self.L = len(self.poss)
 
         # Set wild type sequence
         self.highlight_sequence = highlight_sequence
@@ -685,8 +631,7 @@ class Logo:
         self.neg_alpha = float(below_alpha)
         self.neg_flip = below_flip
         self.max_alpha_val = max_alpha_val
-        self.uniform_stretch = uniform_stretch
-        self.max_stretched_character = max_stretched_character
+        self.use_transparency = use_transparency
 
         # Compute characters and box
         self.compute_characters()
@@ -721,7 +666,6 @@ class Logo:
         self.xlabel = xlabel
         self.vline_width = vline_width
         self.vline_color = to_rgba(vline_color)
-        self.show_vlines = show_vlines
 
         # Set y axis params
         self.ylim = [self.bbox.ymin, self.bbox.ymax]\
@@ -729,10 +673,6 @@ class Logo:
         self.ylabel = ylabel
         self.yticks = yticks
         self.yticklabels = yticklabels
-        self.show_binary_yaxis = show_binary_yaxis
-
-        # Set title
-        self.title = title
 
         # Set other formatting parameters
         self.floor_line_width = baseline_width
@@ -746,37 +686,17 @@ class Logo:
         else:
             max_alpha_val = self.max_alpha_val
 
-        # Compute hstretch values for all characters
-        hstretch_dict, vstretch_dict = \
-            character.get_stretch_vals(self.chars,
-                                    width=self.width,
-                                    height=1,
-                                    font_properties=self.font_properties,
-                                    hpad=self.hpad,
-                                    vpad=self.vpad)
-        # Set max_hstretch
-        if self.uniform_stretch:
-            self.max_hstretch = min(hstretch_dict.values())
-        elif self.max_stretched_character:
-            self.max_hstretch = hstretch_dict[self.max_stretched_character]
-        else:
-            self.max_hstretch = np.Inf
-
         char_list = []
         for i, pos in enumerate(self.poss):
 
             vals = self.df.iloc[i, :].values
-            ymin = vals[vals < 0].sum()
+            ymin = (vals * (vals < 0)).sum()
 
             # Reorder columns
             if self.stack_order == 'big_on_top':
                 indices = np.argsort(vals)
             elif self.stack_order == 'small_on_top':
-                tmp_indices = np.argsort(vals)
-                pos_tmp_indices = tmp_indices[vals[tmp_indices] >= 0]
-                neg_tmp_indices = tmp_indices[vals[tmp_indices] < 0]
-                indices = np.array(list(neg_tmp_indices[::-1]) +
-                                   list(pos_tmp_indices[::-1]))
+                indices = np.argsort(vals)[::-1]
             elif self.stack_order == 'fixed':
                 indices = range(len(vals))
             else:
@@ -835,20 +755,18 @@ class Logo:
                     facecolor[3] *= alpha
                     edgecolor[3] *= alpha
 
-                # Create Character object
+
+                # Create and store character
                 char = character.Character(
                     c=char, xmin=x, ymin=y, width=w, height=h,
                     facecolor=facecolor, flip=flip,
-                    font_properties=self.font_properties,
+                    font_properties = self.font_properties,
                     edgecolor=edgecolor,
                     linewidth=edgewidth,
                     boxcolor=boxcolor,
                     boxalpha=boxalpha,
-                    hpad=self.hpad,
-                    vpad=self.vpad,
-                    max_hstretch=self.max_hstretch)
-
-                # Store Character object
+                    hpad = self.hpad,
+                    vpad = self.vpad)
                 char_list.append(char)
 
                 # Increment y
@@ -865,9 +783,7 @@ class Logo:
         self.char_list = char_list
         self.bbox = bbox
 
-
     def draw(self, ax=None):
-
         if ax is None:
             ax = plt.gca()
 
@@ -897,14 +813,7 @@ class Logo:
         elif self.logo_style == 'naked':
 
             # Turn everything off
-            ax.set_xticks([])
-            ax.set_yticks([])
-            ax.set_xlabel('')
-            ax.set_ylabel('')
-            ax.spines['left'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            ax.spines['top'].set_visible(False)
-            ax.spines['bottom'].set_visible(False)
+            ax.axis('off')
 
         elif self.logo_style == 'rails':
             ax.set_xticks([])
@@ -941,11 +850,17 @@ class Logo:
 
         elif self.logo_style == 'vlines':
 
+            for x in self.xticks:
+                ax.axvline(x,
+                           linewidth=self.vline_width,
+                           color=self.vline_color,
+                           zorder=-1)
+
             ax.xaxis.set_tick_params(width=0)
             ax.set_xticklabels(self.xticklabels)
             ax.set_xticks(self.xticks)
             ax.set_yticks([])
-            ax.set_ylabel(self.ylabel)
+            ax.set_ylabel('')
             ax.spines['left'].set_visible(False)
             ax.spines['right'].set_visible(False)
             ax.spines['top'].set_visible(False)
@@ -959,38 +874,11 @@ class Logo:
         if self.yticklabels is not None:
             ax.set_yticklabels(self.yticklabels)
 
-        # Draw binary y axis if requested
-        # Override all other y-axis settings except for ylabel
-        # Note: ylims will be forced to become symmetric
-        if self.show_binary_yaxis:
-            ymin, ymax = ax.get_ylim()
-            y = max(abs(ymax), abs(ymin))
-            ax.set_ylim([-y, y])
-            ax.set_yticks([-.5*y, .5*y])
-            ax.set_yticklabels(['$-$', '$+$'])
-            ax.yaxis.set_tick_params(length=0)
-            #ax.spines['left'].set_visible(True)
-
-        # Add vlines if requested
-        if (self.show_vlines) or (self.logo_style == 'vlines'):
-            for x in self.xticks:
-                ax.axvline(x,
-                           linewidth=self.vline_width,
-                           color=self.vline_color,
-                           zorder=-1)
-
         # Draw characters
         for char in self.char_list:
             char.draw(ax)
 
-        # Render title
-        if self.title:
-            ax.set_title(self.title)
-
-        plt.draw()
-
-def make_styled_logo(style_file=None,
-                     style_dict=None,
+def make_styled_logo(style_file,
                      print_params=True,
                      print_warnings=True,
                      *args, **user_kwargs):
@@ -1007,33 +895,19 @@ def make_styled_logo(style_file=None,
 
     Args:
 
-        style_file (str): file containing default keyword arguments.
-
-        style_dict (dict): dictionary containing style specifications.
-            Overrides style_file specifications.
-
-        print_params (bool): whether to print the specified parameters
-            to stdout.
-
-        print_warnings (bool): whether to print warnings to stderr.
+        style_file (str): file containing default keyword arguments
 
         args (list): standard args list passed by user
 
-        user_kwargs (dict): user-specified keyword arguments specifying style.
-            Overrides both style_file and style_dict specifications.
+        user_kwargs (dict): user-specified keyword arguments used to overwrite
+            the keyword arguments specified in style_file.
     """
 
-    # Copy kwargs explicitly specified by user
-    kwargs = user_kwargs
+    # Load kwargs in parameters file
+    file_kwargs = load_parameters(style_file, print_params, print_warnings)
 
-    # If user provides a style dict
-    if style_dict is not None:
-        kwargs = dict(style_dict, **kwargs)
-
-    # If user provides a parameters file
-    if style_file is not None:
-        file_kwargs = load_parameters(style_file, print_params, print_warnings)
-        kwargs = dict(file_kwargs, **kwargs)
+    # Set kwargs equal to file_kwargs, modified by user_kwargs
+    kwargs = dict(file_kwargs, **user_kwargs)
 
     # Make logo
     logo = make_logo(*args, **kwargs)
@@ -1041,21 +915,13 @@ def make_styled_logo(style_file=None,
     # Return logo to user
     return logo
 
-
 def load_parameters(file_name, print_params=True, print_warnings=True):
     """
-    Description:
-
-        Fills a dictionary with parameters parsed from specified file.
+    Fills a dictionary with parameters parsed from specified file.
 
     Arg:
 
-        file_name (str): Name of file containing parameter assignments.
-
-        print_params (bool): whether to print the specified parameters
-            to stdout.
-
-        print_warnings (bool): whether to print warnings to stderr.
+        file_name (str): Name of file containing parameter assignments
 
     Return:
 
@@ -1067,7 +933,7 @@ def load_parameters(file_name, print_params=True, print_warnings=True):
     params_dict = {}
 
     # Create regular expression for parsing parameter file lines
-    pattern = re.compile('^\s*(?P<param_name>[\w]+)\s*[:=]\s*(?P<param_value>.*)$')
+    pattern = re.compile('^\s*(?P<param_name>[\w]+)\s*:\s*(?P<param_value>.*)$')
 
     # Quit if file_name is not specified
     if file_name is None:
@@ -1133,4 +999,3 @@ def load_parameters(file_name, print_params=True, print_warnings=True):
             print('Warning: could not parse line "%s".' % line)
 
     return params_dict
-

@@ -1,0 +1,48 @@
+<!doctype html>
+
+
+<!--
+display status message after uploading file
+keep this here in case needed for file by file
+upload
+-->
+
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+<form action = "/" method = "POST" enctype = "multipart/form-data">
+    <input type = "file" name = "file" />
+    <input type = "submit" value="Upload and Draw"/>
+</form>
+
+<!-- textarea side by side which will get populated in the upload page -->
+<div class="inline-div">
+    <h2 align="center">Input Data</h2>
+    <textarea cols="50" class="inline-txtarea"></textarea>
+</div>
+<div class="inline-div">
+    <h2 align="center">Parameter Values</h2>
+    <textarea cols="50" class="inline-txtarea"></textarea>
+</div>
+<br>
+<div class="inline-div">
+    <h1 align="left">Feedback</h1>
+<p>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <script>
+                var messages = {{ messages | safe }};
+                for (var i=0; i<messages.length; i++)
+                {
+                    //alert(messages[i]);
+                    //document.write(Date());
+                    document.write(messages[i]);
+                }
+
+            </script>
+        {% endif %}
+    {% endwith %}
+</p>
+</div>
+
+
+
