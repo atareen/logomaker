@@ -1,4 +1,4 @@
-colors : 'Oranges'
-logo_type : 'counts'
+colors : 'classic'
+logo_type : 'probability'
 font_family : 'sans-serif'
 font_weight : 'heavy'

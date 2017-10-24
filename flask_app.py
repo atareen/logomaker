@@ -114,7 +114,8 @@ def uploaded_file():
         # uploadMat = logomaker.load_mat(f.filename, 'fasta', mat_type='freq_mat')
 
         uploadMat = logomaker.load_alignment(f.filename)
-        uploadMat.to_csv('crp_counts.txt', sep='\t', float_format='%d')
+        # why do the following? ask Justin:
+        #uploadMat.to_csv('crp_counts.txt', sep='\t', float_format='%d')
         # END ADDITION (i)
 
         global uploadMatGlobal
@@ -125,8 +126,6 @@ def uploaded_file():
 
         with open(f.filename, 'r') as fileVar:
             rawInput = fileVar.readlines()
-
-        #displayInput = []
 
         global inputDataLength
         inputDataLength = len(rawInput)
@@ -141,10 +140,6 @@ def uploaded_file():
         # keep uploaded data to display after logo updates
         global uploadData
         uploadData = displayInput
-
-        global mat_type
-        global logo_type
-        global color_scheme
 
         global userParametersUploaded
         userParametersUploaded = False
@@ -330,7 +325,7 @@ if __name__ == "__main__":
     #app.jinja_env.auto_reload = True
     #app.config['TEMPLATES_AUTO_RELOAD'] = True
     #https://stackoverflow.com/questions/41144565/flask-does-not-see-change-in-js-file
-    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 # avoids loading cached image on send_url
     app.run()
 
 
