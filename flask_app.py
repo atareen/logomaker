@@ -70,6 +70,7 @@ def displayUploadStatus(displayMessage=''):
     return dict(statusMessage=displayMessage)
 
 
+# homepage global variables
 default_parameters_text = """
 colors : 'Blues'
 logo_type : 'probability'
@@ -78,14 +79,16 @@ font_family : 'sans-serif'
 font_weight : 'heavy'
 """
 
+defaultMat = logomaker.load_alignment('data/crp_sites.fasta')
+defaultMat.to_csv('crp_counts.txt', sep='\t', float_format='%d')
+
 @app.route("/")
 def index():
 
     # this snippet cannot be different than the default snippet
     # in uploadedFig
-    defaultMat = logomaker.load_alignment('data/crp_sites.fasta')
-    defaultMat.to_csv('crp_counts.txt', sep='\t', float_format='%d')
 
+    global defaultMat
     global default_parameters_text
 
     style_fileTemp = 'parameters_file.txt'
@@ -206,17 +209,17 @@ def uploadedFig(argMat=None,refresh=None):
     global userParametersUploaded
     print("uploaded fig, paramsUpload: ",userParametersUploaded)
 
-
+    # flag for default logo drawing
     strArgMat = str(argMat)
     strArgMat.encode('ascii')
 
     print("argMat: ",strArgMat)
 
+    # for drawing the homepage logo
     if(strArgMat=='default'):
-        # get default parameters for printing
-        defaultMat = logomaker.load_alignment('data/crp_sites.fasta')
-        defaultMat.to_csv('crp_counts.txt', sep='\t', float_format='%d')
 
+        # get default parameters for printing
+        global defaultMat
         global default_parameters_text
 
         style_fileTemp = 'parameters_file.txt'
@@ -236,20 +239,17 @@ def uploadedFig(argMat=None,refresh=None):
         img.seek(0)
         return send_file(img, mimetype='image/png')
 
-
     # if no parameters file uploaded
     if userParametersUploaded is False:
 
         print(" Draw Fig: I have not uploaded parameters")
         # ADDITION (iia)
-
         # if no params uploaded, empty style file
         style_fileTemp = 'parameters_file.txt'
         with open(style_fileTemp, 'w') as f:
             f.write("")
 
         logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=uploadMatGlobal)
-
         # END ADDITION (iia)
 
         # Draw logos
@@ -257,11 +257,6 @@ def uploadedFig(argMat=None,refresh=None):
         # logo1.draw(ax_list[0])
 
         logo.draw(ax_list)
-
-        #fig = plt.figure(figsize=[8, 6])
-        #ax = fig.add_subplot(3, 1, 1)
-
-        #logomaker.Logo(mat=uploadMatGlobal, mat_type=matType, logo_type=logoType,color_scheme=str(argColorScheme)).draw()
 
     # otherwise if parameters file uploaded
     elif userParametersUploaded is True:
@@ -274,9 +269,7 @@ def uploadedFig(argMat=None,refresh=None):
         # Draw logos
         fig, ax_list = plt.subplots(figsize=[8, 2])
         logo.draw(ax_list)
-
         # END ADDITION (iib)
-
 
     img = StringIO.StringIO()
     fig.savefig(img)

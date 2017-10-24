@@ -1,4 +1,4 @@
-colors : 'Blues'
+colors : 'Wistia'
 logo_type : 'counts'
 font_family : 'sans-serif'
 font_weight : 'heavy'
