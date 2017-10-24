@@ -1,4 +1,4 @@
-colors : 'Wistia'
+colors : 'Blues'
 logo_type : 'counts'
-font_family : 'sans-serif'
-font_weight : 'heavy'
+axes_style : 'vlines'
+font_family : 'sans-seri

@@ -73,7 +73,7 @@ def displayUploadStatus(displayMessage=''):
 # homepage global variables
 default_parameters_text = """
 colors : 'Blues'
-logo_type : 'probability'
+logo_type : 'counts'
 axes_style : 'vlines'
 font_family : 'sans-serif'
 font_weight : 'heavy'
@@ -81,6 +81,17 @@ font_weight : 'heavy'
 
 defaultMat = logomaker.load_alignment('data/crp_sites.fasta')
 defaultMat.to_csv('crp_counts.txt', sep='\t', float_format='%d')
+# flag that checks whether default parameters have been modified
+#if this is set to default, copy default matrices to uploaded matrices
+# upon parameter modification
+updatedDefaultParams = ''
+defaultDisplayInput = []
+defaultInputDataLength = 0
+defaultParamsLength = 0
+defaultDisplayParams = []
+default_style_file = 'parameters_file.txt'
+
+# end homepage global variables
 
 @app.route("/")
 def index():
@@ -91,8 +102,7 @@ def index():
     global defaultMat
     global default_parameters_text
 
-    style_fileTemp = 'parameters_file.txt'
-    with open(style_fileTemp, 'w') as f:
+    with open(default_style_file, 'w') as f:
         f.write(default_parameters_text)
 
     defaultFileName = 'crp_sites.fasta'
@@ -100,22 +110,26 @@ def index():
     with open('data/'+defaultFileName, 'r') as fileVar:
         defaultRawInput = fileVar.readlines()
 
+    global defaultInputDataLength
     defaultInputDataLength = len(defaultRawInput)
 
-    defaultDisplayInput = []
+    global defaultDisplayInput
     for x in range(defaultInputDataLength):
         # displayInput.append(rawInput[x].split(" "))
         defaultDisplayInput.append(defaultRawInput[x].split('    '))
 
 
-    with open(style_fileTemp, 'r') as p:
+    with open(default_style_file, 'r') as p:
         defaultRawParams = p.read()
 
+    global defaultParamsLength
     defaultParamsLength = len(defaultRawParams)
 
-    defaultDisplayParams = []
+    global defaultDisplayParams
     for index in range(defaultParamsLength):
         defaultDisplayParams.append(defaultRawParams[index].split('    '))
+
+    print("Index: drawing default logo")
 
     return render_template('index.html',defaultMat=defaultMat,defaultInputDataLength=defaultInputDataLength,
                            defaultDisplayInput=defaultDisplayInput,defaultParamsLength=defaultParamsLength,
@@ -207,16 +221,23 @@ def uploaded_file():
 def uploadedFig(argMat=None,refresh=None):
 
     global userParametersUploaded
-    print("uploaded fig, paramsUpload: ",userParametersUploaded)
+    print("Uploaded fig, paramsUpload: ",userParametersUploaded)
 
     # flag for default logo drawing
     strArgMat = str(argMat)
     strArgMat.encode('ascii')
 
+    strRefresh = str(refresh)
+    strRefresh.encode('ascii')
+
     print("argMat: ",strArgMat)
 
     # for drawing the homepage logo
     if(strArgMat=='default'):
+
+        print("In the default part of UploadedFig")
+        global updatedDefaultParams
+        updatedDefaultParams = strArgMat
 
         # get default parameters for printing
         global defaultMat
@@ -226,7 +247,10 @@ def uploadedFig(argMat=None,refresh=None):
         with open(style_fileTemp, 'w') as f:
             f.write(default_parameters_text)
 
-        logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=defaultMat)
+        if(strRefresh=='editDefault'):
+            logo = logomaker.make_styled_logo(style_file=style_file, matrix=defaultMat)
+        else:
+            logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=defaultMat)
 
         # Draw logos
         fig, ax_list = plt.subplots(figsize=[8, 2])
@@ -327,9 +351,6 @@ def parametersUpload():
 
         print('Upload params: ',userParametersUploaded)
 
-        #return render_template('upload.html', matType=mat_type, logoType=logo_type,
-        #                       colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput,
-        #                       paramsLength=paramsLength,displayParams=displayParams)
         flash(" Logo redrawn with uploaded parameters")
         print('Upload Params: Just hit upload parameters with filename ',style_file)
         return render_template('upload.html',
@@ -367,19 +388,25 @@ def updateLogo():
         for index in range(paramsLength):
             displayParams.append(rawParams[index].split('    '))
 
-
         flash(" Logo redrawn with updated parameters")
 
         global updatedParams
         updatedParams = True
 
-        #print('Update Params: Just hit update parameters with filename ', style_file)
-        print('Update Params: Just hit update parameters with filename ', style_file)
-        return render_template('upload.html',
-                               inputDataLength=inputDataLength, displayInput=displayInput,
-                               paramsLength=paramsLength, displayParams=displayParams,
-                               uploadMat=uploadMatGlobal,userParamsUploaded=userParametersUploaded,
-                               style_file=style_file,updatedParams=updatedParams)
+        print('Update Params: Just hit update parameters with filename ', style_file, " Updated default params: ",updatedDefaultParams)
+
+        if updatedDefaultParams == 'default':
+            print("Update: editing default parameteres")
+            return render_template('upload.html', uploadMat=defaultMat, inputDataLength=defaultInputDataLength,
+                                   displayInput=defaultDisplayInput, paramsLength=defaultParamsLength,
+                                   displayParams=defaultDisplayParams,userParamsUploaded=userParametersUploaded,
+                                   style_file=style_file, updatedParams=updatedParams,updatedDefaultParams=updatedDefaultParams)
+        else:
+            return render_template('upload.html',
+                                   inputDataLength=inputDataLength, displayInput=displayInput,
+                                   paramsLength=paramsLength, displayParams=displayParams,
+                                   uploadMat=uploadMatGlobal,userParamsUploaded=userParametersUploaded,
+                                   style_file=style_file,updatedParams=updatedParams)
 
 
 
