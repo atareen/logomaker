@@ -77,19 +77,12 @@ color_scheme:'{{colorScheme}}'
 {% elif (userParamsUploaded==True) and (updatedParams==True) %}
 <a href="{{ url_for('uploadedFig',argMat=uploadMat,refresh=updatedParams) }}" download="logo.png">
 <img src="{{ url_for('uploadedFig',argMat=uploadMat,refresh=updatedParams) }}">
+</a>
 {% else %}
 <a href="{{ url_for('uploadedFig',argMat=uploadMat) }}" download="logo.png">
 <img src="{{ url_for('uploadedFig',argMat=uploadMat) }}">
 </a>
 {% endif %}
-
-{#
-{% if updatedParams is defined %}
-<a href="{{ url_for('uploadedFig',argMat=uploadMat) }}" download="logo.png">
-<img src="{{ url_for('uploadedFig',argMat=uploadMat,refresh=updatedParams) }}">
-</a>
-{% endif %}
-#}
 
 
 

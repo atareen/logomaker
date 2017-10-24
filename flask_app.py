@@ -8,6 +8,7 @@ import pandas
 import re
 import sys
 import os
+from os import path
 
 
 import matplotlib.pyplot as plt
@@ -36,14 +37,13 @@ paramsTest = {}
 
 # part of ADDITION (iib)
 style_file = ''
+updatedParams = False
 
 
 mat_type = 'freq_mat'
 logo_type = 'weight_logo'
 logo_style = 'classic'
 color_scheme = 'classic'
-
-
 
 # old globals, may get rid of them
 uploadMatGlobal = pandas.DataFrame()
@@ -158,7 +158,6 @@ def uploaded_file():
                            uploadMat=uploadMat)
 
 
-import ast
 # display the uploaded figure at upload.html after file has been uploaded
 @app.route('/uploadedFig')
 @app.route('/uploadedFig/<argMat>')
@@ -307,8 +306,11 @@ def updateLogo():
 
 
         flash(" Logo redrawn with updated parameters")
+
+        global updatedParams
         updatedParams = True
 
+        #print('Update Params: Just hit update parameters with filename ', style_file)
         print('Update Params: Just hit update parameters with filename ', style_file)
         return render_template('upload.html',
                                inputDataLength=inputDataLength, displayInput=displayInput,
@@ -319,9 +321,16 @@ def updateLogo():
 
 
 
+
 if __name__ == "__main__":
+
     #other option
     #app.run(port=8080, debug=True)
     #app.run(debug=True,use_reloader=True)
+    #app.jinja_env.auto_reload = True
+    #app.config['TEMPLATES_AUTO_RELOAD'] = True
+    #https://stackoverflow.com/questions/41144565/flask-does-not-see-change-in-js-file
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
     app.run()
+
 
