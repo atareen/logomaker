@@ -5,10 +5,10 @@ import flask
 from werkzeug.utils import secure_filename
 import StringIO
 import pandas
-import re
+import inspect
 import sys
 import os
-from os import path
+
 
 
 import matplotlib.pyplot as plt
@@ -72,7 +72,52 @@ def displayUploadStatus(displayMessage=''):
 
 @app.route("/")
 def index():
-    return render_template('index.html')
+
+
+    # this snippet cannot be different than the default snippet
+    # in uploadedFig
+    defaultMat = logomaker.load_alignment('data/crp_sites.fasta')
+    defaultMat.to_csv('crp_counts.txt', sep='\t', float_format='%d')
+
+    parameters_text = """
+    colors : 'Blues'
+    logo_type : 'probability'
+    axes_style : 'vlines'
+    font_family : 'sans-serif'
+    font_weight : 'heavy'
+    """
+
+    style_fileTemp = 'parameters_file.txt'
+    with open(style_fileTemp, 'w') as f:
+        f.write(parameters_text)
+
+    logo2 = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=defaultMat)
+
+    defaultFileName = 'crp_sites.fasta'
+
+    with open('data/'+defaultFileName, 'r') as fileVar:
+        defaultRawInput = fileVar.readlines()
+
+    defaultInputDataLength = len(defaultRawInput)
+
+    defaultDisplayInput = []
+    for x in range(defaultInputDataLength):
+        # displayInput.append(rawInput[x].split(" "))
+        defaultDisplayInput.append(defaultRawInput[x].split('    '))
+
+
+    with open(style_fileTemp, 'r') as p:
+        defaultRawParams = p.read()
+
+    defaultParamsLength = len(defaultRawParams)
+
+    defaultDisplayParams = []
+    for index in range(defaultParamsLength):
+        defaultDisplayParams.append(defaultRawParams[index].split('    '))
+
+    return render_template('index.html',defaultMat=defaultMat,defaultInputDataLength=defaultInputDataLength,
+                           defaultDisplayInput=defaultDisplayInput,defaultParamsLength=defaultParamsLength,
+                           defaultDisplayParams=defaultDisplayParams)
 
 
 # when I click submit, this funciton gets called. I should render
@@ -161,7 +206,43 @@ def uploadedFig(argMat=None,refresh=None):
 
     global userParametersUploaded
     print("uploaded fig, paramsUpload: ",userParametersUploaded)
-    #print("argMat: ",argMat)
+
+
+    strArgMat = str(argMat)
+    strArgMat.encode('ascii')
+
+    print("argMat: ",strArgMat)
+
+    if(strArgMat=='default'):
+        # get default parameters for printing
+        defaultMat = logomaker.load_alignment('data/crp_sites.fasta')
+        defaultMat.to_csv('crp_counts.txt', sep='\t', float_format='%d')
+
+        parameters_text = """
+        colors : 'Blues'
+        logo_type : 'probability'
+        axes_style : 'vlines'
+        font_family : 'sans-serif'
+        font_weight : 'heavy'
+        """
+
+        style_fileTemp = 'parameters_file.txt'
+        with open(style_fileTemp, 'w') as f:
+            f.write(parameters_text)
+
+        logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=defaultMat)
+
+        # Draw logos
+        fig, ax_list = plt.subplots(figsize=[8, 2])
+        # logo1.draw(ax_list[0])
+
+        logo.draw(ax_list)
+
+        img = StringIO.StringIO()
+        fig.savefig(img)
+        img.seek(0)
+        return send_file(img, mimetype='image/png')
+
 
     # if no parameters file uploaded
     if userParametersUploaded is False:
@@ -175,6 +256,7 @@ def uploadedFig(argMat=None,refresh=None):
             f.write("")
 
         logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=uploadMatGlobal)
+
         # END ADDITION (iia)
 
         # Draw logos

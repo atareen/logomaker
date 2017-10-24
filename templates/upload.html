@@ -24,11 +24,7 @@
     </form>
     {% else %}
     <form action="/updateLogo" id="textform0" method="POST">
-    <textarea name="paramsText" cols="50" class="inline-txtarea">
-mat_type:'{{matType}}'
-logo_type:'{{logoType}}'
-color_scheme:'{{colorScheme}}'
-    </textarea>
+    <textarea name="paramsText" cols="50" class="inline-txtarea"></textarea>
     <input type="submit" value="Update logo">
     </form>
     {% endif %}
@@ -84,15 +80,18 @@ color_scheme:'{{colorScheme}}'
 </a>
 {% endif %}
 
-
-
 {#
-<a href="{{ url_for('uploadedFig',argMat=uploadMat) }}" download="logo.png">
-<img src="{{ url_for('uploadedFig',argMat=uploadMat) }}">
-<p>test bool</p>
-</a>
+<!-- the following gives a nice display of the default parameters -->
+<p> Default params dict here: </p>
+<table>
+{% for key, value in displayDefaultParams.iteritems() %}
+   <tr>
+        <th> {{ key }} </th>
+        <td> {{ value }} </td>
+   </tr>
+{% endfor %}
+</table>
 #}
-
 
 <form action="/" method="get">
 <button name="subject" type="submit" value="">Back to Home Page</button>
