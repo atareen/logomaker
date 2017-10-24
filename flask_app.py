@@ -70,28 +70,27 @@ def displayUploadStatus(displayMessage=''):
     return dict(statusMessage=displayMessage)
 
 
+default_parameters_text = """
+colors : 'Blues'
+logo_type : 'probability'
+axes_style : 'vlines'
+font_family : 'sans-serif'
+font_weight : 'heavy'
+"""
+
 @app.route("/")
 def index():
-
 
     # this snippet cannot be different than the default snippet
     # in uploadedFig
     defaultMat = logomaker.load_alignment('data/crp_sites.fasta')
     defaultMat.to_csv('crp_counts.txt', sep='\t', float_format='%d')
 
-    parameters_text = """
-    colors : 'Blues'
-    logo_type : 'probability'
-    axes_style : 'vlines'
-    font_family : 'sans-serif'
-    font_weight : 'heavy'
-    """
+    global default_parameters_text
 
     style_fileTemp = 'parameters_file.txt'
     with open(style_fileTemp, 'w') as f:
-        f.write(parameters_text)
-
-    logo2 = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=defaultMat)
+        f.write(default_parameters_text)
 
     defaultFileName = 'crp_sites.fasta'
 
@@ -218,17 +217,11 @@ def uploadedFig(argMat=None,refresh=None):
         defaultMat = logomaker.load_alignment('data/crp_sites.fasta')
         defaultMat.to_csv('crp_counts.txt', sep='\t', float_format='%d')
 
-        parameters_text = """
-        colors : 'Blues'
-        logo_type : 'probability'
-        axes_style : 'vlines'
-        font_family : 'sans-serif'
-        font_weight : 'heavy'
-        """
+        global default_parameters_text
 
         style_fileTemp = 'parameters_file.txt'
         with open(style_fileTemp, 'w') as f:
-            f.write(parameters_text)
+            f.write(default_parameters_text)
 
         logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=defaultMat)
 
