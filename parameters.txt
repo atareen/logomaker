@@ -1,8 +1,9 @@
 
-logo_type : 'probability'
+logo_type : 'information'
 below_flip : True
-width : .9
-axes_style : 'rails'
-use_transparency : False
-stack_order : 'small_on_top'
-use_transparency : True
+colors : 'classic'
+highlight_colors: 'black'
+highlight_sequence : 'ATTAATGTGAGTTAGCTCACTCATTA'
+vpad : .05
+width : .90
+ylim:[0,1]

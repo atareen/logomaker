@@ -445,6 +445,6 @@ if __name__ == "__main__":
     #app.config['TEMPLATES_AUTO_RELOAD'] = True
     #https://stackoverflow.com/questions/41144565/flask-does-not-see-change-in-js-file
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 # avoids loading cached image on send_url
-    app.run()
+    app.run(debug=True)
 
 

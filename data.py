@@ -3,91 +3,34 @@ import numpy as np
 import pandas as pd
 import re
 import pdb
+from Bio import SeqIO
 
 # Set constants
 SMALL = 1E-6
 
-def validate_mat(matrix):
-    '''
-    Runs assert statements to verify that df is indeed a motif dataframe.
-    Returns a cleaned-up version of df if possible
-    '''
+# Character lists
+DNA = list('ACGT')
+RNA = list('ACGU')
+dna = [c.lower() for c in DNA]
+rna = [c.lower() for c in DNA]
+PROTEIN = list('RKDENQSGHTAPYVMCLFIW')
+protein = [c.lower() for c in PROTEIN]
+PROTEIN_STOP = PROTEIN + ['*']
+protein_stop = protein + ['*']
 
-    # Copy and preserve logomaker_type
-    try:
-        mat_type = matrix.logomaker_type
-    except:
-        mat_type = None
-    matrix = matrix.copy()
+# Character transformations dictionaries
+to_DNA = {'a': 'A', 'c': 'C', 'g': 'G', 't': 'T', 'U': 'T', 'u': 'T'}
+to_dna = {'A': 'a', 'C': 'c', 'G': 'g', 'T': 't', 'U': 't', 'u': 't'}
+to_RNA = {'a': 'A', 'c': 'C', 'g': 'G', 't': 'U', 'T': 'U', 'u': 'U'}
+to_rna = {'A': 'a', 'C': 'c', 'G': 'g', 'T': 'u', 't': 'u', 'U': 'u'}
+to_PROTEIN = dict(zip(protein, PROTEIN))
+to_protein = dict(zip(PROTEIN, protein))
 
-    assert type(matrix) == pd.core.frame.DataFrame, 'Error: df is not a dataframe'
-    cols = matrix.columns
-
-    for i, col_name in enumerate(cols):
-        # Ok to have a 'pos' column
-        if col_name=='pos':
-            continue
-
-        # Convert column name to simple string if possible
-        assert isinstance(col_name,basestring), \
-            'Error: column name %s is not a string'%col_name
-        new_col_name = str(col_name)
-
-        # If column name is not a single chracter, try extracting single character
-        # after an underscore
-        if len(new_col_name) != 1:
-            new_col_name = new_col_name.split('_')[-1]
-            assert (len(new_col_name)==1), \
-                'Error: could not extract single character from colum name %s'%col_name
-
-        # Make sure that colun name is not a whitespace character
-        assert re.match('\S',new_col_name), \
-            'Error: column name "%s" is a whitespace charcter.'%repr(col_name)
-
-        # Set revised column name
-        matrix.rename(columns={col_name:new_col_name}, inplace=True)
-
-    # If there is a pos column, make that the index
-    if 'pos' in cols:
-        matrix.set_index('pos', drop=True, inplace=True)
-
-    # Remove name from index column
-    matrix.index.names = [None]
-
-    # Alphabetize character columns
-    char_cols = list(matrix.columns)
-    char_cols.sort()
-    matrix = matrix[char_cols]
-    matrix.logomaker_type = mat_type
-
-    # Return cleaned-up df
-    return matrix
-
-def validate_probability_mat(matrix):
-    '''
-    Verifies that the df is indeed a probability motif dataframe.
-    Returns a normalized and cleaned-up version of df if possible
-    '''
-
-    # Validate as motif
-    matrix = validate_mat(matrix)
-
-    # Validate df values as info values
-    assert (all(matrix.values.ravel() >= 0)), \
-        'Error: not all values in df are >=0.'
-
-    # Normalize across columns
-    matrix.loc[:, :] = matrix.values / matrix.values.sum(axis=1)[:, np.newaxis]
-
-    # Label matrix type
-    matrix.logomaker_type = 'probability'
-
-    return matrix
-
+from validate import validate_mat, validate_probability_mat
 
 def transform_mat(matrix, to_type, from_type=None, background=None,
                   energy_gamma=1, pseudocount=1, enrichment_logbase=2,
-                  information_units='bits'):
+                  enrichment_centering=True, information_units='bits'):
     '''
     transform_mat(): transforms a matrix of one type into another.
     :param matrix: input matrix, in data frame format
@@ -117,16 +60,17 @@ def transform_mat(matrix, to_type, from_type=None, background=None,
         probability_mat = validate_probability_mat(matrix)
 
     elif from_type == 'counts':
-        probability_mat = counts_mat_to_probability_mat(matrix,
-                                                        pseudocount=pseudocount)
+        probability_mat = \
+            counts_mat_to_probability_mat(matrix, pseudocount=pseudocount)
 
     elif from_type == 'energy':
         probability_mat = energy_mat_to_probability_mat(matrix, bg_mat,
                                                         gamma=energy_gamma)
 
     elif from_type == 'enrichment':
-        probability_mat = enrichment_mat_to_probability_mat(matrix, bg_mat,
-                                                            base=enrichment_logbase)
+        probability_mat = \
+            enrichment_mat_to_probability_mat(matrix, bg_mat,
+                                              base=enrichment_logbase)
 
     else:
         assert False, 'Error! from_type %s is invalid.'%from_type
@@ -147,8 +91,10 @@ def transform_mat(matrix, to_type, from_type=None, background=None,
                                                 gamma=energy_gamma)
 
     elif to_type == 'enrichment':
-        out_mat = probability_mat_to_enrichment_mat(probability_mat, bg_mat,
-                                                    base=enrichment_logbase)
+        out_mat = \
+            probability_mat_to_enrichment_mat(probability_mat, bg_mat,
+                                              base=enrichment_logbase,
+                                              centering=enrichment_centering)
 
     elif to_type == 'information':
         out_mat = probability_mat_to_information_mat(probability_mat, bg_mat,
@@ -235,7 +181,8 @@ def probability_mat_to_energy_mat(freq_mat, bg_mat, gamma):
     energy_mat.logomaker_type = 'energy'
     return energy_mat
 
-def probability_mat_to_enrichment_mat(freq_mat, bg_mat, base=2):
+def probability_mat_to_enrichment_mat(freq_mat, bg_mat, base=2,
+                                      centering=True):
     '''
     Converts a freq_mat to an energy_mat
     '''
@@ -245,6 +192,11 @@ def probability_mat_to_enrichment_mat(freq_mat, bg_mat, base=2):
     # Compute weight_mat
     weight_mat = freq_mat.copy()
     weight_mat.loc[:, :] = np.log2(freq_mat / bg_mat)/np.log2(base)
+
+    # Center if requested
+    if centering:
+        weight_mat.loc[:, :] = \
+            weight_mat.values - weight_mat.values.mean(axis=1)[:, np.newaxis]
 
     # Validate and return
     weight_mat = validate_mat(weight_mat)
@@ -346,31 +298,24 @@ def set_bg_mat(background, matrix):
     return new_bg_mat
 
 
-
-def load_alignment(fasta_file=None, sequences=None, sequence_counts=None,
-                   characters=None, positions=None, ignore_characters='.-'):
+def load_alignment(fasta_file=None,
+                   sequences=None,
+                   sequence_counts=None,
+                   sequence_type=None,
+                   characters=None,
+                   positions=None,
+                   ignore_characters='.-',
+                   occurance_threshold=0):
 
     # If loading file name
     if fasta_file is not None:
 
-        # Load lines
-        with open(fasta_file, 'r') as f:
-            lines = f.readlines()
+        # Load sequences using SeqIO
+        sequences = [str(record.seq) for record in \
+                     SeqIO.parse(fasta_file, "fasta")]
 
-        # Remove whitespace
-        pattern = re.compile(r'\s+')
-        lines = [re.sub(pattern, '', line) for line in lines]
-
-        # Remove comment lines
-        pattern = re.compile(r'^[>#]')
-        lines = [line for line in lines if not re.match(pattern, line)]
-
-        # Remove empty lines
-        lines = [line for line in lines if (len(line) > 0)]
-
-        # Store sequences and counts
-        sequences = lines
-        sequence_counts = np.ones(len(lines))
+        # Assign each sequence a count of 1
+        sequence_counts = np.ones(len(sequences))
 
     assert sequences is not None, \
         'Error: either fasta_file or sequences must not be None.'
@@ -387,14 +332,6 @@ def load_alignment(fasta_file=None, sequences=None, sequence_counts=None,
         assert len(sequence_counts) == len(sequences), 'Error: sequence_counts is not the same length as sequences'
         counts_array = np.array(sequence_counts)
 
-    # If characters are not specified by user, get list of unique characters from sequence
-    if characters is None:
-        seq_concat = ''.join(sequences)
-        characters = list(set(seq_concat))
-        characters.sort()
-    elif isinstance(characters, basestring):
-        characters = list(characters)
-
     # If positions is not specified by user, make it
     if positions is not None:
         assert len(positions) == L, 'Error: positions, if passed, must be same length as sequences.'
@@ -402,25 +339,96 @@ def load_alignment(fasta_file=None, sequences=None, sequence_counts=None,
         positions = range(L)
 
     # Create counts matrix
-    counts_mat = pd.DataFrame(index=positions, columns=characters).fillna(0)
+    counts_mat = pd.DataFrame(index=positions).fillna(0)
 
     # Create array of characters at each position
     char_array = np.array([np.array(list(seq)) for seq in sequences])
 
+    # Get list of unique characters
+    unique_characters = np.unique(char_array.ravel())
+    unique_characters.sort()
+
     # Sum of the number of occurances of each character at each position
-    for c in characters:
+    for c in unique_characters:
         v = (char_array == c).astype(float)
         v *= counts_array[:, np.newaxis]
         counts_mat.loc[:, c] = v.sum(axis=0).ravel()
 
-    # Remove columns corresponding to unwanted characters
-    columns = counts_mat.columns.copy()
-    for char in ignore_characters:
-        if char in columns:
-            del counts_mat[char]
+    # Filter columns
+    counts_mat = filter_columns(counts_mat,
+                                sequence_type=sequence_type,
+                                characters=characters,
+                                ignore_characters=ignore_characters)
+
+    # Remove rows with too few counts
+    position_counts = counts_mat.values.sum(axis=1)
+    max_counts = position_counts.max()
+    positions_to_keep = position_counts >= occurance_threshold * max_counts
+    counts_mat = counts_mat.loc[positions_to_keep, :]
 
     # Name index
     counts_mat.index.name = 'pos'
     counts_mat.logomaker_type = 'counts'
 
     return counts_mat
+
+
+def filter_columns(matrix,
+                   sequence_type=None,
+                   characters=None,
+                   ignore_characters='.-'):
+
+    # Rename characters if appropriate
+    if sequence_type is None:
+        translation_dict = {}
+    elif sequence_type == 'dna':
+        translation_dict = to_dna
+    elif sequence_type == 'DNA':
+        translation_dict = to_DNA
+    elif sequence_type == 'rna':
+        translation_dict = to_rna
+    elif sequence_type == 'RNA':
+        translation_dict = to_RNA
+    elif sequence_type == 'protein':
+        translation_dict = to_protein
+    elif sequence_type == 'PROTEIN':
+        translation_dict = to_PROTEIN
+    else:
+        message = \
+            "Could not interpret sequence_type = %s. Columns not filtered." %\
+            repr(sequence_type)
+        warnings.warn(message, UserWarning)
+        translation_dict = {}
+
+    # If manually restricting to specific characters, do it:
+    if characters is not None:
+        new_columns = [c for c in characters if c in matrix.columns]
+        new_matrix = matrix.loc[:,new_columns]
+
+    # Otherwise performing translation, do it
+    elif len(translation_dict) > 0:
+        # Rename columns
+        new_matrix = matrix.rename(columns=translation_dict)
+
+        # Collapse columns with same name
+        new_matrix = new_matrix.groupby(new_matrix.columns, axis=1).sum()
+
+        # Order columns alphabetically
+        new_columns = list(set(translation_dict.values()))
+        new_columns.sort()
+        new_matrix = new_matrix.loc[:, new_columns]
+
+    # Otherwise, just copy matrix
+    else:
+        new_matrix = matrix.copy()
+
+    # Remove any characters to ignore
+    for char in ignore_characters:
+        if char in new_matrix.columns:
+            del new_matrix[char]
+
+    # Record logomaker type
+    if 'logomaker_type' in matrix.__dict__:
+        new_matrix.logomaker_type = matrix.logomaker_type
+
+    return new_matrix
