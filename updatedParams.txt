@@ -1,4 +1,3 @@
-colors : 'Blues'
+colors : 'Oranges'
 logo_type : 'counts'
 axes_style : 'vlines'
-font_family : 'sans-seri

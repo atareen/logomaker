@@ -29,4 +29,4 @@ for member in inspect.getmembers(logo):
        len(str(member[1])) < 100:
 
 
-        print member[0],":",member[1],len(str(member[1]))
+        print member[0],":",member[1]

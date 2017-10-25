@@ -21,18 +21,35 @@ upload
 </div>
 <div class="inline-div">
 <h2 align="center">Default Parameter Values</h2>
-<form action="/updateLogo" id="textformDefault" method="POST">
-    <textarea name="paramsText" cols="50" class="inline-txtarea">{% for row in range(defaultParamsLength) %}{{ defaultDisplayParams[row][0] | safe }}{% endfor %}
+<!-- if default params edited, render the following, otherwise go to else -->
+{% if paramsLength is defined %}
+<form action="/updateLogo" id="textformDefaultUpdated" method="POST">
+    <textarea name="defaultParamsText" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] | safe }}{% endfor %}
 </textarea>
 <input type="submit" value="Update logo">
 </form>
+{% else %}
+<form action="/updateLogo" id="textformDefault" method="POST">
+    <textarea name="defaultParamsText" cols="50" class="inline-txtarea">{% for row in range(defaultParamsLength) %}{{ defaultDisplayParams[row][0] | safe }}{% endfor %}
+</textarea>
+<input type="submit" value="Update logo">
+</form>
+{% endif %}
 </div>
 <br>
 <div class="inline-div">
 
+
+<!-- comment here -->
+{% if updatedDefaultParams=='default' %}
+<a href="{{ url_for('uploadedFig',argMat='default',refresh='editDefault') }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',argMat='default',refresh='editDefault') }}">
+</a>
+{% else %}
 <a href="{{ url_for('uploadedFig',argMat='default') }}" download="logo.png">
 <img src="{{ url_for('uploadedFig',argMat='default') }}">
 </a>
+{% endif %}
 
 <h1 align="left">Feedback</h1>
 <p>

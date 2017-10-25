@@ -146,7 +146,10 @@ def index():
 def uploaded_file():
     # surround with try catch if post fails, handle exception
     if request.method == 'POST':
-    #if request.method == 'POST' and len(str(request.files))>1:
+
+        # if not editing default params, set back to default value
+        global updatedDefaultParams
+        updatedDefaultParams = ''
 
         f = request.files['file']
 
@@ -248,8 +251,10 @@ def uploadedFig(argMat=None,refresh=None):
             f.write(default_parameters_text)
 
         if(strRefresh=='editDefault'):
+            print("Uploaded Fig strRefresh: ",strRefresh)
             logo = logomaker.make_styled_logo(style_file=style_file, matrix=defaultMat)
         else:
+            print("Uploaded Fig strRefresh: ", strRefresh)
             logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=defaultMat)
 
         # Draw logos
@@ -278,7 +283,6 @@ def uploadedFig(argMat=None,refresh=None):
 
         # Draw logos
         fig, ax_list = plt.subplots(figsize=[8, 2])
-        # logo1.draw(ax_list[0])
 
         logo.draw(ax_list)
 
@@ -286,7 +290,7 @@ def uploadedFig(argMat=None,refresh=None):
     elif userParametersUploaded is True:
 
         # ADDITION (iib)
-        global style_file
+        #global style_file
         print(" Draw Fig: I have uploaded parameters ",style_file)
 
         logo = logomaker.make_styled_logo(style_file=style_file, matrix=uploadMatGlobal)
@@ -366,7 +370,11 @@ def updateLogo():
 
     if request.method == 'POST':
 
-        updatedText = request.form['paramsText']
+        if updatedDefaultParams == 'default':
+            print('getting data from default textarea')
+            updatedText = request.form['defaultParamsText']
+        else:
+            updatedText = request.form['paramsText']
 
         # make updates to the params box
         tempParamFileName = "updatedParams.txt"
@@ -397,11 +405,24 @@ def updateLogo():
 
         if updatedDefaultParams == 'default':
             print("Update: editing default parameteres")
-            return render_template('upload.html', uploadMat=defaultMat, inputDataLength=defaultInputDataLength,
-                                   displayInput=defaultDisplayInput, paramsLength=defaultParamsLength,
-                                   displayParams=defaultDisplayParams,userParamsUploaded=userParametersUploaded,
+
+            '''
+                return render_template('index.html',defaultMat=defaultMat,defaultInputDataLength=defaultInputDataLength,
+                           defaultDisplayInput=defaultDisplayInput,defaultParamsLength=defaultParamsLength,
+                           defaultDisplayParams=defaultDisplayParams)
+            
+            '''
+
+            return render_template('index.html', uploadMat=defaultMat, defaultInputDataLength=defaultInputDataLength,
+                                   defaultDisplayInput=defaultDisplayInput, paramsLength=paramsLength,
+                                   displayParams=displayParams,userParamsUploaded=userParametersUploaded,
                                    style_file=style_file, updatedParams=updatedParams,updatedDefaultParams=updatedDefaultParams)
         else:
+
+            # if not editing default parameters,
+            # updatedDefaultParams is set to default
+            # value in upload file
+
             return render_template('upload.html',
                                    inputDataLength=inputDataLength, displayInput=displayInput,
                                    paramsLength=paramsLength, displayParams=displayParams,
