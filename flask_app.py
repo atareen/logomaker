@@ -338,6 +338,9 @@ def parametersUpload():
         paramsLength = len(rawParams)
 
         global displayParams
+        # del the list so that parameters get rendered correctly
+        # after default params edited
+        del displayParams [:]
         for index in range(paramsLength):
             displayParams.append(rawParams[index].split('    '))
 

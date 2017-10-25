@@ -3,9 +3,7 @@ Dated: 10/24/2017
 The current list of issues that needs to be implemented is the following:
 
 1) Make homepage parameters editable (or hide update button)
-	this is almost resolved, need to re-render parameters correctly on new data upload
 2) Should new uploaded data display any parameters? 
 3) Display flask debug messages in feedback
 4) Check upload conditionals
-	this is behaving normally but I will continue to check
 5) Create a box for upload background matrix    
