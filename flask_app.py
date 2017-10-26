@@ -1,23 +1,18 @@
 from flask import Flask, render_template, redirect, send_file, request,url_for,flash
 
-import flask
-
 from werkzeug.utils import secure_filename
 import StringIO
 import pandas
-import inspect
 import sys
 import os
-
-
-
 import matplotlib.pyplot as plt
 import logomaker
 
 app = Flask(__name__)
+
+
 # session key. Use random key to invalidate old sessions
 app.secret_key = os.urandom(64)
-
 
 ALLOWED_EXTENSIONS = set(['txt', 'fasta'])
 
@@ -399,7 +394,7 @@ def updateLogo():
         for index in range(paramsLength):
             displayParams.append(rawParams[index].split('    '))
 
-        flash(" Logo redrawn with updated parameters")
+        flash(" Logo redrawn with edited parameters ")
 
         global updatedParams
         updatedParams = True
@@ -407,14 +402,13 @@ def updateLogo():
         print('Update Params: Just hit update parameters with filename ', style_file, " Updated default params: ",updatedDefaultParams)
 
         if updatedDefaultParams == 'default':
-            print("Update: editing default parameteres")
+            print("Update: editing default parameters")
 
-            '''
-                return render_template('index.html',defaultMat=defaultMat,defaultInputDataLength=defaultInputDataLength,
-                           defaultDisplayInput=defaultDisplayInput,defaultParamsLength=defaultParamsLength,
-                           defaultDisplayParams=defaultDisplayParams)
-            
-            '''
+            # make standard error go to standard output
+            #sys.stderr = sys.stdout
+            # the following will write a warning to the log on application close
+            sys.stderr = Logger()
+
 
             return render_template('index.html', uploadMat=defaultMat, defaultInputDataLength=defaultInputDataLength,
                                    defaultDisplayInput=defaultDisplayInput, paramsLength=paramsLength,
@@ -433,10 +427,56 @@ def updateLogo():
                                    style_file=style_file,updatedParams=updatedParams)
 
 
+class Logger(object):
+    def __init__(self):
+        self.terminal = sys.stdout
+        self.log = open("log.txt", "a")
 
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+        self.terminal.flush()
+        self.log.flush()
+
+
+
+from time import strftime
+from logging.handlers import RotatingFileHandler
+import logging
+
+@app.after_request
+def after_request(response):
+    # this if avoids the duplication of registry in the log,
+    # since that 500 is already logged via @app.errorhandler
+    if response.status_code != 500:
+        ts = strftime('[%Y-%b-%d %H:%M]')
+        logger.info('%s %s %s %s %s %s',
+                  ts,
+                  request.remote_addr,
+                  request.method,
+                  request.scheme,
+                  request.full_path,
+                  response.status)
+    return response
 
 
 if __name__ == "__main__":
+
+    '''
+    # records all flask related activity to a log file
+    handler = RotatingFileHandler('app.log', maxBytes=100000, backupCount=3)
+    handler.setLevel(logging.INFO)
+    logger = logging.getLogger('__name__')
+    logger.setLevel(logging.INFO)
+    logger.addHandler(handler)
+    '''
+
+
+    handler = RotatingFileHandler('app.log', maxBytes=100000, backupCount=3)
+    logger = logging.getLogger('werkzeug')
+    logger.setLevel(logging.INFO)
+    logger.addHandler(handler)
+
 
     #other option
     #app.run(port=8080, debug=True)
