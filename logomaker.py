@@ -992,7 +992,7 @@ class Logo:
 
 def make_styled_logo(style_file=None,
                      style_dict=None,
-                     print_params=True,
+                     print_params=False,
                      print_warnings=True,
                      *args, **user_kwargs):
     """

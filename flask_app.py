@@ -7,12 +7,21 @@ import sys
 import os
 import matplotlib.pyplot as plt
 import logomaker
+from time import strftime
+from logging.handlers import RotatingFileHandler
+import logging
+import subprocess
+
+from flask_socketio import SocketIO,emit
+
+
 
 app = Flask(__name__)
 
 
 # session key. Use random key to invalidate old sessions
 app.secret_key = os.urandom(64)
+
 
 ALLOWED_EXTENSIONS = set(['txt', 'fasta'])
 
@@ -248,6 +257,8 @@ def uploadedFig(argMat=None,refresh=None):
         if(strRefresh=='editDefault'):
             print("Uploaded Fig strRefresh: ",strRefresh)
             logo = logomaker.make_styled_logo(style_file=style_file, matrix=defaultMat)
+            # redirect stderr to warnings logger
+            sys.stderr = WarningsLogger()
         else:
             print("Uploaded Fig strRefresh: ", strRefresh)
             logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=defaultMat)
@@ -255,7 +266,12 @@ def uploadedFig(argMat=None,refresh=None):
         # Draw logos
         fig, ax_list = plt.subplots(figsize=[8, 2])
         # logo1.draw(ax_list[0])
-
+        '''
+        print("XXXX")
+        print(str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip())
+        flash(str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip())
+        print("XXXX")
+        '''
         logo.draw(ax_list)
 
         img = StringIO.StringIO()
@@ -402,13 +418,21 @@ def updateLogo():
         print('Update Params: Just hit update parameters with filename ', style_file, " Updated default params: ",updatedDefaultParams)
 
         if updatedDefaultParams == 'default':
-            print("Update: editing default parameters")
+
 
             # make standard error go to standard output
+            # but will only log on application close
             #sys.stderr = sys.stdout
-            # the following will write a warning to the log on application close
-            sys.stderr = Logger()
 
+            # redirect stderr to warnings logger
+            #sys.stderr = WarningsLogger()
+
+            logo = logomaker.make_styled_logo(style_file=style_file, matrix=defaultMat)
+            sys.stderr = WarningsLogger()
+            print("XXXX")
+            print(str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip())
+            flash(str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip())
+            print("XXXX")
 
             return render_template('index.html', uploadMat=defaultMat, defaultInputDataLength=defaultInputDataLength,
                                    defaultDisplayInput=defaultDisplayInput, paramsLength=paramsLength,
@@ -427,23 +451,42 @@ def updateLogo():
                                    style_file=style_file,updatedParams=updatedParams)
 
 
-class Logger(object):
+
+class WarningsLogger(object):
+
     def __init__(self):
+
         self.terminal = sys.stdout
-        self.log = open("log.txt", "a")
+        # open file and append log
+        # check if file exists first
+
+        self.log = open("warnings.log", "a")
 
     def write(self, message):
         self.terminal.write(message)
         self.log.write(message)
+        # why flush, see following:
+        # https://stackoverflow.com/questions/24011117/logging-realtime-stdout-to-a-file-in-python
         self.terminal.flush()
         self.log.flush()
 
 
+lineGlobal = ''
+lineGlobalOld = ''
 
-from time import strftime
-from logging.handlers import RotatingFileHandler
-import logging
 
+@app.before_first_request
+def before_first_request():
+    # erase app.log file before request
+    open('app.log','w').close()
+
+@app.before_first_request
+def before_request():
+    # erase warnings file before request
+    open('warnings.log','w').close()
+
+
+# logs messages to app.log
 @app.after_request
 def after_request(response):
     # this if avoids the duplication of registry in the log,
@@ -457,10 +500,29 @@ def after_request(response):
                   request.scheme,
                   request.full_path,
                   response.status)
+    '''
+        sys.stderr = WarningsLogger()
+        global lineGlobal
+        global lineGlobalOld
+
+        lineGlobal = str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip()
+
+        if(lineGlobalOld!=lineGlobal):
+            print("lines aren't equal")
+            flash(lineGlobal)
+        print("XXXXXX")
+
+        #print(lineGlobal)
+        print(str(lineGlobalOld).strip(), str(lineGlobal).strip())
+        print(len(str(lineGlobalOld).strip()), len(str(lineGlobal).strip()))
+        print("XXXXXX")
+    '''
     return response
 
 
+from os import path
 if __name__ == "__main__":
+
 
     '''
     # records all flask related activity to a log file
@@ -471,12 +533,11 @@ if __name__ == "__main__":
     logger.addHandler(handler)
     '''
 
-
     handler = RotatingFileHandler('app.log', maxBytes=100000, backupCount=3)
     logger = logging.getLogger('werkzeug')
+    # change the following to errors on production launch
     logger.setLevel(logging.INFO)
     logger.addHandler(handler)
-
 
     #other option
     #app.run(port=8080, debug=True)
@@ -484,7 +545,13 @@ if __name__ == "__main__":
     #app.jinja_env.auto_reload = True
     #app.config['TEMPLATES_AUTO_RELOAD'] = True
     #https://stackoverflow.com/questions/41144565/flask-does-not-see-change-in-js-file
+    lineGlobalOld = str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip()
+    sys.stderr = WarningsLogger()
+    print("OLD", str(lineGlobalOld).strip())
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 # avoids loading cached image on send_url
-    app.run(debug=True)
+
+
+    app.run()
+
 
 
