@@ -1,4 +1,4 @@
-colors : 'Briwn'
+colors : 'Oranges'
 logo_type : 'energy'
 font_family : 'sans-serif'
 font_weight : 'heavy'

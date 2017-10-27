@@ -37,6 +37,8 @@ displayParams = []
 paramsLength = 0
 
 userParametersUploaded = False
+# if parameters added after new data upload
+nonDefaultParametersAdded = False
 paramsTest = {}
 
 # part of ADDITION (iib)
@@ -283,15 +285,20 @@ def uploadedFig(argMat=None,refresh=None):
     # if no parameters file uploaded
     if userParametersUploaded is False:
 
-        print(" Draw Fig: I have not uploaded parameters")
-        # ADDITION (iia)
-        # if no params uploaded, empty style file
-        style_fileTemp = 'parameters_file.txt'
-        with open(style_fileTemp, 'w') as f:
-            f.write("")
+        if nonDefaultParametersAdded is False:
 
-        logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=uploadMatGlobal)
-        # END ADDITION (iia)
+            # if no params uploaded, empty style file
+            style_fileTemp = 'parameters_file.txt'
+            with open(style_fileTemp, 'w') as f:
+                f.write("")
+
+            print(" Draw Fig: I have not uploaded parameters, style file: ", style_fileTemp)
+            logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=uploadMatGlobal)
+        else:
+            # if non-default params added, use updated style file
+            print(" Draw Fig: I have not uploaded parameters, style file: ", style_file)
+            logo = logomaker.make_styled_logo(style_file=style_file, matrix=uploadMatGlobal)
+
 
         # Draw logos
         fig, ax_list = plt.subplots(figsize=[8, 2])
@@ -389,7 +396,18 @@ def updateLogo():
             print('getting data from default textarea')
             updatedText = request.form['defaultParamsText']
         else:
+            # this is where non default parameters get added
             updatedText = request.form['paramsText']
+            print('getting data from NON-default textarea, len-updatedText: ',len(updatedText))
+            # check if non-default params added
+            # this flag helps update the style in uploadedFig
+            if len(updatedText)>0:
+                global nonDefaultParametersAdded
+                nonDefaultParametersAdded = True
+            else:
+                global nonDefaultParametersAdded
+                nonDefaultParametersAdded = False
+
 
         # make updates to the params box
         tempParamFileName = "updatedParams.txt"
@@ -439,7 +457,7 @@ def updateLogo():
                                    displayParams=displayParams,userParamsUploaded=userParametersUploaded,
                                    style_file=style_file, updatedParams=updatedParams,updatedDefaultParams=updatedDefaultParams)
         else:
-
+            print(" Adding params for new data upload ")
             # if not editing default parameters,
             # updatedDefaultParams is set to default
             # value in upload file
