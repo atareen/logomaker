@@ -35,8 +35,47 @@
     <input type = "submit" value="Upload Parameter File"/>
 </form>
 
+
+    <!--
+        the following method routes to uploadedFig defined in flask_app
+        the argMat is filled via "mat"; mat is passed in to the upload.html
+        file when the file is uploaded.
+
+-->
+
+
+<!--  argColorScheme=colorScheme, the right side exists in the template, the left side will be passed to uploadedFig -->
 <div class="inline-div">
-    <h1 align="left">Feedback</h1>
+{% if (userParamsUploaded==True) and (updatedParams is not defined) %}
+<a href="{{ url_for('uploadedFig') }}" download="logo.png">
+<img src="{{ url_for('uploadedFig') }}">
+</a>
+{% elif (userParamsUploaded==True) and (updatedParams==True) %}
+<a href="{{ url_for('uploadedFig',argMat=uploadMat,refresh=updatedParams) }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',argMat=uploadMat,refresh=updatedParams) }}">
+</a>
+{% else %}
+<a href="{{ url_for('uploadedFig',argMat=uploadMat) }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',argMat=uploadMat) }}">
+</a>
+{% endif %}
+<p> click to download</p>
+
+{#
+<!-- the following gives a nice display of the default parameters -->
+<p> Default params dict here: </p>
+<table>
+{% for key, value in displayDefaultParams.iteritems() %}
+   <tr>
+        <th> {{ key }} </th>
+        <td> {{ value }} </td>
+   </tr>
+{% endfor %}
+</table>
+#}
+
+<!--<div> -->
+<h1 align="left">Feedback</h1>
 <p>
     {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -54,47 +93,6 @@
     {% endwith %}
 </p>
 </div>
-
-<p> Rendering figure after upload (click to download)</p>
-    <!--
-        the following method routes to uploadedFig defined in flask_app
-        the argMat is filled via "mat"; mat is passed in to the upload.html
-        file when the file is uploaded.
-
--->
-
-
-<!--  argColorScheme=colorScheme, the right side exists in the template, the left side will be passed to uploadedFig -->
-
-{% if (userParamsUploaded==True) and (updatedParams is not defined) %}
-<a href="{{ url_for('uploadedFig') }}" download="logo.png">
-<img src="{{ url_for('uploadedFig') }}">
-</a>
-<p>First</p>
-{% elif (userParamsUploaded==True) and (updatedParams==True) %}
-<a href="{{ url_for('uploadedFig',argMat=uploadMat,refresh=updatedParams) }}" download="logo.png">
-<img src="{{ url_for('uploadedFig',argMat=uploadMat,refresh=updatedParams) }}">
-</a>
-<p>Second</p>
-{% else %}
-<a href="{{ url_for('uploadedFig',argMat=uploadMat) }}" download="logo.png">
-<img src="{{ url_for('uploadedFig',argMat=uploadMat) }}">
-</a>
-<p>Third</p>
-{% endif %}
-
-{#
-<!-- the following gives a nice display of the default parameters -->
-<p> Default params dict here: </p>
-<table>
-{% for key, value in displayDefaultParams.iteritems() %}
-   <tr>
-        <th> {{ key }} </th>
-        <td> {{ value }} </td>
-   </tr>
-{% endfor %}
-</table>
-#}
 
 <form action="/" method="get">
 <button name="subject" type="submit" value="">Back to Home Page</button>

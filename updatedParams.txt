@@ -1,4 +1,4 @@
 colors : 'Oranges'
-logo_type : 'energy'
+logo_type : 'counts'
 font_family : 'sans-serif'
 font_weight : 'heavy'

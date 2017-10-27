@@ -405,7 +405,6 @@ def updateLogo():
                 global nonDefaultParametersAdded
                 nonDefaultParametersAdded = True
             else:
-                global nonDefaultParametersAdded
                 nonDefaultParametersAdded = False
 
 
