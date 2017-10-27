@@ -1,7 +1,4 @@
-colors : 'Bluesxxs'
-logo_type : 'counts'
-axes_style : 'vlines'
+colors : 'Briwn'
+logo_type : 'energy'
 font_family : 'sans-serif'
 font_weight : 'heavy'
-
-

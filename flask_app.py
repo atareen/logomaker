@@ -255,11 +255,12 @@ def uploadedFig(argMat=None,refresh=None):
             f.write(default_parameters_text)
 
         if(strRefresh=='editDefault'):
+            # if default parameters are edited, re-render logo
+            # with edited parameters
             print("Uploaded Fig strRefresh: ",strRefresh)
             logo = logomaker.make_styled_logo(style_file=style_file, matrix=defaultMat)
-            # redirect stderr to warnings logger
-            sys.stderr = WarningsLogger()
         else:
+            # the very first http call lands here
             print("Uploaded Fig strRefresh: ", strRefresh)
             logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=defaultMat)
 
@@ -426,7 +427,6 @@ def updateLogo():
 
             # redirect stderr to warnings logger
             #sys.stderr = WarningsLogger()
-
             logo = logomaker.make_styled_logo(style_file=style_file, matrix=defaultMat)
             #sys.stderr = WarningsLogger()
             print("XXXX")
@@ -443,7 +443,9 @@ def updateLogo():
             # if not editing default parameters,
             # updatedDefaultParams is set to default
             # value in upload file
-
+            logo = logomaker.make_styled_logo(style_file=style_file, matrix=uploadMatGlobal)
+            # generate warning
+            flash(str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip())
             return render_template('upload.html',
                                    inputDataLength=inputDataLength, displayInput=displayInput,
                                    paramsLength=paramsLength, displayParams=displayParams,
