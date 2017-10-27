@@ -1,6 +1,7 @@
-colors : 'Bluesx'
+colors : 'Bluesxxs'
 logo_type : 'counts'
 axes_style : 'vlines'
 font_family : 'sans-serif'
 font_weight : 'heavy'
+
 

@@ -428,7 +428,7 @@ def updateLogo():
             #sys.stderr = WarningsLogger()
 
             logo = logomaker.make_styled_logo(style_file=style_file, matrix=defaultMat)
-            sys.stderr = WarningsLogger()
+            #sys.stderr = WarningsLogger()
             print("XXXX")
             print(str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip())
             flash(str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip())
@@ -471,16 +471,12 @@ class WarningsLogger(object):
         self.log.flush()
 
 
-lineGlobal = ''
-lineGlobalOld = ''
-
-
 @app.before_first_request
 def before_first_request():
-    # erase app.log file before request
+    # erase app.log file before first request
     open('app.log','w').close()
 
-@app.before_first_request
+@app.before_request
 def before_request():
     # erase warnings file before request
     open('warnings.log','w').close()
@@ -500,23 +496,7 @@ def after_request(response):
                   request.scheme,
                   request.full_path,
                   response.status)
-    '''
-        sys.stderr = WarningsLogger()
-        global lineGlobal
-        global lineGlobalOld
 
-        lineGlobal = str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip()
-
-        if(lineGlobalOld!=lineGlobal):
-            print("lines aren't equal")
-            flash(lineGlobal)
-        print("XXXXXX")
-
-        #print(lineGlobal)
-        print(str(lineGlobalOld).strip(), str(lineGlobal).strip())
-        print(len(str(lineGlobalOld).strip()), len(str(lineGlobal).strip()))
-        print("XXXXXX")
-    '''
     return response
 
 
@@ -545,9 +525,7 @@ if __name__ == "__main__":
     #app.jinja_env.auto_reload = True
     #app.config['TEMPLATES_AUTO_RELOAD'] = True
     #https://stackoverflow.com/questions/41144565/flask-does-not-see-change-in-js-file
-    lineGlobalOld = str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip()
     sys.stderr = WarningsLogger()
-    print("OLD", str(lineGlobalOld).strip())
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 # avoids loading cached image on send_url
 
 
