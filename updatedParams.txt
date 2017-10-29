@@ -1,4 +1,1 @@
-colors : 'Oranges'
-logo_type : 'counts'
-font_family : 'sans-serif'
-font_weight : 'heavy'
+colors:"classic"

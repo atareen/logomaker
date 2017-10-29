@@ -12,9 +12,6 @@ from logging.handlers import RotatingFileHandler
 import logging
 import subprocess
 
-from flask_socketio import SocketIO,emit
-
-
 
 app = Flask(__name__)
 
@@ -80,9 +77,10 @@ def displayUploadStatus(displayMessage=''):
 default_parameters_text = """
 colors : 'Blues'
 logo_type : 'counts'
-axes_style : 'vlines'
+axes_type : 'classic'
 font_family : 'sans-serif'
 font_weight : 'heavy'
+use_tightlayout : True
 """
 
 defaultMat = logomaker.load_alignment('data/crp_sites.fasta')
@@ -546,7 +544,6 @@ if __name__ == "__main__":
     #https://stackoverflow.com/questions/41144565/flask-does-not-see-change-in-js-file
     sys.stderr = WarningsLogger()
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 # avoids loading cached image on send_url
-
 
     app.run()
 

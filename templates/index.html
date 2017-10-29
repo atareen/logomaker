@@ -1,6 +1,5 @@
 <!doctype html>
 
-
 <!--
 display status message after uploading file
 keep this here in case needed for file by file
@@ -29,7 +28,8 @@ upload
 <input type="submit" value="Update logo">
 </form>
 {% else %}
-<form action="/updateLogo" id="textformDefault" method="POST">
+<!-- <form action="/updateLogo" id="textformDefault" method="POST"> -->
+<form action="/updateLogo" method="POST">
     <textarea name="defaultParamsText" cols="50" class="inline-txtarea">{% for row in range(defaultParamsLength) %}{{ defaultDisplayParams[row][0] | safe }}{% endfor %}
 </textarea>
 <input type="submit" value="Update logo">
@@ -67,6 +67,14 @@ upload
     {% endwith %}
 </p>
 </div>
+
+<!--
+{#
+<div>
+    <textarea id="tags"></textarea>
+</div>
+#}
+-->
 
 {#
 <!--
