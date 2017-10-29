@@ -1,1 +1,1 @@
-colors:'Dark2'
+colors:"classic"
