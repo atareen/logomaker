@@ -5,12 +5,10 @@ import ast
 import inspect
 import re
 import sys
-import numbers
 import matplotlib.pyplot as plt
 
 from matplotlib.font_manager import FontProperties
-from matplotlib.textpath import TextPath
-from character import font_manager
+from matplotlib.transforms import Bbox
 
 # Need for testing colors
 import color
@@ -27,7 +25,7 @@ def _warning(message, category = UserWarning, filename = '', lineno = -1):
 warnings.showwarning = _warning
 
 # Comment this line if you don't want to see warnings multiple times
-# warnings.simplefilter('always', UserWarning)
+warnings.simplefilter('always', UserWarning)
 
 
 def _try_some_code(code_lines, **kwargs):
@@ -50,107 +48,84 @@ def _try_some_code(code_lines, **kwargs):
 # Valid values for matrix_type and logo_type
 LOGOMAKER_TYPES = {'counts', 'probability', 'enrichment', 'information'}
 
-# Names of parameters that can take on any float value
 params_with_float_values = {
-    'shift_first_position_to',
-    'xtick_anchor',
-    'xtick_rotation',
-    'ytick_rotation',
+    'xtick_anchor'
 }
 
 # Names of numerical parameters that must be > 0
 params_greater_than_0 = {
-    'dpi',
-    'xtick_spacing',
+    'width',
+    'xtick_spacing'
 }
 
 # Names of numerical parameters that must be >= 0
 params_greater_or_equal_to_0 = {
     'pseudocount',
-    'counts_threshold',
     'edgewidth',
-    'boxedgewidth',
-    'highlight_edgewidth',
-    'highlight_boxedgewidth',
-    'max_alpha_val',
-    'hpad',
-    'vpad',
-    'gridline_width',
+    'highlight_edge_width',
     'baseline_width',
-    'xtick_length',
-    'ytick_length',
+    'vline_width',
+    'hpad',
+    'vpad'
 }
 
 # Names of numerical parameters in the interval [0,1]
 params_between_0_and_1 = {
     'alpha',
-    'edgealpha',
     'boxalpha',
-    'boxedgealpha',
     'highlight_alpha',
-    'highlight_edgealpha',
-    'highlight_boxalpha',
-    'highlight_boxedgealpha',
-    'below_shade',
+    'highlight_box_alpha',
     'below_alpha',
-    'width',
-    'gridline_alpha',
-    'baseline_alpha',
+    'below_shade',
+    'occurance_threshold',
 }
 
 # Names of parameters allowed to take on a small number of specific values
 params_with_values_in_dict = {
     'matrix_type': LOGOMAKER_TYPES,
     'logo_type': LOGOMAKER_TYPES,
-    'enrichment_logbase': [2, np.e, 10],
     'information_units': ['bits', 'nats'],
-    'sequence_type': ['dna','DNA', 'rna', 'RNA', 'protein', 'PROTEIN'],
     'stack_order': ['big_on_top', 'small_on_top', 'fixed'],
-    'axes_type': ['classic', 'naked', 'everything', 'rails'],
-    'gridline_axis': ['x','y','both'],
+    'axes_style': ['classic', 'naked', 'everything', 'rails',
+                   'light_rails', 'vlines'],
+    'enrichment_logbase': [2, np.e, 10]
 }
 
 # Names of parameters whose values are True or False
 params_with_boolean_values = {
     'enrichment_centering',
-    'draw_now',
+    'uniform_stretch',
+    'first_position_is_1',
     'use_transparency',
     'below_flip',
-    'uniform_stretch',
-    'show_gridlines',
-    'show_baseline',
+    'show_vlines',
     'show_binary_yaxis',
-    'left_spine',
-    'right_spine',
-    'top_spine',
-    'bottom_spine',
-    'use_tightlayout',
+    'draw_now'
 }
 
 # Names of parameters whose values are strings
 params_with_string_values = {
-    'save_to_file',
-    'characters',
-    'ignore_characters',
-    'highlight_sequence',
     'max_stretched_character',
-    'style_sheet',
-    'xtick_format',
+    'highlight_sequence',
+    'font_family',
+    'font_style',
+    'font_file',
     'xlabel',
-    'ytick_format',
     'ylabel',
     'title',
+    'save_to_file'
 }
 
 # Names of parameters whose values specify a numerical interval
 params_that_specify_intervals = {
-    'position_range',
+    'use_position_range',
     'xlim',
     'ylim'
 }
 
 # Names of parameters whose values are ordered numerical arrays
 params_that_are_ordered_arrays = {
+    'positions',
     'xticks',
     'yticks'
 }
@@ -160,106 +135,29 @@ params_that_specify_colorschemes = {
     'colors',
     'edgecolors',
     'boxcolors',
-    'boxedgecolors',
-    'highlight_colors',
-    'highlight_edgecolors',
-    'highlight_boxcolors',
-    'highlight_boxedgecolors',
+    'highlight_colors'
 }
 
 # Names of parameters that specify colors:
 params_that_specify_colors = {
-    'gridline_color',
-    'baseline_color',
-}
-
-
-# Names of parameters that specify fontsize
-params_that_specify_FontProperties = {
-    'font_file': 'fname',
-    'font_family': 'family',
-    'font_weight': 'weight',
-    'font_style': 'style',
-
-    'axes_fontfile': 'fname',
-    'axes_fontfamily': 'family',
-    'axes_fontweight': 'weight',
-    'axes_fontstyle': 'style',
-    'axes_fontsize': 'size',
-
-    'tick_fontfile': 'fname',
-    'tick_fontfamily': 'family',
-    'tick_fontweight': 'weight',
-    'tick_fontstyle': 'style',
-    'tick_fontsize': 'size',
-
-    'label_fontfile': 'fname',
-    'label_fontfamily': 'family',
-    'label_fontweight': 'weight',
-    'label_fontstyle': 'style',
-    'label_fontsize': 'size',
-
-    'title_fontfile': 'fname',
-    'title_fontfamily': 'family',
-    'title_fontweight': 'weight',
-    'title_fontstyle': 'style',
-    'title_fontsize': 'size',
+    'vline_color'
 }
 
 # Names of parameters that cannot have None value
 params_that_cant_be_none = {
-    'matrix',
-    'matrix_type',
     'pseudocount',
     'enrichment_logbase',
-    'enrichment_centering',
     'information_units',
-    'counts_threshold',
-    'draw_now',
-    'shift_first_position_to',
-    'colors',
     'alpha',
-    'edgecolors',
-    'edgealpha',
     'edgewidth',
-    'boxcolors',
-    'boxalpha',
-    'boxedgecolors',
-    'boxedgealpha',
-    'boxedgewidth',
-    'stack_order',
-    'use_transparency',
-    'below_shade',
-    'below_alpha',
-    'below_flip',
     'hpad',
     'vpad',
+    'stack_order',
+    'baseline_width',
+    'vline_width',
+    'vline_color',
     'width',
-    'uniform_stretch',
-    'axes_type',
-    'rcparams',
-    'show_gridlines',
-    'show_baseline',
-    'xtick_anchor',
-    'show_binary_yaxis',
-    'use_tightlayout',
-}
-
-# Names of parameters to leave for later validatation
-params_for_later_validation = {
-    'font_family',
-    'font_weight',
-    'gridline_style',
-    'baseline_style',
-    'axes_fontfamily',
-    'axes_fontweight',
-    'tick_fontfamily',
-    'tick_fontweight',
-    'tick_fontize',
-    'label_fontfamily',
-    'label_fontweight',
-    'title_fontfamily',
-    'title_fontweight',
+    'draw_now'
 }
 
 #
@@ -281,85 +179,65 @@ def validate_parameter(name, user, default):
         else:
             value = user
 
-    #  If value is in a set
+    # Skip these two specific parameters,
+    # Which can't be validated except in the context of other parameters
+    elif name in ['background', 'font_weight']:
+        value = user
+
     elif name in params_with_values_in_dict:
         value = _validate_in_set(name, user, default,
                                  params_with_values_in_dict[name])
 
-    # If value is boolean
     elif name in params_with_boolean_values:
         value = _validate_bool(name, user, default)
 
-    # If value is str
     elif name in params_with_string_values:
         value = _validate_str(name, user, default)
 
-    # If value is float
     elif name in params_with_float_values:
         value = _validate_float(name, user, default)
 
-    # If value is float > 0
     elif name in params_greater_than_0:
         value = _validate_float(name, user, default,
                                 greater_than=0.0)
 
-    # If value is float >= 0
     elif name in params_greater_or_equal_to_0:
         value = _validate_float(name, user, default,
                                 greater_than_or_equal_to=0.0)
 
-    # If value is float in [0,1]
     elif name in params_between_0_and_1:
         value = _validate_float(name, user, default,
                                 greater_than_or_equal_to=0.0,
                                 less_than_or_equal_to=1.0)
 
-    # If value is an interval
     elif name in params_that_specify_intervals:
         value = _validate_array(name, user, default, length=2)
 
-    # If value is an ordered array
     elif name in params_that_are_ordered_arrays:
         value = _validate_array(name, user, default, increasing=True)
 
-    # If value specifies a color scheme
     elif name in params_that_specify_colorschemes:
         value = _validate_colorscheme(name, user, default)
 
-    # If value specifies a color
     elif name in params_that_specify_colors:
         value = _validate_color(name, user, default)
 
-    # If value specifies FontProperties object
-    elif name in params_that_specify_FontProperties:
-         passedas = params_that_specify_FontProperties[name]
-         value = _validate_FontProperties_parameter(name, user, default,
-                                                    passedas=passedas)
-
-    # Special case: matrix
     elif name == 'matrix':
         value = validate_mat(user)
 
-    # Special case: figsize
     elif name == 'figsize':
         value = _validate_array(name, user, default, length=2)
 
-    # Special case: rcparams
     elif name == 'rcparams':
         if type(user)==dict:
             value = user
         else:
-            message = "rcparams = %s is not a dictionary. Using %s instead." \
-            % (repr(user), repr(default))
+            message = "rcparams = %s is not a dictionary. Using % instead." \
+            % (repr(user),repr(default))
             warnings.warn(message, UserWarning)
 
-    # Parameters left for validation later on
-    elif name in params_for_later_validation:
-        value = user
-
-    # Otherwise, warn if parameter passed through all filters
     else:
-        warnings.warn("'%s' parameter not validated." % name, UserWarning)
+        #warnings.warn("'%s' parameter not validated." % name, UserWarning)
         value = user
 
     return value
@@ -524,6 +402,7 @@ def _validate_colorscheme(name, user, default):
         'color.color_scheme_dict[user]',
         'plt.get_cmap(user)',
         'to_rgb(user)',
+        'assert(user in ["none", "random"])',
         'expand_color_dict(user)'
     ]
 
@@ -531,14 +410,10 @@ def _validate_colorscheme(name, user, default):
     is_valid = False
     for code_line in code_lines:
         try:
-            eval(code_line)
+            exec(code_line)
             is_valid = True
         except:
             pass
-
-    # For some reason, this needs to be tested separately.
-    if user == 'random':
-        is_valid = True
 
     # If so, then colorscheme is valid
     if is_valid:
@@ -576,25 +451,6 @@ def _validate_color(name, user, default):
         message = "Improper value %s for parameter '%s'. " + \
                   "Using default value %s instead."
         message = message % (repr(user), name, repr(default))
-        warnings.warn(message, UserWarning)
-
-    # Return valid value to user
-    return value
-
-def _validate_FontProperties_parameter(name, user, default, passedas):
-    """ Validates any parameter passed to the FontProperties constructor. """
-
-    try:
-        # Create a FontProperties object and try to use it for something
-        prop = FontProperties(**{passedas:user})
-        TextPath((0,0), 'A', size=1, prop=prop)
-
-        value = user
-    except ValueError:
-        value = default
-        message = ("Invalid string specification '%s' for parameter '%s'. "
-                   + "Using default value %s instead.") \
-                  % (user, name, default)
         warnings.warn(message, UserWarning)
 
     # Return valid value to user
@@ -669,4 +525,3 @@ def validate_probability_mat(matrix):
     matrix.loc[:, :] = matrix.values / matrix.values.sum(axis=1)[:, np.newaxis]
 
     return matrix
-

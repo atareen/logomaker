@@ -1,0 +1,82 @@
+<!doctype html>
+
+<!--
+display status message after uploading file
+keep this here in case needed for file by file
+upload
+-->
+
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+<form action = "/" method = "POST" enctype = "multipart/form-data">
+    <input type = "file" name = "file" />
+    <input type = "submit" value="Upload and Draw"/>
+</form>
+
+<!-- textarea side by side which will get populated in the upload page -->
+<div class="inline-div">
+    <h2 align="center">Input Data</h2>
+    <textarea cols="50" class="inline-txtarea">{% for row in range(defaultInputDataLength) %}{{ defaultDisplayInput[row][0] }}{% endfor %}</textarea>
+</div>
+<div class="inline-div">
+<h2 align="center">Default Parameter Values</h2>
+<!-- if default params edited, render the following, otherwise go to else -->
+{% if paramsLength is defined %}
+<form action="/updateLogo" id="textformDefaultUpdated" method="POST">
+    <textarea name="defaultParamsText" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] | safe }}{% endfor %}
+</textarea>
+<input type="submit" value="Update logo">
+</form>
+{% else %}
+<!-- <form action="/updateLogo" id="textformDefault" method="POST"> -->
+<form action="/updateLogo" method="POST">
+    <textarea name="defaultParamsText" cols="50" class="inline-txtarea">{% for row in range(defaultParamsLength) %}{{ defaultDisplayParams[row][0] | safe }}{% endfor %}
+</textarea>
+<input type="submit" value="Update logo">
+</form>
+{% endif %}
+</div>
+<br>
+<div class="inline-div">
+
+
+<!-- comment here -->
+{% if updatedDefaultParams=='default' %}
+<a href="{{ url_for('uploadedFig',argMat='default',refresh='editDefault') }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',argMat='default',refresh='editDefault') }}">
+</a>
+{% else %}
+<a href="{{ url_for('uploadedFig',argMat='default') }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',argMat='default') }}">
+</a>
+{% endif %}
+
+<h1 align="left">Feedback</h1>
+<p>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <script>
+                var messages = {{ messages | safe }};
+                for (var i=0; i<messages.length; i++)
+                {
+                    document.write(messages[i]);
+                }
+
+            </script>
+        {% endif %}
+    {% endwith %}
+</p>
+</div>
+
+<!--
+{#
+<div>
+    <textarea id="tags"></textarea>
+</div>
+#}
+-->
+
+{#
+<!--
+<a href="javascript:location.reload(true)">Refresh Page</a>
+#}

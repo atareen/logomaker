@@ -1,0 +1,229 @@
+<!doctype html>
+
+<head>
+
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+<script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+<script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+  <script>
+  $(function() {
+    var availableTags = [
+"matrix_type",
+"logo_type",
+"background",
+"pseudocount",
+"enrichment_logbase",
+"enrichment_centering",
+"information_units",
+"counts_threshold",
+"figsize",
+"draw_now",
+"save_to_file",
+"position_range",
+"shift_first_position_to",
+"sequence_type",
+"characters",
+"ignore_characters",
+"colors",
+"alpha",
+"edgecolors",
+"edgealpha",
+"edgewidth",
+"boxcolors",
+"boxedgecolors",
+"boxedgewidth",
+"boxalpha",
+"boxedgealpha",
+"highlight_sequence",
+"highlight_colors",
+"highlight_alpha",
+"highlight_edgecolors",
+"highlight_edgewidth",
+"highlight_edgealpha",
+"highlight_boxcolors",
+"highlight_boxalpha",
+"highlight_boxedgecolors",
+"highlight_boxedgewidth",
+"highlight_boxedgealpha",
+"font_properties",
+"font_file",
+"font_family",
+"font_weight",
+"font_style",
+"font_name",
+"stack_order",
+"use_transparency",
+"max_alpha_val",
+"below_shade",
+"below_alpha",
+"below_flip",
+"hpad",
+"vpad",
+"width",
+"uniform_stretch",
+"max_stretched_character",
+"axes_type",
+"style_sheet",
+"baseline_width",
+"show_gridlines",
+"gridline_axis",
+"gridline_width",
+"gridline_color",
+"gridline_alpha",
+"gridline_style",
+"show_binary_yaxis",
+"xlim",
+"xticks",
+"xtick_spacing",
+"xtick_anchor",
+"xticklabels",
+"xtick_rotation",
+"xtick_length",
+"xtick_format",
+"xlabel",
+"ylim",
+"yticks",
+"yticklabels",
+"ytick_rotation",
+"ytick_length",
+"ytick_format",
+"ylabel",
+"title",
+"left_spine",
+"right_spine",
+"top_spine",
+"bottom_spine",
+"use_tightlayout",
+"axes_fontfile",
+"axes_fontfamily",
+"axes_fontweight",
+"axes_fontstyle",
+"axes_fontsize",
+"axes_fontname",
+"tick_fontfile",
+"tick_fontfamily",
+"tick_fontweight",
+"tick_fontstyle",
+"tick_fontsize",
+"tick_fontname",
+"label_fontfile",
+"label_fontfamily",
+"label_fontweight",
+"label_fontstyle",
+"label_fontsize",
+"label_fontname",
+"title_fontfile",
+"title_fontfamily",
+"title_fontweight",
+"title_fontstyle",
+"title_fontsize",
+"title_fontname"
+    ];
+    $( "#tags" ).autocomplete({
+      source: availableTags
+    });
+  });
+  </script>
+</head>
+
+   <body>
+
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+<form action = "/" method = "POST" enctype = "multipart/form-data">
+    <input type = "file" name = "file" />
+    <input type = "submit" value="Re-Upload and Draw"/>
+</form>
+
+<div class="inline-div">
+    <h2 align="center">Uploaded Data</h2>
+    <textarea cols="50" class="inline-txtarea">{% for row in range(inputDataLength) %}{{ displayInput[row][0] }}{% endfor %}</textarea>
+</div>
+<div class="inline-div">
+{% if paramsLength is defined %}
+<h2 align="center">Parameter Values</h2>
+{% else %}
+<h2 align="center">Default Parameter Values</h2>
+{% endif %}
+{% if paramsLength is defined %}
+    <form action="/updateLogo" id="textform1" method="POST">
+        <textarea name="paramsText" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] }}{% endfor %}</textarea>
+        <input type="submit" value="Redraw logo">
+    </form>
+    {% else %}
+    <form action="/updateLogo" id="textform0" method="POST">
+    <textarea id="tags" name="paramsText" cols="50" class="inline-txtarea"></textarea>
+    <input type="submit" value="Update logo">
+    </form>
+    {% endif %}
+</div>
+
+<form action = "/uploadParams" method = "POST" enctype = "multipart/form-data">
+    <input type = "file" name = "file" />
+    <input type = "submit" value="Upload Parameter File"/>
+</form>
+
+
+    <!--
+        the following method routes to uploadedFig defined in flask_app
+        the argMat is filled via "mat"; mat is passed in to the upload.html
+        file when the file is uploaded.
+
+-->
+
+
+<!--  argColorScheme=colorScheme, the right side exists in the template, the left side will be passed to uploadedFig -->
+<div class="inline-div">
+{% if (userParamsUploaded==True) and (updatedParams is not defined) %}
+<a href="{{ url_for('uploadedFig') }}" download="logo.png">
+<img src="{{ url_for('uploadedFig') }}">
+</a>
+{% elif (userParamsUploaded==True) and (updatedParams==True) %}
+<a href="{{ url_for('uploadedFig',argMat=uploadMat,refresh=updatedParams) }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',argMat=uploadMat,refresh=updatedParams) }}">
+</a>
+{% else %}
+<a href="{{ url_for('uploadedFig',argMat=uploadMat) }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',argMat=uploadMat) }}">
+</a>
+{% endif %}
+<p> click to download</p>
+
+{#
+<!-- the following gives a nice display of the default parameters -->
+<p> Default params dict here: </p>
+<table>
+{% for key, value in displayDefaultParams.iteritems() %}
+   <tr>
+        <th> {{ key }} </th>
+        <td> {{ value }} </td>
+   </tr>
+{% endfor %}
+</table>
+#}
+
+<!--<div> -->
+<h1 align="left">Feedback</h1>
+<p>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <script>
+                var messages = {{ messages | safe }};
+                for (var i=0; i<messages.length; i++)
+                {
+                    //alert(messages[i]);
+                    //document.write(Date());
+                    document.write(messages[i]);
+                }
+
+            </script>
+        {% endif %}
+    {% endwith %}
+</p>
+</div>
+
+<form action="/" method="get">
+<button name="subject" type="submit" value="">Back to Home Page</button>
+</form>
+
+</body>

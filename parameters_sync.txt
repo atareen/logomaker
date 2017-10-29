@@ -1,0 +1,5 @@
+colors : 'deepskyblue'
+logo_type : 'probability'
+axes_style : 'vlines'
+font_family : 'sans-serif'
+font_weight : 'heavy'
