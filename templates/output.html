@@ -1,0 +1,66 @@
+<html>
+<body>
+
+<!-- style sheet -->
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+
+<!-- data upload form -->
+<form action = "/" method = "POST" enctype = "multipart/form-data">
+    <input type = "file" name = "file" />
+    <input type="submit" value="Upload Data" name="dataUploadButton">
+</form>
+
+<!-- Parameters upload form -->
+<form action = "/" method = "POST" enctype = "multipart/form-data">
+    <input type = "file" name = "file" />
+    <input type="submit" value="Upload Parameters" name="parameterUploadButton">
+</form>
+
+<!-- Input display text box -->
+<div class="inline-div">
+<h2 align="left">Input Data</h2>
+<form action="/" method="POST">
+<textarea name="inputTextArea" cols="50" class="inline-txtarea">{% for row in range(inputDataLength) %}{{ displayInput[row][0] | safe }}{% endfor %}
+</textarea>
+<!-- <input type="submit" value="Upload Data" name="dataUploadButton"> -->
+</form>
+</div>
+
+<!-- Parameters text box -->
+<div class="inline-div">
+<h2 align="left">Parameters</h2>
+<form action="/" method="POST">
+<textarea name="paramsTextArea" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] | safe }}{% endfor %}
+</textarea>
+<input type="submit" value="Update logo" name="parameterButton">
+</form>
+</div>
+
+<!-- Display the logo -->
+<p>
+{% if result != None %}
+<img src="data:image/png;base64,{{ result }}" width="800">
+{% endif %}
+</p>
+
+<!-- Feedback -->
+<div>
+<h1 align="left">Feedback</h1>
+<p>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <script>
+                var messages = {{ messages | safe }};
+                for (var i=0; i<messages.length; i++)
+                {
+                    document.write(messages[i]);
+                }
+
+            </script>
+        {% endif %}
+    {% endwith %}
+</p>
+</div>
+
+</body>
+</html>
