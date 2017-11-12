@@ -1,57 +1,31 @@
-from flask import Flask, render_template, redirect, send_file, request,url_for,flash
-
+from flask import Flask, render_template, request,session, flash
 from werkzeug.utils import secure_filename
-import StringIO
-import pandas
-import sys
-import os
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
+import os
+import sys
+sys.path.append('../')
 import logomaker
-from time import strftime
-from logging.handlers import RotatingFileHandler
-import logging
-import subprocess
+import uuid
+import shutil
+import sys
+from numpydoc.docscrape import NumpyDocString
+from make_logo import make_logo
 
-
+# name of the flask app
 app = Flask(__name__)
 
+# this key decrypts the cookie on the client's browser
+app.secret_key = os.urandom(32)
 
-# session key. Use random key to invalidate old sessions
-app.secret_key = os.urandom(64)
-
-
-ALLOWED_EXTENSIONS = set(['txt', 'fasta'])
-
+# allowed input file extensions
+ALLOWED_EXTENSIONS = set(['txt', 'fasta', 'fa','input'])
 ALLOWED_PARAM_EXTENSIONS = set(['txt'])
 
-# global variable fix to unicode/panda conversion from python to template
-# new globals
-uploadData = ''
-displayInput = []
-
-inputDataLength = 0
-displayParams = []
-paramsLength = 0
-
-userParametersUploaded = False
-# if parameters added after new data upload
-nonDefaultParametersAdded = False
-paramsTest = {}
-
-# part of ADDITION (iib)
-style_file = ''
-updatedParams = False
-
-
-mat_type = 'freq_mat'
-logo_type = 'weight_logo'
-logo_style = 'classic'
-color_scheme = 'classic'
-
-# old globals, may get rid of them
-uploadMatGlobal = pandas.DataFrame()
-uploadedFileName = ''
-
+# handler methods for checking file extensions
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -61,423 +35,341 @@ def allowed_param_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_PARAM_EXTENSIONS
 
 
-@app.route('/updateParams', methods=['POST'])
-def submit_textarea():
-    updatedText = request.form['paramsText']
-    print(updatedText)
-    return updatedText
-    #return format(request.form["paramsText"])
+'''
+This is the default route that is hit when the default URL is entered into the browser. 
+This handles data upload, logo draw, and parameter updates. Uploaded files are written to a 
+single temporary file; the same will be true of the parameters. This route returns results in
+an HTTP get when the URL is entered and results in a POST when parameters are updated. One every 
+POST, the method re-renders the output page with the updated logo.  
+'''
+@app.route('/', methods=['GET','POST'])
+def index():
 
-@app.context_processor
-def displayUploadStatus(displayMessage=''):
-    return dict(statusMessage=displayMessage)
+    # dictionary to story all metadata
+    # new keys/vals get written to file
+    metaData = {}
+    # radio button state and file format
+    radioState = ''
+    fileFormat = ''
 
+    # real file name just for display.
+    realUploadedFileName = ''
 
-# homepage global variables
-default_parameters_text = """
+    # handle creation of temp files:
+    # create 4 three temp files, input, style, metadata, log
+    if 'uid' in session:
+        print("Temp file already created")
+        tempFile = str(session['uid']) + ".input"
+        tempStyleFile = str(session['uid']) + ".txt"
+        logFile = str(session['uid']) + ".log"
+        metaDataFile = str(session['uid']) + ".meta"
+        sys.stderr = WarningsLogger(logFile)
+    else:
+        session['uid'] = uuid.uuid4()
+        tempFile = str(session['uid'])+".input"
+        shutil.copy('crp_sites.fasta',tempFile)
+        tempStyleFile = str(session['uid']) + ".txt"
+        metaDataFile = str(session['uid']) + ".meta"
+        logFile = str(session['uid']) + ".log"
+        print("New temp file created")
+        sys.stderr = WarningsLogger(logFile)
+
+    # give the data file the temp name
+    dataFileName = tempFile
+
+    # name of the style file that gets passed onto make stylized logo
+    # all parameter values are contained in this.
+    style_file = tempStyleFile
+
+    # default values of parameters
+    default_parameters_text = """
 colors : 'Blues'
-logo_type : 'counts'
+logo_type : 'probability'
 axes_type : 'classic'
-font_family : 'sans-serif'
+font_family : 'Arial'
 font_weight : 'heavy'
 use_tightlayout : True
 """
 
-defaultMat = logomaker.load_alignment('data/crp_sites.fasta')
-defaultMat.to_csv('crp_counts.txt', sep='\t', float_format='%d')
-# flag that checks whether default parameters have been modified
-#if this is set to default, copy default matrices to uploaded matrices
-# upon parameter modification
-updatedDefaultParams = ''
-defaultDisplayInput = []
-defaultInputDataLength = 0
-defaultParamsLength = 0
-defaultDisplayParams = []
-default_style_file = 'parameters_file.txt'
-
-# end homepage global variables
-
-@app.route("/")
-def index():
-
-    # this snippet cannot be different than the default snippet
-    # in uploadedFig
-
-    global defaultMat
-    global default_parameters_text
-
-    with open(default_style_file, 'w') as f:
-        f.write(default_parameters_text)
-
-    defaultFileName = 'crp_sites.fasta'
-
-    with open('data/'+defaultFileName, 'r') as fileVar:
-        defaultRawInput = fileVar.readlines()
-
-    global defaultInputDataLength
-    defaultInputDataLength = len(defaultRawInput)
-
-    global defaultDisplayInput
-    for x in range(defaultInputDataLength):
-        # displayInput.append(rawInput[x].split(" "))
-        defaultDisplayInput.append(defaultRawInput[x].split('    '))
-
-
-    with open(default_style_file, 'r') as p:
-        defaultRawParams = p.read()
-
-    global defaultParamsLength
-    defaultParamsLength = len(defaultRawParams)
-
-    global defaultDisplayParams
-    for index in range(defaultParamsLength):
-        defaultDisplayParams.append(defaultRawParams[index].split('    '))
-
-    print("Index: drawing default logo")
-
-    return render_template('index.html',defaultMat=defaultMat,defaultInputDataLength=defaultInputDataLength,
-                           defaultDisplayInput=defaultDisplayInput,defaultParamsLength=defaultParamsLength,
-                           defaultDisplayParams=defaultDisplayParams)
-
-
-# when I click submit, this funciton gets called. I should render
-# the default parameters used to generate the plot in the parameter
-# values window as a dict this dict should later be combined with
-# the update function. TLDR:
-# upload file at index.html
-# and draws without params file
-@app.route('/', methods=['GET', 'POST'])
-def uploaded_file():
-    # surround with try catch if post fails, handle exception
+    # process the post from html
     if request.method == 'POST':
 
-        # if not editing default params, set back to default value
-        global updatedDefaultParams
-        updatedDefaultParams = ''
+        # if update parameter button is hit, get updated values
+        if str(request.form.get("parameterButton")) == 'Update logo':
 
-        f = request.files['file']
+            updatedParametes = request.form['paramsTextArea']
+            print("Hitting parameter update button ")
+            with open(style_file, "w") as text_file:
+                text_file.write(updatedParametes)
 
-        # display flash message if filetype not supported
-        if not allowed_file(f.filename) and len(f.filename) is not 0:
-            print(f.filename)
-            flash(" File type not supported:  "+str(f.filename))
-            #flash(" File type not supported ")
-            return render_template('index.html')
+        # elif upload data button is hit, upload new data
+        # but put new data in temp file
+        elif str(request.form.get("dataUploadButton")) == 'Upload Data':
+            print("Hitting Upload button ")
 
+            # read radio button value
+            if request.form.getlist('fileformat'):
+                fileFormat = str(request.form['fileformat'])
 
-        #if button pressed without any uploaded
-        if len(f.filename) is 0:
-            flash(" Please select a file to upload ")
-            return render_template('index.html')
+                '''
+                # write radio state to file
+                with open(metaDataFile,'w') as md:
+                    md.write(fileFormat)
+                '''
 
-
-        print(f.filename)
-
-        # secure filename cleans the name of the uploaded file
-        f.save(secure_filename(f.filename))
-
-        # surround this with try catch also if the file is of the wrong format or bad data etc.
-        # upload matrix contains input data
-        # ADDITION (i):         # Load counts matrix from fasta file
-        # uploadMat = logomaker.load_mat(f.filename, 'fasta', mat_type='freq_mat')
-
-        uploadMat = logomaker.load_alignment(f.filename)
-        # why do the following? ask Justin:
-        #uploadMat.to_csv('crp_counts.txt', sep='\t', float_format='%d')
-        # END ADDITION (i)
-
-        global uploadMatGlobal
-        uploadMatGlobal = uploadMat
-
-        global uploadedFileName
-        uploadedFileName = f.filename
-
-        with open(f.filename, 'r') as fileVar:
-            rawInput = fileVar.readlines()
-
-        global inputDataLength
-        inputDataLength = len(rawInput)
-
-        global displayInput
-        # clear list for new input uploads
-        del displayInput[:]
-        for x in range(inputDataLength):
-            # displayInput.append(rawInput[x].split(" "))
-            displayInput.append(rawInput[x].split('    '))
-
-        # keep uploaded data to display after logo updates
-        global uploadData
-        uploadData = displayInput
-
-        global userParametersUploaded
-        userParametersUploaded = False
-
-        if userParametersUploaded is False:
-            status_upload_w_default_params = "Uploaded "+str(uploadedFileName) + " with Default parameters \n"
-            flash(status_upload_w_default_params)
-
-        # the mat variable in here gets passed onto returned template, e.g. upload.html in this instance
-    return render_template('upload.html', inputDataLength=inputDataLength, displayInput=displayInput,
-                           uploadMat=uploadMat)
+                # record format in metadata dict, to be
+                # written to file later
+                metaData['fileFormat'] = fileFormat
 
 
-# display the uploaded figure at upload.html after file has been uploaded
-@app.route('/uploadedFig')
-@app.route('/uploadedFig/<argMat>')
-@app.route('/uploadedFig/<argMat>/<refresh>')
-def uploadedFig(argMat=None,refresh=None):
+            # get file name
+            f = request.files['file']
 
-    global userParametersUploaded
-    print("Uploaded fig, paramsUpload: ",userParametersUploaded)
+            # display flash message if filetype not supported
+            if not allowed_file(f.filename) and len(f.filename) is not 0:
+                print(f.filename)
+                flash(" File type not supported:  " + str(f.filename))
+                # flash(" File type not supported ")
 
-    # flag for default logo drawing
-    strArgMat = str(argMat)
-    strArgMat.encode('ascii')
+            # if button pressed without any uploaded
+            elif len(f.filename) is 0:
+                flash(" Please select a file to upload ")
 
-    strRefresh = str(refresh)
-    strRefresh.encode('ascii')
+            elif len(fileFormat) is 0:
+                flash("Please choose a radio button")
 
-    print("argMat: ",strArgMat)
+            else:
+               # secure filename cleans the name of the uploaded file
+                # generate warning here if upload fails?
+                f.save(secure_filename(f.filename))
 
-    # for drawing the homepage logo
-    if(strArgMat=='default'):
+                # write file name in metadata
+                metaData['fileName'] = f.filename
 
-        print("In the default part of UploadedFig")
-        global updatedDefaultParams
-        updatedDefaultParams = strArgMat
+                # write all metadata to file
+                with open(metaDataFile, "w") as myfile:
+                    for key in sorted(metaData):
+                        myfile.write(key + ":" + str("".join(metaData[key])) + "\n")
 
-        # get default parameters for printing
-        global defaultMat
-        global default_parameters_text
+                # the following puts uploaded data in the temp file
+                # write from
+                with open(f.filename) as f1:
+                    # write to
+                    with open(dataFileName, "w") as f2:
+                        for line in f1:
+                            f2.write(line)
 
-        style_fileTemp = 'parameters_file.txt'
-        with open(style_fileTemp, 'w') as f:
+        # elif parameter upload button is pressed
+        elif str(request.form.get("parameterUploadButton")) == 'Upload Parameters':
+            print("Hitting parameter upload button ")
+
+            # get file name
+            f = request.files['file']
+
+            # if button pressed without any uploaded
+            if len(f.filename) is 0:
+                flash(" Please select a parameters file to upload ")
+
+            # if not right extension
+            elif not allowed_param_file(f.filename) and len(f.filename) is not 0:
+                print(f.filename)
+                flash(" parameters must have .txt extension ")
+
+            else:
+                # secure filename cleans the name of the uploaded file
+                f.save(secure_filename(f.filename))
+
+                # the following puts uploaded data in the temp file
+                # write from
+                with open(f.filename) as f1:
+                    # write to
+                    with open(style_file, "w") as f2:
+                        for line in f1:
+                            f2.write(line)
+
+
+    # show index page values on get
+    elif request.method == 'GET':
+        print("In get ")
+        # on page load the first time, data file name is set to
+        # the following file. This logo is displayed when the user
+        # first arrives on the page
+
+
+        # reset state/variables on get
+        shutil.copy('crp_sites.fasta', tempFile)
+        dataFileName = tempFile
+        radioState = 'fasta'
+        # reset metadata
+        if len(metaDataFile) != 0:
+            open(metaDataFile, 'w').close()
+
+        # write the default parameter values to a temporary style file
+        # which gets passed onto make_stylized_logo
+        with open(style_file, 'w') as f:
             f.write(default_parameters_text)
 
-        if(strRefresh=='editDefault'):
-            # if default parameters are edited, re-render logo
-            # with edited parameters
-            print("Uploaded Fig strRefresh: ",strRefresh)
-            logo = logomaker.make_styled_logo(style_file=style_file, matrix=defaultMat)
+
+    # read state from the metadata file
+    '''
+    try:
+        with open(metaDataFile) as file:
+            radioState = file.read()
+    except IOError as e:
+        print "Unable to open file"
+        # need to do more here in case can't open file
+    '''
+    
+    # read any meta data written to file
+    # check if file exists first
+    read_metadata_dict = {}
+    try:
+        with open(metaDataFile) as myfile:
+            for line in myfile:
+                name, var = line.partition(":")[::2]
+                read_metadata_dict[name.strip()] = var
+    except:
+        print("No metadata file")
+
+    if 'fileName' in read_metadata_dict:
+        realUploadedFileName = str(read_metadata_dict['fileName']).strip()
+        print("Real file name: ",realUploadedFileName)
+
+
+    if 'fileFormat' in read_metadata_dict:
+        radioState = str(read_metadata_dict['fileFormat']).strip()
+        print("File format: ",radioState)
+    
+    
+    
+
+    # display parameter values in a textarea: 3 steps
+    # Note: these steps could be combined into 1 step but
+    # separated for clarity
+    # 1) read raw text from style file
+    with open(style_file, 'r') as p:
+        rawParams = p.read()
+
+    # 2) store length of raw params in variable which
+    # will be used in html
+    paramsLength = len(rawParams)
+
+    # 3) append tab delimited values to list so they look
+    # exactly like the raw data in the parameters file
+    displayParams = []
+    for index in range(paramsLength):
+        displayParams.append(rawParams[index].split('    '))
+
+    # display input data in input text area
+    # Also in 3 steps (see comments above)
+
+    # 1) read raw text from fasta file
+    with open(dataFileName, 'r') as fileVar:
+        rawInput = fileVar.readlines()
+
+    # 2) store length of raw data in variable which
+    # will be used in html
+    inputDataLength = len(rawInput)
+
+    # 3) append tab delimited values to list so they look
+    # exactly like the raw data in the parameters file
+    displayInput = []
+    for x in range(inputDataLength):
+        displayInput.append(rawInput[x].split('    '))
+
+    # this clears the plot before re-rendering so old logos
+    # aren't drawn on top of each other.
+    plt.cla()
+
+    try:
+
+        logoFailure = ''    # zero length for this variables means logo rendered w/o failure
+        if radioState == 'fasta':
+            print("Calling logomaker from fasta", dataFileName)
+            logomaker.make_styled_logo(style_file=style_file,fasta_file=dataFileName)
+        elif radioState == 'meme':
+            print("Calling logomaker from meme",dataFileName)
+            logomaker.make_styled_logo(style_file=style_file,meme_file=dataFileName)
+        elif radioState == 'csv':
+            logomaker.make_styled_logo(style_file=style_file, csv_file=dataFileName)
         else:
-            # the very first http call lands here
-            print("Uploaded Fig strRefresh: ", strRefresh)
-            logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=defaultMat)
+            print("Calling logomaker from default", dataFileName, " radiostate: ",radioState)
+            logomaker.make_styled_logo(style_file=style_file, fasta_file=dataFileName)
+    except:
+        # display this message in lieu of failed logo rendering.
+        logoFailure = "Could not draw Logo"
 
-        # Draw logos
-        fig, ax_list = plt.subplots(figsize=[8, 2])
-        # logo1.draw(ax_list[0])
-        '''
-        print("XXXX")
-        print(str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip())
-        flash(str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip())
-        print("XXXX")
-        '''
-        logo.draw(ax_list)
 
-        img = StringIO.StringIO()
-        fig.savefig(img)
-        img.seek(0)
-        return send_file(img, mimetype='image/png')
+    #save the logo as a stream of bytes which can be passed into
+    logoFigFile = BytesIO()
+    plt.savefig(logoFigFile, format='png')
+    logoFigFile.seek(0)
 
-    # if no parameters file uploaded
-    if userParametersUploaded is False:
+    # the following contains the actual data passed to the html template
+    logoFigData = base64.b64encode(logoFigFile.getvalue())
 
-        if nonDefaultParametersAdded is False:
+    # Show warnings
+    with open(logFile) as log:
+        flash(log.read())
+    cleanWarnings(logFile)
 
-            # if no params uploaded, empty style file
-            style_fileTemp = 'parameters_file.txt'
-            with open(style_fileTemp, 'w') as f:
-                f.write("")
+    # populate documentation dictionary
+    # this is currently sub-optimal; should only be run once
+    doc = NumpyDocString(make_logo.__doc__)
+    doc_dict = {}
+    valueString = ''
+    for i in range(len(doc.get('Extended Summary'))):
 
-            print(" Draw Fig: I have not uploaded parameters, style file: ", style_fileTemp)
-            logo = logomaker.make_styled_logo(style_file=style_fileTemp, matrix=uploadMatGlobal)
+        if len(doc.get('Extended Summary')[i]) != 0:
+            valueString += doc.get('Extended Summary')[i]
         else:
-            # if non-default params added, use updated style file
-            print(" Draw Fig: I have not uploaded parameters, style file: ", style_file)
-            logo = logomaker.make_styled_logo(style_file=style_file, matrix=uploadMatGlobal)
+            key = valueString.partition(' ')[0]
+            value = " ".join(valueString.split())
+            # print key ,":",value
+            doc_dict[key] = value
+            valueString = ''
+
+    plt.close('All')
+
+    # render the template with logo data
+    return render_template('output.html', result=logoFigData, paramsLength=paramsLength, displayParams=displayParams,
+                           displayInput=displayInput, inputDataLength=inputDataLength, doc_dict=doc_dict,
+                           radioState=radioState, logoFailure=logoFailure, realUploadedFileName=realUploadedFileName)
 
 
-        # Draw logos
-        fig, ax_list = plt.subplots(figsize=[8, 2])
+@app.before_first_request
+def before_first_request():
 
-        logo.draw(ax_list)
-
-    # otherwise if parameters file uploaded
-    elif userParametersUploaded is True:
-
-        # ADDITION (iib)
-        #global style_file
-        print(" Draw Fig: I have uploaded parameters ",style_file)
-
-        logo = logomaker.make_styled_logo(style_file=style_file, matrix=uploadMatGlobal)
-        # Draw logos
-        fig, ax_list = plt.subplots(figsize=[8, 2])
-        logo.draw(ax_list)
-        # END ADDITION (iib)
-
-    img = StringIO.StringIO()
-    fig.savefig(img)
-    img.seek(0)
-    return send_file(img,mimetype='image/png')
+    '''
+    # attempt to create unique session id
+    # and make temp file
+    # if it's not made here, for some weird server issue, make again in index
+    session['uid'] = uuid.uuid4()
+    tempFile = str(session['uid']) + ".input"
+    shutil.copy('crp_sites.fasta', tempFile)
+    '''
+    pass
 
 
-# method only for uploading parameters
-@app.route('/uploadParams',methods=['GET','POST'])
-def parametersUpload():
-
-    # surround with try catch if post fails, handle exception
-    if request.method == 'POST':
-
-        # if request.method == 'POST' and len(str(request.files))>1:
-        f = request.files['file']
-
-        # if button pressed without any uploaded
-        if len(f.filename) is 0:
-            flash(" Please select a parameters file to upload ")
-            return render_template('upload.html', matType=mat_type, logoType=logo_type,
-                               colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput)
-
-        # if not right extension
-        if not allowed_param_file(f.filename) and len(f.filename) is not 0:
-            print(f.filename)
-            flash(" parameters must have .txt extension ")
-            return render_template('upload.html', matType=mat_type, logoType=logo_type,
-                               colorScheme=color_scheme, inputDataLength=inputDataLength, displayInput=displayInput)
-
-        # secure filename cleans the name of the uploaded file
-        f.save(secure_filename(f.filename))
-
-        with open(f.filename, 'r') as p:
-            rawParams = p.read()
-
-        global paramsLength
-        paramsLength = len(rawParams)
-
-        global displayParams
-        # del the list so that parameters get rendered correctly
-        # after default params edited
-        del displayParams [:]
-        for index in range(paramsLength):
-            displayParams.append(rawParams[index].split('    '))
+@app.before_request
+def before_request():
+    # here we can do something before every
+    # request is made
+    pass
 
 
-        # ADDITION (iib)
-        # this uploaded file will go into the makestyled logo method
-        global style_file
-        style_file = f.filename
-        # END ADDITION (iib)
-
-
-        # flag variable that tells server if user upload custom parameters
-        global userParametersUploaded
-        userParametersUploaded = True
-
-        print('Upload params: ',userParametersUploaded)
-
-        flash(" Logo redrawn with uploaded parameters")
-        print('Upload Params: Just hit upload parameters with filename ',style_file)
-        return render_template('upload.html',
-                               inputDataLength=inputDataLength, displayInput=displayInput,
-                               paramsLength=paramsLength, displayParams=displayParams,
-                               uploadMat=uploadMatGlobal,userParamsUploaded=userParametersUploaded)
-
-
-# press button on upload.html to update logo type
-#@app.route('/updateLogo', methods=['GET', 'POST'])
-@app.route('/updateLogo', methods=['POST'])
-def updateLogo():
-
-    if request.method == 'POST':
-
-        if updatedDefaultParams == 'default':
-            print('getting data from default textarea')
-            updatedText = request.form['defaultParamsText']
-        else:
-            # this is where non default parameters get added
-            updatedText = request.form['paramsText']
-            print('getting data from NON-default textarea, len-updatedText: ',len(updatedText))
-            # check if non-default params added
-            # this flag helps update the style in uploadedFig
-            if len(updatedText)>0:
-                global nonDefaultParametersAdded
-                nonDefaultParametersAdded = True
-            else:
-                nonDefaultParametersAdded = False
-
-
-        # make updates to the params box
-        tempParamFileName = "updatedParams.txt"
-        with open(tempParamFileName, "w") as text_file:
-            text_file.write(updatedText)
-
-        global style_file
-        style_file = tempParamFileName
-
-        with open(tempParamFileName, 'r') as p:
-            rawParams = p.read()
-
-        global paramsLength
-        paramsLength = len(rawParams)
-
-        global displayParams
-        del displayParams[:]
-
-        for index in range(paramsLength):
-            displayParams.append(rawParams[index].split('    '))
-
-        flash(" Logo redrawn with edited parameters ")
-
-        global updatedParams
-        updatedParams = True
-
-        print('Update Params: Just hit update parameters with filename ', style_file, " Updated default params: ",updatedDefaultParams)
-
-        if updatedDefaultParams == 'default':
-
-
-            # make standard error go to standard output
-            # but will only log on application close
-            #sys.stderr = sys.stdout
-
-            # redirect stderr to warnings logger
-            #sys.stderr = WarningsLogger()
-            logo = logomaker.make_styled_logo(style_file=style_file, matrix=defaultMat)
-            #sys.stderr = WarningsLogger()
-            print("XXXX")
-            print(str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip())
-            flash(str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip())
-            print("XXXX")
-
-            return render_template('index.html', uploadMat=defaultMat, defaultInputDataLength=defaultInputDataLength,
-                                   defaultDisplayInput=defaultDisplayInput, paramsLength=paramsLength,
-                                   displayParams=displayParams,userParamsUploaded=userParametersUploaded,
-                                   style_file=style_file, updatedParams=updatedParams,updatedDefaultParams=updatedDefaultParams)
-        else:
-            print(" Adding params for new data upload ")
-            # if not editing default parameters,
-            # updatedDefaultParams is set to default
-            # value in upload file
-            logo = logomaker.make_styled_logo(style_file=style_file, matrix=uploadMatGlobal)
-            # generate warning
-            flash(str(subprocess.check_output(['tail', '-1', 'warnings.log'])).strip())
-            return render_template('upload.html',
-                                   inputDataLength=inputDataLength, displayInput=displayInput,
-                                   paramsLength=paramsLength, displayParams=displayParams,
-                                   uploadMat=uploadMatGlobal,userParamsUploaded=userParametersUploaded,
-                                   style_file=style_file,updatedParams=updatedParams)
-
+def cleanWarnings(logFile):
+    # erase warnings file before request
+    if len(logFile)!=0 :
+        open(logFile,'w').close()
 
 
 class WarningsLogger(object):
 
-    def __init__(self):
-
+    def __init__(self, logFileName):
         self.terminal = sys.stdout
-        # open file and append log
-        # check if file exists first
-
-        self.log = open("warnings.log", "a")
+        #self.log = open("warnings.log", "a")
+        self.log = open(logFileName, "a")
 
     def write(self, message):
         self.terminal.write(message)
@@ -487,65 +379,5 @@ class WarningsLogger(object):
         self.terminal.flush()
         self.log.flush()
 
-
-@app.before_first_request
-def before_first_request():
-    # erase app.log file before first request
-    open('app.log','w').close()
-
-@app.before_request
-def before_request():
-    # erase warnings file before request
-    open('warnings.log','w').close()
-
-
-# logs messages to app.log
-@app.after_request
-def after_request(response):
-    # this if avoids the duplication of registry in the log,
-    # since that 500 is already logged via @app.errorhandler
-    if response.status_code != 500:
-        ts = strftime('[%Y-%b-%d %H:%M]')
-        logger.info('%s %s %s %s %s %s',
-                  ts,
-                  request.remote_addr,
-                  request.method,
-                  request.scheme,
-                  request.full_path,
-                  response.status)
-
-    return response
-
-
-from os import path
 if __name__ == "__main__":
-
-
-    '''
-    # records all flask related activity to a log file
-    handler = RotatingFileHandler('app.log', maxBytes=100000, backupCount=3)
-    handler.setLevel(logging.INFO)
-    logger = logging.getLogger('__name__')
-    logger.setLevel(logging.INFO)
-    logger.addHandler(handler)
-    '''
-
-    handler = RotatingFileHandler('app.log', maxBytes=100000, backupCount=3)
-    logger = logging.getLogger('werkzeug')
-    # change the following to errors on production launch
-    logger.setLevel(logging.INFO)
-    logger.addHandler(handler)
-
-    #other option
-    #app.run(port=8080, debug=True)
-    #app.run(debug=True,use_reloader=True)
-    #app.jinja_env.auto_reload = True
-    #app.config['TEMPLATES_AUTO_RELOAD'] = True
-    #https://stackoverflow.com/questions/41144565/flask-does-not-see-change-in-js-file
-    sys.stderr = WarningsLogger()
-    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 # avoids loading cached image on send_url
-
-    app.run()
-
-
-
+    app.run(debug=True)
