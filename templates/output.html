@@ -74,7 +74,6 @@
 </form>
 
 
-
 <!-- Parameters upload form -->
 <form action = "/" method = "POST" enctype = "multipart/form-data">
     <input type = "file" name = "file" />
@@ -95,7 +94,7 @@
 <div class="inline-div">
 <h2 align="left">Parameters</h2>
 <form action="/" method="POST">
-<textarea name="paramsTextArea" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] | safe }}{% endfor %}
+<textarea id="paramsTextAreaId" name="paramsTextArea" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] | safe }}{% endfor %}
 </textarea>
 <!-- update button -->
 <input type="submit" id="btnSubmit" value="Update logo" name="parameterButton">
@@ -108,6 +107,9 @@
 {% if realUploadedFileName|length>0 %}
 <h3> Uploaded {{realUploadedFileName}} </h3>
 {% endif %}
+
+<p> Clicked parameter </p>
+<p id="para"></p>
 
 <!-- Feedback -->
 <div>
@@ -149,11 +151,13 @@
 {% for key, value in doc_dict.iteritems() %}
 
    <tr>
-          <a href="#" data-toggle="popover" title="Parameter Description" data-content="{{ value }}">{{ key }}</a>
+          <a id="{{ key }}" href="#" data-toggle="popover" title="Parameter Description" data-content="{{ value }}" data="{{ key }}">{{ key }}</a>
           {#
-          {{ count.value }}
-          {% if count.update({'value': (count.value + 1)}) %} {% endif %}
-           {% if  count.value%20==0 %} <th> {{ count.value }} </th> {% endif %} #}
+              <a href="#" data-toggle="popover" title="Parameter Description" data-content="{{ value }}">{{ key }}</a>
+              {{ count.value }}
+              {% if count.update({'value': (count.value + 1)}) %} {% endif %}
+              {% if  count.value%20==0 %} <th> {{ count.value }} </th> {% endif %}
+          #}
           <br>
    </tr>
 {% endfor %}
@@ -162,10 +166,25 @@
 
 <script>
 $(document).ready(function(){
+    // on hover, show descriptions
     $('[data-toggle="popover"]').popover({trigger:'hover'});
+    // onclick append to parameters
+    $('[data-toggle="popover"]').click
+    (
+        function()
+        {
+            var parameter = $(this).attr("data");
+            document.getElementById("para").innerHTML = parameter
+
+            var paramDescription = $(this).attr("data-content");
+            var start = paramDescription.search(/Default/i);
+            var end = paramDescription.length;
+            var value = paramDescription.substring(start+8, end-1);
+            $('#paramsTextAreaId').append(parameter+":"+value+"\n");
+        }
+    );
 });
 </script>
-
 
 </body>
 </html>
