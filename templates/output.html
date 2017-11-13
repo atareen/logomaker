@@ -6,6 +6,196 @@
   <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">-->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script>
+  $( function() {
+    var availableTags = [
+      "baseline_style",
+"xlim",
+"csv_file",
+"axes_fontfamily",
+"highlight_boxedgealpha",
+"colors",
+"below_flip",
+"fixedchar_edgealpha",
+"background_ctcol",
+"enrichment_centering",
+"ylabel",
+"position_range",
+"below_shade",
+"axes_type",
+"fixedchar_boxcolors",
+"font_weight",
+"show_baseline",
+"xticklabels",
+"background",
+"xtick_spacing",
+"xtick_length",
+"draw_now",
+"ignore_characters",
+"baseline_width",
+"title_fontstyle",
+"background_csvfile",
+"logo_type",
+"counts_threshold",
+"dpi",
+"use_transparency",
+"baseline_alpha",
+"xtick_rotation",
+"use_tightlayout",
+"gridline_axis",
+"fixedchar_boxedgewidth",
+"fixedchar_edgewidth",
+"meme_motifnum",
+"highlight_boxedgewidth",
+"baseline_color",
+"ytick_format",
+"matrix_type",
+"sequence_type",
+"ct_col",
+"uniform_stretch",
+"highlight_edgewidth",
+"tick_fontweight",
+"information_units",
+"font_family",
+"fixedchar_dict",
+"highlight_sequence",
+"highlight_edgealpha",
+"tick_fontfile",
+"stack_order",
+"xtick_anchor",
+"meme_motifname",
+"yticklabels",
+"show_gridlines",
+"seq_col",
+"show_binary_yaxis",
+"title_fontfamily",
+"fixedchar_edgecolors",
+"yticks",
+"tick_fontfamily",
+"meme_file",
+"vline_width",
+"style_sheet",
+"font_file",
+"hpad",
+"axes_fontweight",
+"pseudocount",
+"highlight_boxcolors",
+"font_properties",
+"background_csvkwargs",
+"label_fontweight",
+"axes_fontstyle",
+"ytick_length",
+"fixedchar_boxalpha",
+"xticks",
+"width",
+"gridline_alpha",
+"vsep",
+"vline_alpha",
+"axes_fontfile",
+"title_fontfile",
+"highlight_colors",
+"tick_fontstyle",
+"edgecolors",
+"max_positions_per_line",
+"edgewidth",
+"highlight_alpha",
+"edgealpha",
+"highlight_edgecolors",
+"boxedgewidth",
+"xtick_format",
+"xlabel",
+"boxcolors",
+"label_fontfamily",
+"left_spine",
+"iupac_string",
+"highlight_boxedgecolors",
+"fasta_file",
+"rcparams",
+"gridline_style",
+"fixedchar_boxedgealpha",
+"gridline_color",
+"enrichment_logbase",
+"label_fontfile",
+"ylim",
+"font_style",
+"vpad",
+"max_alpha_val",
+"axes_fontsize",
+"boxalpha",
+"below_alpha",
+"shift_first_position_to",
+"csv_kwargs",
+"figsize",
+"top_spine",
+"vline_color",
+"highlight_boxalpha",
+"fixedchar_boxedgecolors",
+"ytick_rotation",
+"label_fontsize",
+"vline_style",
+"max_stretched_character",
+"gridline_width",
+"characters",
+"tick_fontsize",
+"alpha",
+"label_fontstyle",
+"bottom_spine",
+"title_fontweight",
+"boxedgealpha",
+"fixedchar_colors",
+"save_to_file",
+"background_seqcol",
+"fixedchar_alpha",
+"boxedgecolors",
+"vline_positions",
+"right_spine",
+"title"
+    ];
+    function split( val ) {
+      //split by new line
+      return val.split( /\n\s*/ );
+    }
+    function extractLast( term ) {
+      return split( term ).pop();
+    }
+
+    $( "#paramsTextAreaId" )
+      // don't navigate away from the field on tab when selecting an item
+      .on( "keydown", function( event ) {
+        if ( event.keyCode === $.ui.keyCode.TAB &&
+            $( this ).autocomplete( "instance" ).menu.active ) {
+          event.preventDefault();
+        }
+      })
+      .autocomplete({
+        minLength: 0,
+        source: function( request, response ) {
+          // delegate back to autocomplete, but extract the last term
+          //response( $.ui.autocomplete.filter(availableTags, extractLast( request.term ) ) );
+          // show top three results
+          var results = $.ui.autocomplete.filter(availableTags, extractLast( request.term ) ) ;
+          response(results.slice(0, 3));
+        },
+        focus: function() {
+          // prevent value inserted on focus
+          return false;
+        },
+        select: function( event, ui ) {
+          var terms = split( this.value );
+          // remove the current input
+          terms.pop();
+          // add the selected item
+          terms.push( ui.item.value );
+          // add placeholder to get the newline at the end
+          terms.push( "" );
+          //this.value = terms.join( ", " );
+          this.value = terms.join( "\n" );
+          return false;
+        }
+      });
+  } );
+  </script>
 
     <style>
 .multicoldisplay {
@@ -108,8 +298,8 @@
 <h3> Uploaded {{realUploadedFileName}} </h3>
 {% endif %}
 
-<p> Clicked parameter </p>
-<p id="para"></p>
+<!-- added parameter: append only works if the following is implemented -->
+<p hidden id="para"></p>
 
 <!-- Feedback -->
 <div>
@@ -174,7 +364,7 @@ $(document).ready(function(){
         function()
         {
             var parameter = $(this).attr("data");
-            document.getElementById("para").innerHTML = parameter
+            document.getElementById("para").innerHTML = parameter;
 
             var paramDescription = $(this).attr("data-content");
             var start = paramDescription.search(/Default/i);
