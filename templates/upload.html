@@ -2,9 +2,9 @@
 
 <head>
 
-<link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-<script src="http://code.jquery.com/jquery-1.10.2.js"></script>
-<script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 
   <script>
   $(function() {
@@ -183,8 +183,8 @@
 <img src="{{ url_for('uploadedFig',argMat=uploadMat,refresh=updatedParams) }}">
 </a>
 {% else %}
-<a href="{{ url_for('uploadedFig',argMat=uploadMat) }}" download="logo.png">
-<img src="{{ url_for('uploadedFig',argMat=uploadMat) }}">
+<a href="{{ url_for('uploadedFig',argMat='non-default') }}" download="logo.png">
+<img src="{{ url_for('uploadedFig',argMat='non-default') }}">
 </a>
 {% endif %}
 <p> click to download</p>

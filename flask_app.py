@@ -14,6 +14,7 @@ import shutil
 import sys
 from numpydoc.docscrape import NumpyDocString
 from make_logo import make_logo
+import inspect
 
 # name of the flask app
 app = Flask(__name__)
@@ -83,13 +84,12 @@ def index():
 
     # default values of parameters
     default_parameters_text = """
-colors : 'Blues'
+character_colors : 'random'
 logo_type : 'probability'
 axes_type : 'classic'
 font_family : 'Arial'
 font_weight : 'heavy'
-use_tightlayout : True
-"""
+use_tightlayout : True"""
 
     # process the post from html
     if request.method == 'POST':
@@ -110,12 +110,6 @@ use_tightlayout : True
             # read radio button value
             if request.form.getlist('fileformat'):
                 fileFormat = str(request.form['fileformat'])
-
-                '''
-                # write radio state to file
-                with open(metaDataFile,'w') as md:
-                    md.write(fileFormat)
-                '''
 
                 # record format in metadata dict, to be
                 # written to file later
@@ -209,16 +203,6 @@ use_tightlayout : True
         with open(style_file, 'w') as f:
             f.write(default_parameters_text)
 
-
-    # read state from the metadata file
-    '''
-    try:
-        with open(metaDataFile) as file:
-            radioState = file.read()
-    except IOError as e:
-        print "Unable to open file"
-        # need to do more here in case can't open file
-    '''
     
     # read any meta data written to file
     # check if file exists first
@@ -247,8 +231,11 @@ use_tightlayout : True
     # Note: these steps could be combined into 1 step but
     # separated for clarity
     # 1) read raw text from style file
+
     with open(style_file, 'r') as p:
         rawParams = p.read()
+    # remove any blank lines from parameters textarea
+    rawParams = os.linesep.join([s for s in rawParams.splitlines() if s])
 
     # 2) store length of raw params in variable which
     # will be used in html
@@ -259,6 +246,7 @@ use_tightlayout : True
     displayParams = []
     for index in range(paramsLength):
         displayParams.append(rawParams[index].split('    '))
+
 
     # display input data in input text area
     # Also in 3 steps (see comments above)
@@ -313,27 +301,29 @@ use_tightlayout : True
         flash(log.read())
     cleanWarnings(logFile)
 
-    # populate documentation dictionary
-    # this is currently sub-optimal; should only be run once
-    doc = NumpyDocString(make_logo.__doc__)
-    doc_dict = {}
-    valueString = ''
-    for i in range(len(doc.get('Extended Summary'))):
+    ### Updated parameters dictionary
 
-        if len(doc.get('Extended Summary')[i]) != 0:
-            valueString += doc.get('Extended Summary')[i]
-        else:
-            key = valueString.partition(' ')[0]
-            value = " ".join(valueString.split())
-            # print key ,":",value
-            doc_dict[key] = value
-            valueString = ''
+    param_dict = logomaker.documentation_parser.parse_documentation_file('make_logo_arguments.txt')
+    default_values = inspect.getargspec(logomaker.make_logo)
+    doc_dict = dict(zip(default_values[0], list(default_values[3])))
+
+    doc_dict_2 = {}
+    param_pairs = [(val.param_num, val.section, val.name, val.description) for val in param_dict.values()]
+
+    # form dictionary with default values and descriptions together
+    for num, section, name, description in sorted(param_pairs):
+        doc_dict_2[name] = (doc_dict[name], description)
+
+
+    # for downloads
+    plt.savefig('/Users/tareen/Desktop/Desktop_Tests/logomaker_after_csv_parsing_params/logomaker/'+str(session['uid'])+'.png')
 
     plt.close('All')
 
     # render the template with logo data
     return render_template('output.html', result=logoFigData, paramsLength=paramsLength, displayParams=displayParams,
-                           displayInput=displayInput, inputDataLength=inputDataLength, doc_dict=doc_dict,
+                           #displayInput=displayInput, inputDataLength=inputDataLength, doc_dict=doc_dict,
+                           displayInput=displayInput, inputDataLength=inputDataLength, doc_dict=doc_dict_2,
                            radioState=radioState, logoFailure=logoFailure, realUploadedFileName=realUploadedFileName)
 
 

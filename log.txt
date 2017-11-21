@@ -1,2 +1,0 @@
-Warning: Improper value 'Blues1' for parameter 'colors'. Using default value 'blue' instead.
-Warning: Improper value 'Blues12' for parameter 'colors'. Using default value 'blue' instead.

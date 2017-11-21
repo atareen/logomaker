@@ -25,8 +25,8 @@ table.dataframe, .dataframe th, .dataframe td {
 .inline-txtarea {
     resize: none;
     border : 2px solid red;
-    height:100px;
-    resize: none;
+    height:200px;
+    resize: auto;
     overflow-x: scroll;
     overflow-y: scroll;
 }

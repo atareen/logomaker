@@ -1,4 +1,4 @@
-<html>
+  <html>
 
 <head>
   <meta charset="utf-8">
@@ -8,212 +8,81 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   <script>
-  $( function() {
-    var availableTags = [
-      "baseline_style",
-"xlim",
-"csv_file",
-"axes_fontfamily",
-"highlight_boxedgealpha",
-"colors",
-"below_flip",
-"fixedchar_edgealpha",
-"background_ctcol",
-"enrichment_centering",
-"ylabel",
-"position_range",
-"below_shade",
-"axes_type",
-"fixedchar_boxcolors",
-"font_weight",
-"show_baseline",
-"xticklabels",
-"background",
-"xtick_spacing",
-"xtick_length",
-"draw_now",
-"ignore_characters",
-"baseline_width",
-"title_fontstyle",
-"background_csvfile",
-"logo_type",
-"counts_threshold",
-"dpi",
-"use_transparency",
-"baseline_alpha",
-"xtick_rotation",
-"use_tightlayout",
-"gridline_axis",
-"fixedchar_boxedgewidth",
-"fixedchar_edgewidth",
-"meme_motifnum",
-"highlight_boxedgewidth",
-"baseline_color",
-"ytick_format",
-"matrix_type",
-"sequence_type",
-"ct_col",
-"uniform_stretch",
-"highlight_edgewidth",
-"tick_fontweight",
-"information_units",
-"font_family",
-"fixedchar_dict",
-"highlight_sequence",
-"highlight_edgealpha",
-"tick_fontfile",
-"stack_order",
-"xtick_anchor",
-"meme_motifname",
-"yticklabels",
-"show_gridlines",
-"seq_col",
-"show_binary_yaxis",
-"title_fontfamily",
-"fixedchar_edgecolors",
-"yticks",
-"tick_fontfamily",
-"meme_file",
-"vline_width",
-"style_sheet",
-"font_file",
-"hpad",
-"axes_fontweight",
-"pseudocount",
-"highlight_boxcolors",
-"font_properties",
-"background_csvkwargs",
-"label_fontweight",
-"axes_fontstyle",
-"ytick_length",
-"fixedchar_boxalpha",
-"xticks",
-"width",
-"gridline_alpha",
-"vsep",
-"vline_alpha",
-"axes_fontfile",
-"title_fontfile",
-"highlight_colors",
-"tick_fontstyle",
-"edgecolors",
-"max_positions_per_line",
-"edgewidth",
-"highlight_alpha",
-"edgealpha",
-"highlight_edgecolors",
-"boxedgewidth",
-"xtick_format",
-"xlabel",
-"boxcolors",
-"label_fontfamily",
-"left_spine",
-"iupac_string",
-"highlight_boxedgecolors",
-"fasta_file",
-"rcparams",
-"gridline_style",
-"fixedchar_boxedgealpha",
-"gridline_color",
-"enrichment_logbase",
-"label_fontfile",
-"ylim",
-"font_style",
-"vpad",
-"max_alpha_val",
-"axes_fontsize",
-"boxalpha",
-"below_alpha",
-"shift_first_position_to",
-"csv_kwargs",
-"figsize",
-"top_spine",
-"vline_color",
-"highlight_boxalpha",
-"fixedchar_boxedgecolors",
-"ytick_rotation",
-"label_fontsize",
-"vline_style",
-"max_stretched_character",
-"gridline_width",
-"characters",
-"tick_fontsize",
-"alpha",
-"label_fontstyle",
-"bottom_spine",
-"title_fontweight",
-"boxedgealpha",
-"fixedchar_colors",
-"save_to_file",
-"background_seqcol",
-"fixedchar_alpha",
-"boxedgecolors",
-"vline_positions",
-"right_spine",
-"title"
-    ];
-    function split( val ) {
-      //split by new line
-      return val.split( /\n\s*/ );
-    }
-    function extractLast( term ) {
-      return split( term ).pop();
-    }
+ $(function(){
+    // on hover, show descriptions
+    $('[data-toggle="popover"]').popover({trigger:'hover'});
+    // onclick append to parameters
+    //$('[data-toggle="popover"]').click
+    $('[data-toggle]').click
+    //$('[data]').click
+    (
+        function()
+        {
+            console.log("calling append function")
 
-    $( "#paramsTextAreaId" )
-      // don't navigate away from the field on tab when selecting an item
-      .on( "keydown", function( event ) {
-        if ( event.keyCode === $.ui.keyCode.TAB &&
-            $( this ).autocomplete( "instance" ).menu.active ) {
-          event.preventDefault();
-        }
-      })
-      .autocomplete({
-        minLength: 0,
-        source: function( request, response ) {
-          // delegate back to autocomplete, but extract the last term
-          //response( $.ui.autocomplete.filter(availableTags, extractLast( request.term ) ) );
-          // show top three results
-          var results = $.ui.autocomplete.filter(availableTags, extractLast( request.term ) ) ;
-          response(results.slice(0, 3));
-        },
-        focus: function() {
-          // prevent value inserted on focus
-          return false;
-        },
-        select: function( event, ui ) {
-          var terms = split( this.value );
-          // remove the current input
-          terms.pop();
-          // add the selected item
-          terms.push( ui.item.value );
-          // add placeholder to get the newline at the end
-          terms.push( "" );
-          //this.value = terms.join( ", " );
-          this.value = terms.join( "\n" );
-          return false;
-        }
-      });
-  } );
-  </script>
+            // contains key
+            var parameter = $(this).attr("data");
+            var defaultValue = $(this).attr("data-target");
+            document.getElementById("para").innerHTML = parameter;
 
+            /*
+            var paramDescription = $(this).attr("data-content");
+            var start = paramDescription.search(/Default/i);
+            var end = paramDescription.length;
+            var value = paramDescription.substring(start+8, end-1);
+            $('#paramsTextAreaId').append(parameter+":"+value+"\n");
+            */
+            $('#paramsTextAreaId').append(parameter+":"+defaultValue+"\n");
+            console.log(parameter)
+        }
+    );
+});
+
+</script>
+
+<!--
+<script>
+$(function(){
+    // on hover, show descriptions
+    $('[data-toggle="popover"]').popover({trigger:'hover'});
+    // onclick append to parameters
+    $('[data-toggle="popover"]').click
+    (
+        function()
+        {
+            console.log("calling append function")
+            var parameter = $(this).attr("data");
+            document.getElementById("para").innerHTML = parameter;
+
+            var paramDescription = $(this).attr("data-content");
+            var start = paramDescription.search(/Default/i);
+            var end = paramDescription.length;
+            var value = paramDescription.substring(start+8, end-1);
+            $('#paramsTextAreaId').append(parameter+":"+value+"\n");
+            console.log(parameter)
+        }
+    );
+});
+</script>
+-->
     <style>
 .multicoldisplay {
     -webkit-column-count: 5; /* Chrome, Safari, Opera */
     -moz-column-count: 5; /* Firefox */
     column-count: 5;
-    width: 50%;
+    width: 60%;
 }
 </style>
-</head>
-
-<body>
 
 <!-- style sheet -->
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
 
+</head>
+
+<body>
+
 <!-- data upload form -->
-<form action = "/" method = "POST" enctype = "multipart/form-data">
+<form class="inline-div" action = "/" method = "POST" enctype = "multipart/form-data">
 
     {% if radioState == 'fasta' %}
     FASTA file
@@ -265,16 +134,16 @@
 
 
 <!-- Parameters upload form -->
-<form action = "/" method = "POST" enctype = "multipart/form-data">
+<form class="inline-div" action = "/" method = "POST" enctype = "multipart/form-data">
     <input type = "file" name = "file" />
     <input type="submit" value="Upload Parameters" name="parameterUploadButton">
 </form>
-
+<br>
 <!-- Input display text box -->
 <div class="inline-div">
 <h2 align="left">Input Data</h2>
 <form action="/" method="POST">
-<textarea name="inputTextArea" cols="50" class="inline-txtarea">{% for row in range(inputDataLength) %}{{ displayInput[row][0] | safe }}{% endfor %}
+<textarea name="inputTextArea" rows="100" cols="50" class="inline-txtarea">{% for row in range(inputDataLength) %}{{ displayInput[row][0] | safe }}{% endfor %}
 </textarea>
 <!-- <input type="submit" value="Upload Data" name="dataUploadButton"> -->
 </form>
@@ -284,13 +153,12 @@
 <div class="inline-div">
 <h2 align="left">Parameters</h2>
 <form action="/" method="POST">
-<textarea id="paramsTextAreaId" name="paramsTextArea" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] | safe }}{% endfor %}
+<textarea id="paramsTextAreaId" name="paramsTextArea" rows="100" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] | safe }}{% endfor %}
 </textarea>
 <!-- update button -->
 <input type="submit" id="btnSubmit" value="Update logo" name="parameterButton">
 </form>
 </div>
-
 
 <!-- real file name -->
 <br>
@@ -310,6 +178,7 @@
             <script>
                 var messages = {{ messages | safe }};
                 for (var i=0; i<messages.length; i++)
+
                 {
                     document.write(messages[i]);
                 }
@@ -341,8 +210,9 @@
 {% for key, value in doc_dict.iteritems() %}
 
    <tr>
-          <a id="{{ key }}" href="#" data-toggle="popover" title="Parameter Description" data-content="{{ value }}" data="{{ key }}">{{ key }}</a>
+          <a id="{{ key }}" href="#" data-toggle="popover" title="Parameter Description" data-content="{{ value[1] }}" data="{{ key }}" data-target="{{ value[0] }}">{{ key }}</a>
           {#
+              <a id="{{ keyXXX }}" href="#" data-toggle="popover" title="Parameter Description" data-content="{{ value[1] }}" data="{{ key }}">{{ key }}</a>
               <a href="#" data-toggle="popover" title="Parameter Description" data-content="{{ value }}">{{ key }}</a>
               {{ count.value }}
               {% if count.update({'value': (count.value + 1)}) %} {% endif %}
@@ -354,27 +224,7 @@
 </table>
 </div>
 
-<script>
-$(document).ready(function(){
-    // on hover, show descriptions
-    $('[data-toggle="popover"]').popover({trigger:'hover'});
-    // onclick append to parameters
-    $('[data-toggle="popover"]').click
-    (
-        function()
-        {
-            var parameter = $(this).attr("data");
-            document.getElementById("para").innerHTML = parameter;
 
-            var paramDescription = $(this).attr("data-content");
-            var start = paramDescription.search(/Default/i);
-            var end = paramDescription.length;
-            var value = paramDescription.substring(start+8, end-1);
-            $('#paramsTextAreaId').append(parameter+":"+value+"\n");
-        }
-    );
-});
-</script>
 
 </body>
 </html>
