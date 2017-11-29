@@ -18,60 +18,48 @@
     (
         function()
         {
-            console.log("calling append function")
-
-            // contains key
             var parameter = $(this).attr("data");
             var defaultValue = $(this).attr("data-target");
             document.getElementById("para").innerHTML = parameter;
-
-            /*
-            var paramDescription = $(this).attr("data-content");
-            var start = paramDescription.search(/Default/i);
-            var end = paramDescription.length;
-            var value = paramDescription.substring(start+8, end-1);
-            $('#paramsTextAreaId').append(parameter+":"+value+"\n");
-            */
             $('#paramsTextAreaId').append(parameter+":"+defaultValue+"\n");
-            console.log(parameter)
+            //console.log(parameter)
         }
     );
 });
 
-</script>
+function toggleParams(id) {
+    var x = document.getElementById(id);
 
-<!--
-<script>
-$(function(){
-    // on hover, show descriptions
-    $('[data-toggle="popover"]').popover({trigger:'hover'});
-    // onclick append to parameters
-    $('[data-toggle="popover"]').click
-    (
-        function()
-        {
-            console.log("calling append function")
-            var parameter = $(this).attr("data");
-            document.getElementById("para").innerHTML = parameter;
-
-            var paramDescription = $(this).attr("data-content");
-            var start = paramDescription.search(/Default/i);
-            var end = paramDescription.length;
-            var value = paramDescription.substring(start+8, end-1);
-            $('#paramsTextAreaId').append(parameter+":"+value+"\n");
-            console.log(parameter)
-        }
-    );
-});
-</script>
--->
-    <style>
-.multicoldisplay {
-    -webkit-column-count: 5; /* Chrome, Safari, Opera */
-    -moz-column-count: 5; /* Firefox */
-    column-count: 5;
-    width: 60%;
+    if (x.style.display === "block")
+    {
+        x.style.display = "none";
+    } else
+    {
+    	x.style.display ="block";
+    }
 }
+
+</script>
+
+<style>
+
+body{
+background: #ECE9E6;  /* fallback for old browsers */
+background: -webkit-linear-gradient(to right, #FFFFFF, #ECE9E6);  /* Chrome 10-25, Safari 5.1-6 */
+background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+
+.button-container {
+    width: 850px;
+    overflow-y: auto;
+}
+
+.button-container > button {
+    width: 200px;
+    overflow-y: auto;
+}
+
 </style>
 
 <!-- style sheet -->
@@ -138,6 +126,7 @@ $(function(){
     <input type = "file" name = "file" />
     <input type="submit" value="Upload Parameters" name="parameterUploadButton">
 </form>
+
 <br>
 <!-- Input display text box -->
 <div class="inline-div">
@@ -151,7 +140,7 @@ $(function(){
 
 <!-- Parameters text box -->
 <div class="inline-div">
-<h2 align="left">Parameters</h2>
+<h2 align="left">Style</h2>
 <form action="/" method="POST">
 <textarea id="paramsTextAreaId" name="paramsTextArea" rows="100" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] | safe }}{% endfor %}
 </textarea>
@@ -159,6 +148,7 @@ $(function(){
 <input type="submit" id="btnSubmit" value="Update logo" name="parameterButton">
 </form>
 </div>
+
 
 <!-- real file name -->
 <br>
@@ -169,9 +159,58 @@ $(function(){
 <!-- added parameter: append only works if the following is implemented -->
 <p hidden id="para"></p>
 
+<div>
+<h2>Logo</h2>
+<!-- Display the logo -->
+{% if logoFailure|length == 0 %}
+    <p>
+    {% if result != None %}
+    <img src="data:image/png;base64,{{ result }}" width="800">
+    {% endif %}
+    </p>
+{% elif logoFailure|length>0 %}
+    <h2> {{logoFailure}} </h2>
+{% endif %}
+</div>
+
+<!-- Parameter Section Buttons -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<!-- <table  rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
+<div class="button-container">
+<h2> Optional Style Parameters</h2>
+{% for key,value in sectionDict.iteritems() -%}
+<button onclick="toggleParams('{{ key[0:3] }}')">{{ key }}
+
+<!-- hide parameter list unless button is clicked -->
+<style>
+#{{ key[0:3] }} {
+display : none;
+}
+</style>
+
+<!-- list of parameters associated with section -->
+<table id="{{ key[0:3] }}">
+<tr><th style="width:300px;">{{ key }}</th></tr>
+          <!-- <br> -->
+          {% for val in value %}
+                {#  {{ val[0] }} gives parameter names #}
+                {#  {{ val[1] }} gives default values #}
+                {#  {{ val[2] }} gives descriptions #}
+                {# {{ val[0] }}:{{ val[1] }} #}
+                <tr><td>
+                <a id="{{ val[0] }}" href="#" data-toggle="popover" title="Parameter Description" data-content="{{ val[2] }}" data="{{ val[0] }}" data-target="{{ val[1] }}">{{ val[0] }}</a>
+                </td></tr>
+          <!-- <br> -->
+          {% endfor %}
+</table>
+</button>
+{%- endfor %}
+</div>
+
+
 <!-- Feedback -->
 <div>
-<h1 align="left">Feedback</h1>
+<h2 align="left">Feedback</h2>
 <p>
     {% with messages = get_flashed_messages() %}
         {% if messages %}
@@ -189,41 +228,22 @@ $(function(){
 </p>
 </div>
 
-<!-- Display the logo -->
-{% if logoFailure|length == 0 %}
-    <p>
-    {% if result != None %}
-    <img src="data:image/png;base64,{{ result }}" width="800">
-    {% endif %}
-    </p>
-{% elif logoFailure|length>0 %}
-    <h2> {{logoFailure}} </h2>
-{% endif %}
-
-<!-- Parameter list -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-<!-- <table  rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
-
-<div class="multicoldisplay">
-<table>
-{% set count = {'value': 0} %}
-{% for key, value in doc_dict.iteritems() %}
-
-   <tr>
-          <a id="{{ key }}" href="#" data-toggle="popover" title="Parameter Description" data-content="{{ value[1] }}" data="{{ key }}" data-target="{{ value[0] }}">{{ key }}</a>
-          {#
-              <a id="{{ keyXXX }}" href="#" data-toggle="popover" title="Parameter Description" data-content="{{ value[1] }}" data="{{ key }}">{{ key }}</a>
-              <a href="#" data-toggle="popover" title="Parameter Description" data-content="{{ value }}">{{ key }}</a>
-              {{ count.value }}
-              {% if count.update({'value': (count.value + 1)}) %} {% endif %}
-              {% if  count.value%20==0 %} <th> {{ count.value }} </th> {% endif %}
-          #}
-          <br>
-   </tr>
-{% endfor %}
-</table>
+<!--
+{#
+<h2> Test development </h2>
+<div class="container">
+  <div class="dropdown">
+    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Dropdown Example
+    <span class="caret"></span></button>
+    <ul class="dropdown-menu">
+      <li><a href="#">HTML</a></li>
+      <li><a href="#">CSS</a></li>
+      <li><a href="#">JavaScript</a></li>
+    </ul>
+  </div>
 </div>
-
+#}
+-->
 
 
 </body>

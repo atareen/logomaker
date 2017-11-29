@@ -301,18 +301,42 @@ use_tightlayout : True"""
         flash(log.read())
     cleanWarnings(logFile)
 
-    ### Updated parameters dictionary
-
+    # form default values dict
     param_dict = logomaker.documentation_parser.parse_documentation_file('make_logo_arguments.txt')
     default_values = inspect.getargspec(logomaker.make_logo)
     doc_dict = dict(zip(default_values[0], list(default_values[3])))
 
+    # for unique sections names
+    sectionSet = set()
+    # form dictionary with default values, descriptions, and sections
     doc_dict_2 = {}
     param_pairs = [(val.param_num, val.section, val.name, val.description) for val in param_dict.values()]
-
-    # form dictionary with default values and descriptions together
     for num, section, name, description in sorted(param_pairs):
-        doc_dict_2[name] = (doc_dict[name], description)
+        doc_dict_2[name] = (doc_dict[name], description, section)
+        sectionSet.add(section)
+
+    # change to list to access section as elements
+    sectionList = sorted(list(sectionSet))
+    sectionIndex = 0  # index to iterate unique sections
+    # dictionary for showing parameters based on sections
+    sectionDict = {}
+
+    # sort by section; index 1 is value, 2 is section.
+    for key, value in sorted(doc_dict_2.items(), key=lambda x: x[1][2]):
+        # section matches unique seciton in set, return all parameters associated with it
+        if (value[2] == sectionList[sectionIndex]) and sectionIndex < len(sectionList):
+            # sectionList[sectionIndex] is going to be button name and id
+            # key are going to be table elements
+            # print(sectionList[sectionIndex], key, value[0], value[1])
+
+            # new dict with section name as key and values being all the associated parameter names.
+            # along with default values and descriptions
+            if sectionList[sectionIndex] in sectionDict:
+                sectionDict[sectionList[sectionIndex]].append([key, value[0], value[1]])
+            else:
+                sectionDict[sectionList[sectionIndex]] = [[key, value[0], value[1]]]
+        else:
+            sectionIndex += 1
 
 
     # for downloads
@@ -322,8 +346,7 @@ use_tightlayout : True"""
 
     # render the template with logo data
     return render_template('output.html', result=logoFigData, paramsLength=paramsLength, displayParams=displayParams,
-                           #displayInput=displayInput, inputDataLength=inputDataLength, doc_dict=doc_dict,
-                           displayInput=displayInput, inputDataLength=inputDataLength, doc_dict=doc_dict_2,
+                           displayInput=displayInput, inputDataLength=inputDataLength, doc_dict=doc_dict_2,sectionDict=sectionDict,
                            radioState=radioState, logoFailure=logoFailure, realUploadedFileName=realUploadedFileName)
 
 
@@ -371,3 +394,4 @@ class WarningsLogger(object):
 
 if __name__ == "__main__":
     app.run(debug=True)
+    #app.run()
