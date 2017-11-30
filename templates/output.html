@@ -69,68 +69,15 @@ background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, F
 
 <body>
 
-<!-- data upload form -->
-<form class="inline-div" action = "/" method = "POST" enctype = "multipart/form-data">
 
-    {% if radioState == 'fasta' %}
-    FASTA file
-    <input id="fasta_id1" type="radio" name="fileformat" value="fasta" checked="checked"/>
-    <br>
-    MEME file
-    <input id="meme_id1" type="radio" name="fileformat" value="meme" />
-    <br>
-    CSV file
-    <input id="csv_id1" type="radio" name="fileformat" value="csv" />
-    <br>
-    {% elif radioState == 'meme' %}
-    FASTA file
-    <input id="fasta_id2" type="radio" name="fileformat" value="fasta" />
-    <br>
-    MEME file
-    <input id="meme_id2" type="radio" name="fileformat" value="meme" checked="checked"/>
-    <br>
-    CSV file
-    <input id="csv_id2" type="radio" name="fileformat" value="csv" />
-    <br>
-    {% elif radioState == 'csv' %}
-    FASTA file
-    <input id="fasta_id3" type="radio" name="fileformat" value="fasta" />
-    <br>
-    MEME file
-    <input id="meme_id3" type="radio" name="fileformat" value="meme"/>
-    <br>
-    CSV file
-    <input id="csv_id3" type="radio" name="fileformat" value="csv" checked="checked"/>
-    <br>
-    {% else %}
-    FASTA file
-    <input id="fasta_id4" type="radio" name="fileformat" value="fasta" checked="checked"/>
-    <br>
-    MEME file
-    <input id="meme_id4" type="radio" name="fileformat" value="meme" />
-    <br>
-    CSV file
-    <input id="csv_id4" type="radio" name="fileformat" value="csv" />
-    <br>
-    {% endif %}
-
-    <input type = "file" name = "file" />
-    <input type="submit" value="Upload Data" name="dataUploadButton">
-
-
-</form>
-
-
-<!-- Parameters upload form -->
-<form class="inline-div" action = "/" method = "POST" enctype = "multipart/form-data">
-    <input type = "file" name = "file" />
-    <input type="submit" value="Upload Parameters" name="parameterUploadButton">
-</form>
-
-<br>
-<!-- Input display text box -->
+<h2 align="left">Data</h2>
 <div class="inline-div">
-<h2 align="left">Input Data</h2>
+
+<input form="inputForm" type = "file" name = "file" />
+<input form="inputForm" type="submit" value="Upload Data" name="dataUploadButton">
+
+<!-- Input display text box -->
+
 <form action="/" method="POST">
 <textarea name="inputTextArea" rows="100" cols="50" class="inline-txtarea">{% for row in range(inputDataLength) %}{{ displayInput[row][0] | safe }}{% endfor %}
 </textarea>
@@ -138,17 +85,101 @@ background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, F
 </form>
 </div>
 
-<!-- Parameters text box -->
 <div class="inline-div">
+
+<textarea cols="50" rows="7" style="margin: 0px; width: 400px; height: 125px;" readonly>
+Help
+Please select a file format and hit the  upload data button.
+Or Paste data and hit the update logo button
+</textarea>
+
+<!-- data upload form -->
+<br>
+Select File Type
+<form id="inputForm" action = "/" method = "POST" enctype = "multipart/form-data">
+
+    {% if radioState == 'fasta' %}
+    <input id="fasta_id1" type="radio" name="fileformat" value="fasta" checked="checked"/>
+    FASTA file
+    <br>
+    <input id="meme_id1" type="radio" name="fileformat" value="meme" />
+    MEME file
+    <br>
+    <input id="csv_id1" type="radio" name="fileformat" value="csv" />
+    CSV file
+    <br>
+    {% elif radioState == 'meme' %}
+    <input id="fasta_id2" type="radio" name="fileformat" value="fasta" />
+    FASTA file
+    <br>
+    <input id="meme_id2" type="radio" name="fileformat" value="meme" checked="checked"/>
+    MEME file
+    <br>
+    <input id="csv_id2" type="radio" name="fileformat" value="csv" />
+    CSV file
+    <br>
+    {% elif radioState == 'csv' %}
+    <input id="fasta_id3" type="radio" name="fileformat" value="fasta" />
+    FASTA file
+    <br>
+    <input id="meme_id3" type="radio" name="fileformat" value="meme"/>
+    MEME file
+    <br>
+    <input id="csv_id3" type="radio" name="fileformat" value="csv" checked="checked"/>
+    CSV file
+    <br>
+    {% else %}
+    <input id="fasta_id4" type="radio" name="fileformat" value="fasta" checked="checked"/>
+    FASTA file
+    <br>
+    <input id="meme_id4" type="radio" name="fileformat" value="meme" />
+    MEME file
+    <br>
+    <input id="csv_id4" type="radio" name="fileformat" value="csv" />
+    CSV file
+    <br>
+    {% endif %}
+
+    <!--
+    <input type = "file" name = "file" />
+    <input type="submit" value="Upload Data" name="dataUploadButton">
+    -->
+
+</form>
+
+</div>
+
+<br>
+
+<!-- Parameters text box -->
 <h2 align="left">Style</h2>
-<form action="/" method="POST">
+
+<!-- Parameters upload form -->
+<form action = "/" method = "POST" enctype = "multipart/form-data">
+    <input type = "file" name = "file" />
+    <input type="submit" value="Upload Parameters" name="parameterUploadButton">
+</form>
+
+<div class="inline-div">
+<form id="parametersForm" action="/" method="POST">
 <textarea id="paramsTextAreaId" name="paramsTextArea" rows="100" cols="50" class="inline-txtarea">{% for row in range(paramsLength) %}{{ displayParams[row][0] | safe }}{% endfor %}
 </textarea>
 <!-- update button -->
-<input type="submit" id="btnSubmit" value="Update logo" name="parameterButton">
+<!-- <input type="submit" id="btnSubmit" value="Update logo" name="parameterButton"> -->
 </form>
 </div>
 
+<div class="inline-div">
+<textarea cols="50" rows="7" style="margin: 0px; width: 400px; height: 200px;" readonly>
+Help
+Default parameters currently selected.
+</textarea>
+</div>
+
+<br>
+
+<!-- draw logo button -->
+<input type="submit" form="parametersForm" id="btnSubmit" value="Update logo" name="parameterButton" />
 
 <!-- real file name -->
 <br>
@@ -180,7 +211,7 @@ background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, F
 <h2> Optional Style Parameters</h2>
 {% for key,value in sectionDict.iteritems() -%}
 <button onclick="toggleParams('{{ key[0:3] }}')">{{ key }}
-
+<span class="caret"></span>
 <!-- hide parameter list unless button is clicked -->
 <style>
 #{{ key[0:3] }} {
