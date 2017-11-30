@@ -60,6 +60,40 @@ background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, F
     overflow-y: auto;
 }
 
+#drawLogoButton {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 16px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+    cursor: pointer;
+
+    background-color: white;
+    color: black;
+    border: 2px solid #008CBA;
+}
+
+#drawLogoButton:hover {
+    background-color: #008CBA;
+    color: white;
+}
+
+#wrapper {
+     float: left;
+     margin: 0 auto;
+}
+
+#leftcolumn, #rightcolumn {
+    float: left;
+    overflow-y: scroll;
+}
+
 </style>
 
 <!-- style sheet -->
@@ -173,37 +207,63 @@ Select File Type
 <textarea cols="50" rows="7" style="margin: 0px; width: 400px; height: 200px;" readonly>
 Help
 Default parameters currently selected.
+Other helpful text about parameters here...
 </textarea>
 </div>
 
 <br>
 
-<!-- draw logo button -->
-<input type="submit" form="parametersForm" id="btnSubmit" value="Update logo" name="parameterButton" />
-
 <!-- real file name -->
-<br>
 {% if realUploadedFileName|length>0 %}
+<br>
 <h3> Uploaded {{realUploadedFileName}} </h3>
 {% endif %}
 
 <!-- added parameter: append only works if the following is implemented -->
 <p hidden id="para"></p>
 
-<div>
 <h2>Logo</h2>
+
+<div id="wrapper">
+<div id="leftcolumn">
+
 <!-- Display the logo -->
 {% if logoFailure|length == 0 %}
     <p>
     {% if result != None %}
-    <img src="data:image/png;base64,{{ result }}" width="800">
+    <img src="data:image/png;base64,{{ result }}">
     {% endif %}
     </p>
 {% elif logoFailure|length>0 %}
     <h2> {{logoFailure}} </h2>
 {% endif %}
+
 </div>
 
+<div id="rightcolumn">
+<!-- draw logo button -->
+<input id="drawLogoButton" type="submit" form="parametersForm" id="btnSubmit" value="Draw logo" name="parameterButton" />
+<br>
+<!-- Feedback -->
+<h3 align="left">Feedback</h3>
+<p style="overflow-y:scroll;">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <script>
+                var messages = {{ messages | safe }};
+                for (var i=0; i<messages.length; i++)
+
+                {
+                    document.write(messages[i]);
+                }
+
+            </script>
+        {% endif %}
+    {% endwith %}
+</p>
+</div>
+</div>
+<br>
 <!-- Parameter Section Buttons -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 <!-- <table  rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
@@ -239,25 +299,6 @@ display : none;
 </div>
 
 
-<!-- Feedback -->
-<div>
-<h2 align="left">Feedback</h2>
-<p>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <script>
-                var messages = {{ messages | safe }};
-                for (var i=0; i<messages.length; i++)
-
-                {
-                    document.write(messages[i]);
-                }
-
-            </script>
-        {% endif %}
-    {% endwith %}
-</p>
-</div>
 
 <!--
 {#

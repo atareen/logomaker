@@ -95,7 +95,7 @@ use_tightlayout : True"""
     if request.method == 'POST':
 
         # if update parameter button is hit, get updated values
-        if str(request.form.get("parameterButton")) == 'Update logo':
+        if str(request.form.get("parameterButton")) == 'Draw logo':
 
             updatedParametes = request.form['paramsTextArea']
             print("Hitting parameter update button ")
@@ -122,7 +122,7 @@ use_tightlayout : True"""
             # display flash message if filetype not supported
             if not allowed_file(f.filename) and len(f.filename) is not 0:
                 print(f.filename)
-                flash(" File type not supported:  " + str(f.filename))
+                flash(" File type not supported:  " + str(f.filename).strip())
                 # flash(" File type not supported ")
 
             # if button pressed without any uploaded
@@ -298,7 +298,7 @@ use_tightlayout : True"""
 
     # Show warnings
     with open(logFile) as log:
-        flash(log.read())
+        flash(log.read().strip())
     cleanWarnings(logFile)
 
     # form default values dict
