@@ -1,4 +1,4 @@
-  <html>
+<html>
 
 <head>
   <meta charset="utf-8">
@@ -21,7 +21,15 @@
             var parameter = $(this).attr("data");
             var defaultValue = $(this).attr("data-target");
             document.getElementById("para").innerHTML = parameter;
-            $('#paramsTextAreaId').append(parameter+":"+defaultValue+"\n");
+            if(isNaN(parameter))
+            {
+	            $('#paramsTextAreaId').append(parameter+":'"+defaultValue+"'\n");
+            }
+            else
+            {
+	            $('#paramsTextAreaId').append(parameter+":"+defaultValue+"\n");
+            }
+            //$('#paramsTextAreaId').append(parameter+":"+defaultValue+"\n");
             //console.log(parameter)
         }
     );
@@ -84,16 +92,6 @@ background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, F
     color: white;
 }
 
-#wrapper {
-     float: left;
-     margin: 0 auto;
-}
-
-#leftcolumn, #rightcolumn {
-    float: left;
-    overflow-y: scroll;
-}
-
 </style>
 
 <!-- style sheet -->
@@ -103,6 +101,27 @@ background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, F
 
 <body>
 
+<!-- return to homepage -->
+<form class="inline-div" action="/home" method="GET">
+    <input type="submit" value="LogoMaker Homepage" />
+</form>
+
+<!-- Go to gallery -->
+<form class="inline-div" action="/gallery" method="GET">
+    <input type="submit" value="Gallery" />
+</form>
+
+<!-- Go to help -->
+<form class="inline-div" action="/help" method="GET">
+    <input type="submit" value="Help" />
+</form>
+
+<!-- Go to about -->
+<form class="inline-div" action="/about" method="GET">
+    <input type="submit" value="About" />
+</form>
+
+<br>
 
 <h2 align="left">Data</h2>
 <div class="inline-div">
@@ -224,8 +243,8 @@ Other helpful text about parameters here...
 
 <h2>Logo</h2>
 
-<div id="wrapper">
-<div id="leftcolumn">
+
+<div class="inline-div">
 
 <!-- Display the logo -->
 {% if logoFailure|length == 0 %}
@@ -235,18 +254,18 @@ Other helpful text about parameters here...
     {% endif %}
     </p>
 {% elif logoFailure|length>0 %}
-    <h2> {{logoFailure}} </h2>
+    <h2 align="center"><font color="red"> {{logoFailure}} </font></h2>
 {% endif %}
 
 </div>
 
-<div id="rightcolumn">
+<div class="inline-div">
 <!-- draw logo button -->
 <input id="drawLogoButton" type="submit" form="parametersForm" id="btnSubmit" value="Draw logo" name="parameterButton" />
 <br>
 <!-- Feedback -->
 <h3 align="left">Feedback</h3>
-<p style="overflow-y:scroll;">
+<p style="overflow-y:scroll;overflow-x:scroll;width=300px">
     {% with messages = get_flashed_messages() %}
         {% if messages %}
             <script>
@@ -262,7 +281,7 @@ Other helpful text about parameters here...
     {% endwith %}
 </p>
 </div>
-</div>
+
 <br>
 <!-- Parameter Section Buttons -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">

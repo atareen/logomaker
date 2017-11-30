@@ -4,6 +4,7 @@ h1, h2          { margin: 0; }
 h1              { border-bottom: 2px solid #eee; }
 h2              { font-size: 1.2em; }
 
+/*
 table.dataframe, .dataframe th, .dataframe td {
   border: none;
   border-bottom: 1px solid #C8C8C8;
@@ -13,25 +14,20 @@ table.dataframe, .dataframe th, .dataframe td {
   margin-bottom: 40px;
   font-size: 0.9em;
 }
-
-.mat th {
-    background-color: #77dd77;
-    color: white;
-}
-
+*/
 .inline-div {
     display:inline-block;
 }
 .inline-txtarea {
     resize: none;
-    border : 2px solid red;
+    border : 1px solid lightgray;
     height:200px;
     resize: auto;
     overflow-x: scroll;
     overflow-y: scroll;
 }
 
-tr:nth-child(odd)		{ background-color:#eee; }
-tr:nth-child(even)	{ background-color:#fff; }
-
+/*
 tr:hover            { background-color: #ffff99;}
+button:hover        { background-color: WhiteSmoke;}
+*/
