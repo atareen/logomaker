@@ -21,6 +21,7 @@
             var parameter = $(this).attr("data");
             var defaultValue = $(this).attr("data-target");
             document.getElementById("para").innerHTML = parameter;
+            /*
             if(isNaN(parameter))
             {
 	            $('#paramsTextAreaId').append(parameter+":'"+defaultValue+"'\n");
@@ -29,7 +30,8 @@
             {
 	            $('#paramsTextAreaId').append(parameter+":"+defaultValue+"\n");
             }
-            //$('#paramsTextAreaId').append(parameter+":"+defaultValue+"\n");
+            */
+            $('#paramsTextAreaId').append(parameter+":"+defaultValue+"\n");
             //console.log(parameter)
         }
     );
@@ -289,17 +291,18 @@ Other helpful text about parameters here...
 <div class="button-container">
 <h2> Optional Style Parameters</h2>
 {% for key,value in sectionDict.iteritems() -%}
-<button onclick="toggleParams('{{ key[0:3] }}')">{{ key }}
+{% set sectionButtonId = key|replace(" ", "_") %}
+<button onclick="toggleParams('{{ sectionButtonId }}')">{{ key }}
 <span class="caret"></span>
 <!-- hide parameter list unless button is clicked -->
 <style>
-#{{ key[0:3] }} {
+#{{ sectionButtonId }} {
 display : none;
 }
 </style>
 
 <!-- list of parameters associated with section -->
-<table id="{{ key[0:3] }}">
+<table id="{{ sectionButtonId }}">
 <tr><th style="width:300px;">{{ key }}</th></tr>
           <!-- <br> -->
           {% for val in value %}
