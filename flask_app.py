@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request,session, flash
+from flask import Flask, render_template, request,session, flash,redirect,url_for,send_file
 from werkzeug.utils import secure_filename
 import matplotlib
 matplotlib.use('Agg')
@@ -12,8 +12,6 @@ import logomaker
 import uuid
 import shutil
 import sys
-from numpydoc.docscrape import NumpyDocString
-from make_logo import make_logo
 import inspect
 
 # name of the flask app
@@ -23,7 +21,7 @@ app = Flask(__name__)
 app.secret_key = os.urandom(32)
 
 # allowed input file extensions
-ALLOWED_EXTENSIONS = set(['txt', 'fasta', 'fa','input'])
+ALLOWED_EXTENSIONS = set(['txt','fasta','fa','csv','meme','input'])
 ALLOWED_PARAM_EXTENSIONS = set(['txt'])
 
 # handler methods for checking file extensions
@@ -35,7 +33,6 @@ def allowed_param_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_PARAM_EXTENSIONS
 
-
 '''
 This is the default route that is hit when the default URL is entered into the browser. 
 This handles data upload, logo draw, and parameter updates. Uploaded files are written to a 
@@ -46,7 +43,7 @@ POST, the method re-renders the output page with the updated logo.
 @app.route('/', methods=['GET','POST'])
 def index():
 
-    # dictionary to story all metadata
+    # dictionary to store all metadata
     # new keys/vals get written to file
     metaData = {}
     # radio button state and file format
@@ -95,7 +92,7 @@ use_tightlayout : True"""
     if request.method == 'POST':
 
         # if update parameter button is hit, get updated values
-        if str(request.form.get("parameterButton")) == 'Update logo':
+        if str(request.form.get("parameterButton")) == 'Draw logo':
 
             updatedParametes = request.form['paramsTextArea']
             print("Hitting parameter update button ")
@@ -140,6 +137,9 @@ use_tightlayout : True"""
                 # write file name in metadata
                 metaData['fileName'] = f.filename
 
+                # write session name in metadata file for getting example from gallery
+                metaData['session_id'] = str(session['uid'])
+
                 # write all metadata to file
                 with open(metaDataFile, "w") as myfile:
                     for key in sorted(metaData):
@@ -181,6 +181,38 @@ use_tightlayout : True"""
                         for line in f1:
                             f2.write(line)
 
+        # check if example loaded from gallery. This is also a post
+        elif 'example_number' in session:
+
+            if session['example_number'] == 'Example 1':
+                style_file = '/Users/tareen/Desktop/Desktop_Tests/logomaker_after_csv_parsing_params/logomaker/static/example_1_style.txt'
+                dataFileName = '/Users/tareen/Desktop/Desktop_Tests/logomaker_after_csv_parsing_params/logomaker/static/example_1_data.fasta'
+                metaData['fileFormat'] = 'fasta'
+
+            elif session['example_number'] == 'Example 2':
+                style_file = '/Users/tareen/Desktop/Desktop_Tests/logomaker_after_csv_parsing_params/logomaker/static/example_2_style.txt'
+                dataFileName = '/Users/tareen/Desktop/Desktop_Tests/logomaker_after_csv_parsing_params/logomaker/static/example_2_data.fasta'
+                metaData['fileFormat'] = 'fasta'
+
+            elif session['example_number'] == 'Example 3':
+                style_file = '/Users/tareen/Desktop/Desktop_Tests/logomaker_after_csv_parsing_params/logomaker/static/example_3_style.txt'
+                dataFileName = '/Users/tareen/Desktop/Desktop_Tests/logomaker_after_csv_parsing_params/logomaker/static/example_3_data.fasta'
+                metaData['fileFormat'] = 'fasta'
+
+            elif session['example_number'] == 'Example 4':
+                style_file = '/Users/tareen/Desktop/Desktop_Tests/logomaker_after_csv_parsing_params/logomaker/static/example_4_style.txt'
+                dataFileName = '/Users/tareen/Desktop/Desktop_Tests/logomaker_after_csv_parsing_params/logomaker/static/example_4_data.txt'
+                metaData['fileFormat'] = 'csv'
+
+            # make necessary updates to metadata
+            # write session name in metadata file for getting example from gallery
+            metaData['session_id'] = str(session['uid'])
+            # write all metadata to file
+            with open(metaDataFile, "w") as myfile:
+                for key in sorted(metaData):
+                    myfile.write(key + ":" + str("".join(metaData[key])) + "\n")
+
+
 
     # show index page values on get
     elif request.method == 'GET':
@@ -189,21 +221,34 @@ use_tightlayout : True"""
         # the following file. This logo is displayed when the user
         # first arrives on the page
 
-
         # reset state/variables on get
         shutil.copy('crp_sites.fasta', tempFile)
         dataFileName = tempFile
         radioState = 'fasta'
-        # reset metadata
+
+        # reset metadata: describe why this is needed?
         if len(metaDataFile) != 0:
             open(metaDataFile, 'w').close()
+
+        # write session name in metadata file for getting example from gallery
+        metaData['session_id'] = str(session['uid'])
+
+        # reset session if home-key pressed, so gallery example don't
+        # intefere with creation of new logos
+        if 'example_number' in session:
+            session.pop('example_number', None)
+
+        # write to metadata file
+        with open(metaDataFile, "w") as myfile:
+            for key in sorted(metaData):
+                myfile.write(key + ":" + str("".join(metaData[key])) + "\n")
 
         # write the default parameter values to a temporary style file
         # which gets passed onto make_stylized_logo
         with open(style_file, 'w') as f:
             f.write(default_parameters_text)
 
-    
+
     # read any meta data written to file
     # check if file exists first
     read_metadata_dict = {}
@@ -219,13 +264,9 @@ use_tightlayout : True"""
         realUploadedFileName = str(read_metadata_dict['fileName']).strip()
         print("Real file name: ",realUploadedFileName)
 
-
     if 'fileFormat' in read_metadata_dict:
         radioState = str(read_metadata_dict['fileFormat']).strip()
         print("File format: ",radioState)
-    
-    
-    
 
     # display parameter values in a textarea: 3 steps
     # Note: these steps could be combined into 1 step but
@@ -279,13 +320,14 @@ use_tightlayout : True"""
             print("Calling logomaker from meme",dataFileName)
             logomaker.make_styled_logo(style_file=style_file,meme_file=dataFileName)
         elif radioState == 'csv':
-            logomaker.make_styled_logo(style_file=style_file, csv_file=dataFileName)
+            #logomaker.make_styled_logo(style_file=style_file, csv_file=dataFileName)
+            logomaker.make_styled_logo(style_file=style_file, matrix_csvfile=dataFileName)
         else:
             print("Calling logomaker from default", dataFileName, " radiostate: ",radioState)
             logomaker.make_styled_logo(style_file=style_file, fasta_file=dataFileName)
     except:
         # display this message in lieu of failed logo rendering.
-        logoFailure = "Could not draw Logo"
+        logoFailure = "ERROR: Could not draw Logo"
 
 
     #save the logo as a stream of bytes which can be passed into
@@ -301,31 +343,136 @@ use_tightlayout : True"""
         flash(log.read())
     cleanWarnings(logFile)
 
-    ### Updated parameters dictionary
-
+    # form default values dict
     param_dict = logomaker.documentation_parser.parse_documentation_file('make_logo_arguments.txt')
     default_values = inspect.getargspec(logomaker.make_logo)
     doc_dict = dict(zip(default_values[0], list(default_values[3])))
 
+    # for unique sections names
+    sectionSet = set()
+    # form dictionary with default values, descriptions, and sections
     doc_dict_2 = {}
     param_pairs = [(val.param_num, val.section, val.name, val.description) for val in param_dict.values()]
-
-    # form dictionary with default values and descriptions together
     for num, section, name, description in sorted(param_pairs):
-        doc_dict_2[name] = (doc_dict[name], description)
+        doc_dict_2[name] = (doc_dict[name], description, section)
+        sectionSet.add(section)
+
+    # change to list to access section as elements
+    sectionList = sorted(list(sectionSet))
+    sectionIndex = 0  # index to iterate unique sections
+    # dictionary for showing parameters based on sections
+    sectionDict = {}
+
+    # sort by section; index 1 is value, 2 is section.
+    for key, value in sorted(doc_dict_2.items(), key=lambda x: x[1][2]):
+        # section matches unique seciton in set, return all parameters associated with it
+        if (value[2] == sectionList[sectionIndex]) and sectionIndex < len(sectionList):
+            # sectionList[sectionIndex] is going to be button name and id
+            # key are going to be table elements
+            # print(sectionList[sectionIndex], key, value[0], value[1])
+
+            # new dict with section name as key and values being all the associated parameter names.
+            # along with default values and descriptions
+            if sectionList[sectionIndex] in sectionDict:
+                sectionDict[sectionList[sectionIndex]].append([key, value[0], value[1]])
+            else:
+                sectionDict[sectionList[sectionIndex]] = [[key, value[0], value[1]]]
+        else:
+            sectionIndex += 1
 
 
     # for downloads
-    plt.savefig('/Users/tareen/Desktop/Desktop_Tests/logomaker_after_csv_parsing_params/logomaker/'+str(session['uid'])+'.png')
+    localpath = '/Users/tareen/Desktop/Desktop_Tests/logomaker_after_csv_parsing_params/logomaker/static/'
+    plt.savefig(localpath+str(session['uid'])+'.png')
+    plt.savefig(localpath+str(session['uid'])+'.pdf')
+    plt.savefig(localpath+str(session['uid'])+'.ps')
+    plt.savefig(localpath+str(session['uid'])+'.svg')
+
 
     plt.close('All')
 
     # render the template with logo data
     return render_template('output.html', result=logoFigData, paramsLength=paramsLength, displayParams=displayParams,
-                           #displayInput=displayInput, inputDataLength=inputDataLength, doc_dict=doc_dict,
-                           displayInput=displayInput, inputDataLength=inputDataLength, doc_dict=doc_dict_2,
-                           radioState=radioState, logoFailure=logoFailure, realUploadedFileName=realUploadedFileName)
+                           displayInput=displayInput, inputDataLength=inputDataLength, doc_dict=doc_dict_2,sectionDict=sectionDict,
+                           radioState=radioState, logoFailure=logoFailure, realUploadedFileName=realUploadedFileName,tempFileName=str(session['uid']))
 
+
+# return to home page after click homepage button
+@app.route('/home',methods=['GET','POST'])
+def redirect_index():
+
+    # reset session if home-key pressed, so gallery example don't
+    # intefere with creation of new logos
+    if 'example_number' in session:
+        session.pop('example_number', None)
+    return redirect(url_for('index'))
+
+# download logo in the format chosen by user
+@app.route('/download_logo/')
+@app.route('/download_logo/<imageFormat>')
+def download_logo(imageFormat='png'):
+    print("xxx")
+    print(imageFormat)
+    print("xxx")
+
+    return send_file('/Users/tareen/Desktop/Desktop_Tests/logomaker_after_csv_parsing_params/logomaker/static/'+str(session['uid'])+'.'+imageFormat)
+
+# return to home page after click homepage button
+@app.route('/gallery',methods=['GET','POST'])
+def gallery():
+    return render_template('gallery.html')
+
+# return to home page after click homepage button
+@app.route('/help',methods=['GET'])
+def help():
+    return render_template('help.html')
+
+# return to home page after click homepage button
+@app.route('/about',methods=['GET'])
+def about():
+    return render_template('about.html')
+
+# get gallery example
+@app.route('/getGalleryExample',methods=['GET','POST'])
+def getGalleryExample():
+
+    # process the post from html
+    if request.method == 'POST':
+
+        print(type(request.form))
+
+
+        if 'example_1_button' in request.form:
+                print('redirecting to index with example 1')
+
+                # set gallery example in the session dict
+                session['example_number'] = 'Example 1'
+                return redirect(url_for('index',example_number=session['example_number']),code=307)
+
+        elif 'example_2_button' in request.form:
+
+            print('redirecting to index with example 2')
+            # set gallery example in the session dict
+            session['example_number'] = 'Example 2'
+            return redirect(url_for('index',example_number=session['example_number']),code=307)
+
+
+        elif 'example_3_button' in request.form:
+            print('redirecting to index with example 3')
+
+            # set gallery example in the session dict
+            session['example_number'] = 'Example 3'
+            return redirect(url_for('index',example_number=session['example_number']),code=307)
+
+
+        elif 'example_4_button' in request.form:
+            print('redirecting to index with example 4')
+
+            # set gallery example in the session dict
+            session['example_number'] = 'Example 4'
+            return redirect(url_for('index',example_number=session['example_number']),code=307)
+
+        return request.form
 
 @app.before_first_request
 def before_first_request():
@@ -371,3 +518,4 @@ class WarningsLogger(object):
 
 if __name__ == "__main__":
     app.run(debug=True)
+    #app.run()

@@ -1,0 +1,31 @@
+axes_fontsize: 6
+style_sheet: 'default'
+csv_delim_whitespace: True
+csv_index_col: 'Position'
+ylim: [-.5,.4] 
+yticks: [-.5,0,.4]
+yticklabels: ['-0.5','0','+0.4']
+xlim: [-7,6]
+shift_first_position_to: -6 
+show_position_zero: False
+bottom_spine: False
+baseline_style: ':'
+baseline_width: 1.5
+xlabel: 'Alpha helix poxition'
+ylabel: 'Contribution to DBF model'
+figsize: [2.5,2]
+font_family: 'Arial'
+font_weight: 'heavy'
+max_stretched_character: 'M'
+fullheight_boxcolors: [.96, .95, .60]
+fullheight_zorder: -10
+width: .8
+vsep: .02
+fullheight_vsep: 0
+fullheight_width: 1
+character_colors: {'DEC': [.42, .16, .42], 'PG': [.47, .47, 0.0], 'MIWALFV': [.13, .35, .61], 'NTSQ': [.25, .73, .28], 'RK': [.74, .18, .12], 'HY': [.09, .47, .46]}
+fullheight: [-1,1,2,5]
+below_alpha: .5 
+remove_flattened_characters: True
+xtick_format: '%+d'
+use_tightlayout: True

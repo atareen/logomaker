@@ -1,0 +1,12 @@
+axes_fontsize: 16
+center_columns: True
+matrix_type: 'counts'
+font_family: 'Stencil Std'
+font_weight: 'bold'
+logo_type: 'enrichment'
+below_flip: True
+below_shade: .5
+below_alpha: .5
+axes_type: 'vlines'
+gridline_alpha: 0
+character_colors: 'gist_rainbow'

@@ -1,2 +1,8 @@
-character_colors : 'classic'
-logo_type : 'probability'
+axes_fontsize: 16
+logo_type: 'information'
+axes_type: 'classic'
+xlabel: ''
+character_colors: 'classic'
+ylim: [0,1]
+yticks: [0,.5,1]
+matrix_type: 'counts'

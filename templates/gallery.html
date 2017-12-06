@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
   <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
 <style>
 
@@ -18,6 +19,9 @@ background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, F
 
 <body>
 
+<!-- logomaker graphic -->
+<img src="/static/logo.png" width="338" height="70">
+<br>
 <!-- return to homepage -->
 <form class="inline-div" action="/home" method="GET">
     <input type="submit" value="LogoMaker Homepage" />
@@ -41,9 +45,26 @@ background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, F
 
 <h1> Gallery </h1>
 
+<h2> Warning: page under development </h2>
+
 <img src="/static/example_1_logo.png">
 <form action="/getGalleryExample" method="POST">
     <input id="example_1_button" type="submit" value="Example 1" name="example_1_button" />
+</form>
+
+<img src="/static/example_2_logo.png">
+<form action="/getGalleryExample" method="POST">
+    <input id="example_2_button" type="submit" value="Example 2" name="example_2_button" />
+</form>
+
+<img src="/static/example_3_logo.png">
+<form action="/getGalleryExample" method="POST">
+    <input id="example_3_button" type="submit" value="Example 3" name="example_3_button" />
+</form>
+
+<img src="/static/example_4_logo.png">
+<form action="/getGalleryExample" method="POST">
+    <input id="example_4_button" type="submit" value="Example 4" name="example_4_button" />
 </form>
 
 </body>

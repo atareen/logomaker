@@ -1,0 +1,9 @@
+axes_fontsize: 16
+matrix_type: 'counts'
+font_family: 'fantasy'
+font_weight: 'bold'
+logo_type: 'probability'
+character_colors: 'blue'
+axes_type: 'rails'
+stack_order: 'small_on_top'
+use_transparency: True

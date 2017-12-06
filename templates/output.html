@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">-->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -21,18 +21,12 @@
             var parameter = $(this).attr("data");
             var defaultValue = $(this).attr("data-target");
             document.getElementById("para").innerHTML = parameter;
-            /*
-            if(isNaN(parameter))
-            {
-	            $('#paramsTextAreaId').append(parameter+":'"+defaultValue+"'\n");
-            }
-            else
-            {
-	            $('#paramsTextAreaId').append(parameter+":"+defaultValue+"\n");
-            }
-            */
-            $('#paramsTextAreaId').append(parameter+":"+defaultValue+"\n");
             //console.log(parameter)
+            // Need to check this so download dropdown doesn't interfere with optional style parameter dropdowns.
+            if(parameter!=undefined)
+            {
+                $('#paramsTextAreaId').append(parameter+":"+defaultValue+"\n");
+            }
         }
     );
 });
@@ -62,12 +56,11 @@ background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, F
 
 .button-container {
     width: 850px;
-    overflow-y: auto;
 }
 
 .button-container > button {
-    width: 200px;
-    overflow-y: auto;
+    width: 250px;
+    text-overflow: ellipsis;
 }
 
 #drawLogoButton {
@@ -103,6 +96,9 @@ background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, F
 
 <body>
 
+<!-- logomaker graphic -->
+<img src="/static/logo.png" width="338" height="70">
+<br>
 <!-- return to homepage -->
 <form class="inline-div" action="/home" method="GET">
     <input type="submit" value="LogoMaker Homepage" />
@@ -265,6 +261,21 @@ Other helpful text about parameters here...
 <!-- draw logo button -->
 <input id="drawLogoButton" type="submit" form="parametersForm" id="btnSubmit" value="Draw logo" name="parameterButton" />
 <br>
+<!-- logo download button -->
+<div class="inline-div" align="left">
+  <div class="dropdown">
+    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Download Logo
+    <span class="caret"></span></button>
+    <ul class="dropdown-menu">
+        <li><a href="{{ url_for('download_logo',imageFormat='pdf') }}" download="logo.pdf"><button>pdf</button></a></li>
+        <li><a href="{{ url_for('download_logo',imageFormat='png') }}" download="logo.png"><button>png</button></a></li>
+        <li><a href="{{ url_for('download_logo',imageFormat='ps') }}" download="logo.ps"><button>ps</button></a></li>
+        <li><a href="{{ url_for('download_logo',imageFormat='svg') }}" download="logo.svg"><button>svg</button></a></li>
+    </ul>
+  </div>
+</div>
+<br>
+
 <!-- Feedback -->
 <h3 align="left">Feedback</h3>
 <p style="overflow-y:scroll;overflow-x:scroll;width=300px">
@@ -284,16 +295,14 @@ Other helpful text about parameters here...
 </p>
 </div>
 
+
 <br>
 <!-- Parameter Section Buttons -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-<!-- <table  rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
 <div class="button-container">
 <h2> Optional Style Parameters</h2>
 {% for key,value in sectionDict.iteritems() -%}
 {% set sectionButtonId = key|replace(" ", "_") %}
-<button onclick="toggleParams('{{ sectionButtonId }}')">{{ key }}
-<span class="caret"></span>
+<button onclick="toggleParams('{{ sectionButtonId }}')">{{ key }}<span class="caret"></span>
 <!-- hide parameter list unless button is clicked -->
 <style>
 #{{ sectionButtonId }} {
@@ -320,24 +329,18 @@ display : none;
 {%- endfor %}
 </div>
 
-
-
+<!-- code for individual download buttons -->
 <!--
 {#
-<h2> Test development </h2>
-<div class="container">
-  <div class="dropdown">
-    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Dropdown Example
-    <span class="caret"></span></button>
-    <ul class="dropdown-menu">
-      <li><a href="#">HTML</a></li>
-      <li><a href="#">CSS</a></li>
-      <li><a href="#">JavaScript</a></li>
-    </ul>
-  </div>
+<div class="container" align="left">
+    <a href="{{ url_for('download_logo',imageFormat='pdf') }}" download="logo.pdf"><button>pdf</button></a>
+    <a href="{{ url_for('download_logo',imageFormat='png') }}" download="logo.png"><button>png</button></a>
+    <a href="{{ url_for('download_logo',imageFormat='ps') }}" download="logo.ps"><button>ps</button></a>
+    <a href="{{ url_for('download_logo',imageFormat='svg') }}" download="logo.svg"><button>svg</button></a>
 </div>
 #}
 -->
+
 
 
 </body>
