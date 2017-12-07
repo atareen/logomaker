@@ -496,6 +496,12 @@ def before_first_request():
     pass
 
 
+# for broken or miss-typed links
+@app.errorhandler(404)
+def broken_link(e):
+    return render_template('four_0_four.html'), 404
+
+
 @app.before_request
 def before_request():
     # here we can do something before every
