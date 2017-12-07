@@ -204,6 +204,14 @@ use_tightlayout : True"""
                 dataFileName = '/Users/tareen/Desktop/Desktop_Tests/logomaker_after_csv_parsing_params/logomaker/static/example_4_data.txt'
                 metaData['fileFormat'] = 'csv'
 
+            # the following updates the temp data so gallery example keeps re-drawing.
+            # write from
+            with open(dataFileName) as f1:
+                # write to
+                with open(tempFile, "w") as f2:
+                    for line in f1:
+                        f2.write(line)
+
             # make necessary updates to metadata
             # write session name in metadata file for getting example from gallery
             metaData['session_id'] = str(session['uid'])
