@@ -16,6 +16,8 @@ import inspect
 
 # name of the flask app
 app = Flask(__name__)
+# don't allow file transfers over 50 mb
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 
 # this key decrypts the cookie on the client's browser
 app.secret_key = os.urandom(32)
@@ -514,6 +516,11 @@ def before_first_request():
 @app.errorhandler(404)
 def broken_link(e):
     return render_template('four_0_four.html'), 404
+
+# for file sizes bigger than 50 mb
+@app.errorhandler(413)
+def file_too_large(e):
+    return render_template('file_too_large.html'), 413
 
 
 @app.before_request

@@ -1,0 +1,49 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<style>
+
+body{
+background: #ECE9E6;  /* fallback for old browsers */
+background: -webkit-linear-gradient(to right, #FFFFFF, #ECE9E6);  /* Chrome 10-25, Safari 5.1-6 */
+background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+</style>
+
+</head>
+
+<body>
+<!-- logomaker graphic -->
+<img src="/static/logo.png" width="338" height="70">
+<br>
+<!-- return to homepage -->
+<form class="inline-div" action="/home" method="GET">
+    <input type="submit" value="LogoMaker Homepage" />
+</form>
+
+<!-- Go to gallery -->
+<form class="inline-div" action="/gallery" method="GET">
+    <input type="submit" value="Gallery" />
+</form>
+
+<!-- Go to help -->
+<form class="inline-div" action="/help" method="GET">
+    <input type="submit" value="Help" />
+</form>
+
+<!-- Go to about -->
+<form class="inline-div" action="/about" method="GET">
+    <input type="submit" value="About" />
+</form>
+
+
+<h2> The uploaded file exceeds our file size limit of 50mb, please upload file with a smaller file size. </h2>
+
+
+</body>
+</html>
