@@ -91,7 +91,21 @@ use_tightlayout : True"""
     # process the post from html
     if request.method == 'POST':
 
-        # if update parameter button is hit, get updated values
+        # read radio state here via ajax post and write to metadata file
+        # this is done to allow the user to change radio state after uploading
+        fileFormatAjax = str(request.values.get('radioValue'))
+        print("Made ajax update ", fileFormatAjax)
+
+        metaData['session_id'] = str(session['uid'])
+
+        if(fileFormatAjax !='None'):
+            metaData['fileFormat'] = fileFormatAjax
+            # write ajax metadata to file
+            with open(metaDataFile, "w") as myfile:
+                for key in sorted(metaData):
+                    myfile.write(key + ":" + str("".join(metaData[key])) + "\n")
+
+        # if draw logo button is hit, get updated values
         if str(request.form.get("parameterButton")) == 'Draw logo':
 
             updatedParametes = request.form['paramsTextArea']
@@ -182,6 +196,7 @@ use_tightlayout : True"""
                             f2.write(line)
 
         # check if example loaded from gallery. This is also a post
+        # the following has lots of room for refactoring, or possibly relocating to another function
         elif 'example_number' in session:
 
             if session['example_number'] == 'Example 1':
@@ -398,7 +413,6 @@ use_tightlayout : True"""
 
 
     plt.close('All')
-
     # render the template with logo data
     return render_template('output.html', result=logoFigData, paramsLength=paramsLength, displayParams=displayParams,
                            displayInput=displayInput, inputDataLength=inputDataLength, doc_dict=doc_dict_2,sectionDict=sectionDict,

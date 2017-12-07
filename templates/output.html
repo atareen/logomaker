@@ -43,6 +43,37 @@ function toggleParams(id) {
     }
 }
 
+// this method will be run when draw logo is hit, this should allow the user to change
+// radio state after the file has been uploaded
+function getRadioState()
+{
+var radios = document.getElementsByName('fileformat');
+
+for (var i = 0, length = radios.length; i < length; i++)
+    {
+        if (radios[i].checked)
+        {
+            // do whatever you want with the checked radio
+            var radioValue = radios[i].value;
+            //console.log(radios[i].value);
+
+            // only one radio can be logically checked, don't check the rest
+            break;
+        }
+    }
+    // the following should post only if radio value is different than before
+    if ( '{{ radioState }}' != radioValue)
+    {
+        $.ajax(
+                {
+                    url: '/',
+                    data: {radioValue},
+                    type: 'POST'
+                }
+              );
+    }
+}
+
 </script>
 
 <style>
@@ -259,7 +290,7 @@ Other helpful text about parameters here...
 
 <div class="inline-div">
 <!-- draw logo button -->
-<input id="drawLogoButton" type="submit" form="parametersForm" id="btnSubmit" value="Draw logo" name="parameterButton" />
+<input id="drawLogoButton" type="submit" form="parametersForm" id="btnSubmit" value="Draw logo" name="parameterButton" onclick="getRadioState()"/>
 <br>
 <!-- logo download button -->
 <div class="inline-div" align="left">
