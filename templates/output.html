@@ -74,6 +74,7 @@ for (var i = 0, length = radios.length; i < length; i++)
     }
 }
 
+
 </script>
 
 <style>
@@ -155,8 +156,9 @@ background: linear-gradient(to right, #FFFFFF, #ECE9E6); /* W3C, IE 10+/ Edge, F
 <h2 align="left">Data</h2>
 <div class="inline-div">
 
-<input form="inputForm" type = "file" name = "file" />
-<input form="inputForm" type="submit" value="Upload Data" name="dataUploadButton">
+<input form="inputForm" type = "file" name = "file" onchange="document.getElementById('uploaderButton').click();"/>
+<input hidden id="uploaderButton" form="inputForm" type="submit" value="Upload Data" name="dataUploadButton">
+
 
 <!-- Input display text box -->
 
@@ -238,8 +240,8 @@ Select File Type
 
 <!-- Parameters upload form -->
 <form action = "/" method = "POST" enctype = "multipart/form-data">
-    <input type = "file" name = "file" />
-    <input type="submit" value="Upload Parameters" name="parameterUploadButton">
+    <input type = "file" name = "file" onchange="document.getElementById('styleFileUploaderButton').click();"/>
+    <input hidden id="styleFileUploaderButton" type="submit" value="Upload Parameters" name="parameterUploadButton">
 </form>
 
 <div class="inline-div">
