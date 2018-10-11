@@ -28,6 +28,19 @@ subsequent customization and incorporation into multi-panel figures.
    
 .. image:: _static/logos.png
    :scale: 40 %
+   
+   
+Installation
+------------
+
+Logomaker can be installed from
+`PyPI <https://pypi.python.org/pypi/logomaker>`_ using the pip package
+manager (version 9.0.0 or higher). At the command line::
+
+    pip install logomaker
+
+The code for logomaker is open source and available on
+`GitHub <https://github.com/jbkinney/logomaker>`_.   
 
 Documentation
 -------------
