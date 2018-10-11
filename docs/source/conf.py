@@ -39,7 +39,8 @@ print('Printing files...')
 
 print(os.listdir('/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/'))
 
-import logomaker
+#import logomaker
+import latest
 
 
 # -- Project information -----------------------------------------------------
