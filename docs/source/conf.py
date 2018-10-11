@@ -70,7 +70,10 @@ extensions = [
     'numpydoc'
 ]
 
-autodoc_mock_imports = ['validate']
+autodoc_mock_imports = ['validate',
+                        'Bio',
+                        'matplotlib.pyplot',
+                        ]
 
 
 # Add any paths that contain templates here, relative to this directory.
