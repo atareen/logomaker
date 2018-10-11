@@ -10,6 +10,10 @@ Logomaker: Software for the visualization of sequence-function relationships
 
 *Written by Ammar Tareen, William Ireland, and Justin B. Kinney.*
 
+.. raw:: html
+
+    <h1><font color="red">Under Active Development</font></h1>
+
 We introduce LogoMaker, a lightweight utility for generating publication-quality sequence
 logos. LogoMaker can generate logos from a variety of data including user-supplied motifs, sequence
 alignments, enrichment data from massively parallel reporter assays or deep mutational scanning
