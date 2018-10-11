@@ -31,11 +31,13 @@ sys.path.insert(3,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/ch
 sys.path.insert(4,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/docs/source/../../../../')
 
 print('Printing files...')
-print(os.listdir('.'))
-print(os.listdir('../.'))
-print(os.listdir('../../.'))
-print(os.listdir('../../../.'))
-print(os.listdir('../../../../.'))
+#print(os.listdir('.'))
+#print(os.listdir('../.'))
+#print(os.listdir('../../.'))
+#print(os.listdir('../../../.'))
+#print(os.listdir('../../../../.'))
+
+print(os.listdir('/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/'))
 
 import logomaker
 
