@@ -17,6 +17,10 @@
 # sys.path.insert(0, os.path.abspath('.'))
 
 import sys
+
+import os
+print('Current working directory',os.getcwd())
+
 sys.path.insert(0,'../../../')
 sys.path.insert(1,'../../')
 
