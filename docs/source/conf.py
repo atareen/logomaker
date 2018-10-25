@@ -19,7 +19,7 @@
 import sys
 
 import os
-print('Current working directory',os.getcwd())
+#print('Current working directory',os.getcwd())
 
 #sys.path.insert(0,'../../../')
 #sys.path.insert(1,'../../')
