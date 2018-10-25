@@ -466,8 +466,8 @@ def validate_parameter(name, user, default):
         value = _validate_iupac(name, user, default)
 
     # Special case: matrix
-    elif name == 'matrix':
-        value = validate_mat(user, allow_nan=True)
+    elif name == 'dataframe':
+        value = validate_dataframe(user, allow_nan=True)
 
     # Special case: figsize
     elif name == 'figsize':
@@ -951,38 +951,38 @@ def _validate_ticklabels(name, user, default):
     return value
 
 
-def validate_mat(matrix, allow_nan=True):
+def validate_dataframe(dataframe, allow_nan=True):
     '''
     Runs assert statements to verify that df is indeed a motif dataframe.
     Returns a cleaned-up version of df if possible
     '''
 
     # Copy and preserve logomaker_type
-    matrix = matrix.copy()
+    dataframe = dataframe.copy()
 
-    assert type(matrix) == pd.core.frame.DataFrame, 'Error: df is not a dataframe'
+    assert type(dataframe) == pd.core.frame.DataFrame, 'Error: df is not a dataframe'
 
     if not allow_nan:
         # Make sure all entries are finite numbers
-        assert np.isfinite(matrix.values).all(), \
+        assert np.isfinite(dataframe.values).all(), \
             'Error: some matrix elements are not finite.' +\
             'Set allow_nan=True to allow.'
 
     # Make sure the matrix has a finite number of rows and columns
-    assert matrix.shape[0] >= 1, 'Error: matrix has zero rows.'
-    assert matrix.shape[1] >= 1, 'Error: matrix has zero columns.'
+    assert dataframe.shape[0] >= 1, 'Error: matrix has zero rows.'
+    assert dataframe.shape[1] >= 1, 'Error: matrix has zero columns.'
 
     # Remove columns whose names aren't strings exactly 1 character long.
     # Warn user when doing so
-    cols = matrix.columns
+    cols = dataframe.columns
     for col in cols:
         if not isinstance(col, basestring) or (len(col) != 1):
-            del matrix[col]
+            del dataframe[col]
             message = ('Matrix has invalid column name "%s". This column ' +
                        'has been removed.') % col
             warnings.warn(message, UserWarning)
 
-    cols = matrix.columns
+    cols = dataframe.columns
     for i, col_name in enumerate(cols):
         # Ok to have a 'pos' column
         if col_name == 'pos':
@@ -1005,23 +1005,23 @@ def validate_mat(matrix, allow_nan=True):
             'Error: column name "%s" is a whitespace charcter.'%repr(col_name)
 
         # Set revised column name
-        matrix.rename(columns={col_name:new_col_name}, inplace=True)
+        dataframe.rename(columns={col_name:new_col_name}, inplace=True)
 
     # If there is a pos column, make that the index
     if 'pos' in cols:
-        matrix['pos'] = matrix['pos'].astype(int)
-        matrix.set_index('pos', drop=True, inplace=True)
+        dataframe['pos'] = dataframe['pos'].astype(int)
+        dataframe.set_index('pos', drop=True, inplace=True)
 
     # Remove name from index column
-    matrix.index.names = [None]
+    dataframe.index.names = [None]
 
     # Alphabetize character columns
-    char_cols = list(matrix.columns)
+    char_cols = list(dataframe.columns)
     char_cols.sort()
-    matrix = matrix[char_cols]
+    dataframe = dataframe[char_cols]
 
     # Return cleaned-up df
-    return matrix
+    return dataframe
 
 def validate_probability_mat(matrix):
     '''
@@ -1030,7 +1030,7 @@ def validate_probability_mat(matrix):
     '''
 
     # Validate as motif
-    matrix = validate_mat(matrix)
+    matrix = validate_dataframe(matrix)
 
     # Validate df values as info values
     assert (all(matrix.values.ravel() >= 0)), \

@@ -4,7 +4,7 @@ import inspect
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 import matplotlib as mpl
-from validate import validate_parameter, validate_mat, \
+from validate import validate_parameter, validate_dataframe, \
     params_that_specify_colorschemes
 from data import load_alignment, load_matrix, iupac_to_probability_mat, \
     counts_mat_to_probability_mat
@@ -25,7 +25,7 @@ def remove_none_from_dict(d):
     assert isinstance(d, dict), 'Error: d is not a dictionary.'
     return dict([(k, v) for k, v in d.items() if v is not None])
 
-def make_logo(matrix=None,
+def make_logo(dataframe=None,
 
               # FASTA file processing
               fasta_file=None,
@@ -1176,7 +1176,7 @@ def make_logo(matrix=None,
     bg_mat = None
 
     # Make sure that only one of the following is specified
-    exclusive_list = ['matrix',
+    exclusive_list = ['dataframe',
                       'fasta_file',
                       'meme_file',
                       'iupac_string',
@@ -1189,19 +1189,14 @@ def make_logo(matrix=None,
             repr(exclusive_list)
 
     # If matrix is specified
-    if matrix is not None:
-        matrix = validate_mat(matrix)
-
-    # Otherwise, if FASTA file is specifieid
-    elif fasta_file is not None:
-        matrix = load_alignment(fasta_file=fasta_file)
-        matrix_type = 'counts'
+    if dataframe is not None:
+        dataframe = validate_dataframe(dataframe)
 
     # Otherwise, if MEME file is specified
     elif meme_file is not None:
-        matrix = load_meme(file_name=meme_file,
-                           motif_name=meme_motifname,
-                           motif_num=meme_motifnum)
+        dataframe = load_meme(file_name=meme_file,
+                              motif_name=meme_motifname,
+                              motif_num=meme_motifnum)
         matrix_type = 'probability'
 
         # Set background based on MEME file if background is currently None
@@ -1211,11 +1206,11 @@ def make_logo(matrix=None,
 
         # Set title to be matrix name if none is specified
         if title is None:
-            title = matrix.name
+            title = dataframe.name
 
     # Otherwise, if iupac_string is specified
     elif iupac_string is not None:
-        matrix = iupac_to_probability_mat(iupac_string)
+        dataframe = iupac_to_probability_mat(iupac_string)
         matrix_type = 'probability'
 
         # Set title to be matrix name if none is specified
@@ -1224,11 +1219,11 @@ def make_logo(matrix=None,
 
     # Otherwise, if csv file is specified
     elif sequences_csvfile is not None:
-        matrix = load_alignment(csv_file=sequences_csvfile,
-                                seq_col=seq_col,
-                                ct_col=ct_col,
-                                csv_kwargs=csv_kwargs,
-                                ignore_characters=ignore_characters)
+        dataframe = load_alignment(csv_file=sequences_csvfile,
+                                   seq_col=seq_col,
+                                   ct_col=ct_col,
+                                   csv_kwargs=csv_kwargs,
+                                   ignore_characters=ignore_characters)
         matrix_type = 'counts'
 
         # If either a background counts column or a
@@ -1259,8 +1254,8 @@ def make_logo(matrix=None,
 
     # Otherwise, if csv matrix file is specified
     elif matrix_csvfile is not None:
-        matrix = load_matrix(csv_file=matrix_csvfile,
-                             csv_kwargs=csv_kwargs)
+        dataframe = load_matrix(csv_file=matrix_csvfile,
+                                csv_kwargs=csv_kwargs)
 
     else:
         assert False, 'This should never happen.'
@@ -1279,11 +1274,11 @@ def make_logo(matrix=None,
     # matrix.columns
 
     # Filter matrix columns based on sequence and character specifications
-    matrix = data.filter_columns(matrix=matrix,
-                                 sequence_type=sequence_type,
-                                 characters=characters,
-                                 ignore_characters=ignore_characters)
-    characters = matrix.columns
+    dataframe = data.filter_columns(matrix=dataframe,
+                                    sequence_type=sequence_type,
+                                    characters=characters,
+                                    ignore_characters=ignore_characters)
+    characters = dataframe.columns
 
     ######################################################################
     # matrix.index
@@ -1292,50 +1287,50 @@ def make_logo(matrix=None,
     # remove positions with too few counts and renumber positions starting
     # at zero
     if matrix_type == 'counts' and counts_threshold is not None:
-        position_counts = matrix.values.sum(axis=1)
-        matrix = matrix.loc[position_counts >= counts_threshold, :]
-        matrix['pos'] = range(len(matrix))
-        matrix.set_index('pos', inplace=True, drop=True)
+        position_counts = dataframe.values.sum(axis=1)
+        dataframe = dataframe.loc[position_counts >= counts_threshold, :]
+        dataframe['pos'] = range(len(dataframe))
+        dataframe.set_index('pos', inplace=True, drop=True)
 
     # Restrict to specific position range if requested
     if position_range is not None:
         min = position_range[0]
         max = position_range[1]
-        indices = (matrix.index >= min) & (matrix.index < max)
-        matrix = matrix.loc[indices, :]
+        indices = (dataframe.index >= min) & (dataframe.index < max)
+        dataframe = dataframe.loc[indices, :]
 
         # Process bg_mat if that has been set
         if bg_mat is not None:
             bg_mat = bg_mat.loc[indices, :]
 
     # Matrix length is now set. Record it.
-    L = len(matrix)
+    L = len(dataframe)
 
     # Shift positions to requested start if so requested
     if shift_first_position_to is None:
-        matrix['pos'] = matrix.index
+        dataframe['pos'] = dataframe.index
     else:
-        matrix['pos'] = shift_first_position_to + matrix.index \
-                        - matrix.index[0]
+        dataframe['pos'] = shift_first_position_to + dataframe.index \
+                           - dataframe.index[0]
 
     # Enforce integer positions and set as index
-    matrix['pos'] = matrix['pos'].astype(int)
-    matrix.set_index('pos', inplace=True, drop=True)
-    matrix = validate_mat(matrix)
-    positions = matrix.index
+    dataframe['pos'] = dataframe['pos'].astype(int)
+    dataframe.set_index('pos', inplace=True, drop=True)
+    dataframe = validate_dataframe(dataframe)
+    positions = dataframe.index
 
     # Shift bg_mat positions too if bg_mat is specified
     if bg_mat is not None:
         bg_mat['pos'] = positions
         bg_mat.set_index('pos', inplace=True, drop=True)
-        bg_mat = validate_mat(bg_mat)
+        bg_mat = validate_dataframe(bg_mat)
 
     ######################################################################
     # matrix.values
 
     # Negate matrix values if requested
     if negate_matrix:
-        matrix *= -1.0
+        dataframe *= -1.0
 
     # Set logo_type equal to matrix_type if is currently None
     if logo_type is None:
@@ -1344,17 +1339,17 @@ def make_logo(matrix=None,
 
     # Get background matrix, only if it has not yet been set
     if bg_mat is None:
-        bg_mat = data.set_bg_mat(background, matrix)
+        bg_mat = data.set_bg_mat(background, dataframe)
 
     # Transform matrix:
-    matrix = data.transform_mat(matrix=matrix,
-                                from_type=matrix_type,
-                                to_type=logo_type,
-                                pseudocount=pseudocount,
-                                background=bg_mat,
-                                enrichment_logbase=enrichment_logbase,
-                                center_columns=center_columns,
-                                information_units=information_units)
+    dataframe = data.transform_mat(matrix=dataframe,
+                                   from_type=matrix_type,
+                                   to_type=logo_type,
+                                   pseudocount=pseudocount,
+                                   background=bg_mat,
+                                   enrichment_logbase=enrichment_logbase,
+                                   center_columns=center_columns,
+                                   information_units=information_units)
 
     # Set highlight sequence from background consensus if requested
     # Overrides highlight_sequence
@@ -1592,10 +1587,10 @@ def make_logo(matrix=None,
             figsize = [default_fig_width, fig_height]
 
         # Pad matrix with zeros
-        rows = matrix.index[0] + \
+        rows = dataframe.index[0] + \
                np.arange(L, num_lines * max_positions_per_line)
         for r in rows:
-            matrix.loc[r, :] = 0.0
+            dataframe.loc[r, :] = 0.0
 
         # If there is a background matrix, pad it with ones:
         if bg_mat is not None:
@@ -1625,7 +1620,7 @@ def make_logo(matrix=None,
 
         # Set ylim (will not be None)
         if ylim is None:
-            values = matrix.fillna(0).values
+            values = dataframe.fillna(0).values
             ymax = (values * (values > 0)).sum(axis=1).max()
             ymin = (values * (values < 0)).sum(axis=1).min()
             ylim = [ymin, ymax]
@@ -1647,7 +1642,7 @@ def make_logo(matrix=None,
             # Section matrix
             start = int(n * max_positions_per_line)
             stop = int((n + 1) * max_positions_per_line)
-            n_matrix = matrix.iloc[start:stop, :]
+            n_matrix = dataframe.iloc[start:stop, :]
 
             # If there is a background matrix, section it
             if bg_mat is not None:
@@ -1679,7 +1674,7 @@ def make_logo(matrix=None,
             n_kwargs['highlight_sequence'] = n_highlight_sequence
 
             # Pass shifted shift_first_position_to
-            n_kwargs['shift_first_position_to'] = matrix.index[0] + start
+            n_kwargs['shift_first_position_to'] = dataframe.index[0] + start
 
             # Don't draw each individual logo. Wait until all are returned.
             n_kwargs['figsize'] = None
@@ -1733,7 +1728,7 @@ def make_logo(matrix=None,
 
     # Modify ylim and ylabel according to logo_type
     if logo_type == 'counts':
-        ymax = matrix.values.sum(axis=1).max()
+        ymax = dataframe.values.sum(axis=1).max()
         if ylim is None:
             ylim = [0, ymax]
         if ylabel is None and axes_type != 'naked':
@@ -1745,7 +1740,7 @@ def make_logo(matrix=None,
             ylabel = 'probability'
     elif logo_type == 'information':
         if ylim is None and (background is None):
-            ylim = [0, np.log2(matrix.shape[1])]
+            ylim = [0, np.log2(dataframe.shape[1])]
         if ylabel is None and axes_type != 'naked':
             ylabel = 'information\n(%s)' % information_units
     elif logo_type == 'enrichment':
@@ -1766,15 +1761,15 @@ def make_logo(matrix=None,
 
     # Set ylim (will not be None)
     if ylim is None:
-        values = matrix.fillna(0).values
+        values = dataframe.fillna(0).values
         ymax = (values * (values > 0)).sum(axis=1).max()
         ymin = (values * (values < 0)).sum(axis=1).min()
         ylim = [ymin, ymax]
 
     # Set xlim (will not be None)
     if xlim is None:
-        xmin = matrix.index.min() - .5
-        xmax = matrix.index.max() + .5
+        xmin = dataframe.index.min() - .5
+        xmax = dataframe.index.max() + .5
         xlim = [xmin, xmax]
 
     # Set xticks
@@ -2113,7 +2108,7 @@ def make_logo(matrix=None,
 
     ######################################################################
     # Create Logo instance
-    logo = Logo(matrix=matrix,
+    logo = Logo(matrix=dataframe,
                 highlight_sequence=highlight_sequence,
                 fullheight=fullheight,
                 font_properties=font_properties,
