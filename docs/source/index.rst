@@ -25,8 +25,21 @@ subsequent customization and incorporation into multi-panel figures.
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+
+Examples
+--------
+
+.. image:: _static/Figure1.png
+   :scale: 40 %
+ 
+.. image:: _static/for_polly_ddG.png
+   :scale: 40 %
    
-.. image:: _static/logos.png
+.. image:: _static/plac_enrichment.png
+   :scale: 40 %
+  
+.. image:: _static/wwdomain.png
    :scale: 40 %
    
    
