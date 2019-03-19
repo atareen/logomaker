@@ -8,11 +8,11 @@ import matplotlib.cm
 import pdb
 
 # Import stuff from logomaker
-from logomaker.src.Glyph import Glyph
-from logomaker.src import color as lm_color
-from logomaker.src.validate import validate_matrix, validate_probability_mat
-import logomaker.src.validate as validate
-from logomaker import ControlledError, check, handle_errors
+from latest.src.Glyph import Glyph
+from latest.src import color as lm_color
+from latest.src.validate import validate_matrix, validate_probability_mat
+import latest.src.validate as validate
+from latest import ControlledError, check, handle_errors
 
 chars_to_colors_dict = {
     tuple('ACGT'): 'classic',
