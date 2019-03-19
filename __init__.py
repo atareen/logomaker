@@ -158,7 +158,11 @@ def handle_errors(func):
 
 # Rename useful stuff from within Logomaker
 
+print('printing cwd from __init__:',os.getcwd())
+
 from logomaker.src.Logo import Logo
+
+
 from logomaker.src.Glyph import Glyph
 from logomaker.src.Glyph import list_font_families
 
