@@ -64,6 +64,7 @@ Documentation
 
    examples
    make_logo
+   Logo
 
 
 
