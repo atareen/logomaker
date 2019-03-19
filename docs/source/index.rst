@@ -63,7 +63,6 @@ Documentation
    :maxdepth: 2
 
    examples
-   make_logo
    Logo
 
 
