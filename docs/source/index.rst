@@ -8,7 +8,7 @@
 Logomaker: Software for the visualization of sequence-function relationships
 =============================================================================
 
-*Written by Ammar Tareen, William Ireland, and Justin B. Kinney.*
+*Written by Ammar Tareen, and Justin B. Kinney.*
 
 .. raw:: html
 

@@ -25,7 +25,7 @@ chars_to_colors_dict = {
 
 class Logo:
     """
-    Logo represents a basic logo, drawn on a specified axes object
+    Logo represents a basic logo, drawn on a specified axes object\n
     using a specified matrix.
 
     attributes
