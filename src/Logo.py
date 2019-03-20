@@ -882,7 +882,7 @@ class Logo:
         ----------
 
         anchor: (int)
-            Anchors tick marks at a specific number. Even if this number
+            Anchors tick marks at a specific number. Even if this number \n
             is not within the x-axis limits, it fixes the register for
             tick marks.
 
