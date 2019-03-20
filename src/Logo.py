@@ -32,66 +32,66 @@ class Logo:
     ----------
 
     matrix: (pd.DataFrame)
-        A matrix specifying character heights and positions. Note that
+        A matrix specifying character heights and positions. Note that \n
         positions index rows while characters index columns.
 
     colors: (color scheme)
-        Face color of logo characters. Default 'gray'. Here and in
+        Face color of logo characters. Default 'gray'. Here and in \n
         what follows a variable of type 'color' can take a variety of value
-        types.
-         - (str) A Logomaker color scheme in which the color is determined
-             by the specific character being drawn. Options are,
-             + For DNA/RNA: 'classic', 'grays', 'base_paring'.
-             + For protein: 'hydrophobicity', 'chemistry', 'charge'.
-         - (str) A built-in matplotlib color name  such as 'k' or 'tomato'
-         - (str) A built-in matplotlib colormap name such as  'viridis' or
-             'Purples'. In this case, the color within the colormap will
-             depend on the character being drawn.
-         - (list) An RGB color (3 floats in interval [0,1]) or RGBA color
-             (4 floats in interval [0,1]).
-         - (dict) A dictionary mapping of characters to colors, in which
-             case the color will depend  on the character being drawn.
-             E.g., {'A': 'green','C': [ 0.,  0.,  1.], 'G': 'y',
-             'T': [ 1.,  0.,  0.,  0.5]}
+        types. \n
+         - (str) A Logomaker color scheme in which the color is determined \n
+             by the specific character being drawn. Options are, \n
+             + For DNA/RNA: 'classic', 'grays', 'base_paring'. \n
+             + For protein: 'hydrophobicity', 'chemistry', 'charge'. \n
+         - (str) A built-in matplotlib color name  such as 'k' or 'tomato' \n
+         - (str) A built-in matplotlib colormap name such as  'viridis' or \n
+             'Purples'. In this case, the color within the colormap will \n
+             depend on the character being drawn. \n
+         - (list) An RGB color (3 floats in interval [0,1]) or RGBA color \n
+             (4 floats in interval [0,1]). \n
+         - (dict) A dictionary mapping of characters to colors, in which \n
+             case the color will depend  on the character being drawn. \n
+             E.g., {'A': 'green','C': [ 0.,  0.,  1.], 'G': 'y', \n
+             'T': [ 1.,  0.,  0.,  0.5]} \n
 
     font_name: (str)
-        The 'font_name' parameter to pass to FontProperties() when creating
+        The 'font_name' parameter to pass to FontProperties() \n when creating
         Glyphs.
 
     stack_order: (str)
-        Must be 'big_on_top', 'small_on_top', or 'fixed. If 'big_on_top',
-        stack glyphs away from x-axis in order of increasing absolute value.
-        If 'small_on_top', stack glyphs away from x-axis in order of
-        decreasing absolute value. If 'fixed', stack glyphs from top to bottom
-        in the order that characters appear in the data frame. If 'flipped',
-        stack glyphs in the opposite order as 'fixed'.
+        Must be 'big_on_top', 'small_on_top', or 'fixed. If 'big_on_top', \n
+        stack glyphs away from x-axis in order of increasing absolute value. \n
+        If 'small_on_top', stack glyphs away from x-axis in order of \n
+        decreasing absolute value. If 'fixed', stack glyphs from top to bottom \n
+        in the order that characters appear in the data frame. If 'flipped', \n
+        stack glyphs in the opposite order as 'fixed'. \n
 
     negate_values: (bool)
-        If True, all values in matrix are multiplied by -1. This can be
-        useful when illustrating negative energy values in an energy matrix.
+        If True, all values in matrix are multiplied by -1. This can be \n
+        useful when illustrating negative energy values in an energy matrix. \n
 
     center_values: (bool)
-        If True, the stack of characters at each position will be centered
-        around zero. This is accomplished by subtracting the mean value
-        in each row of the matrix from each element in that row.
+        If True, the stack of characters at each position will be centered \n
+        around zero. This is accomplished by subtracting the mean value \n
+        in each row of the matrix from each element in that row. \n
 
     baseline_width: (float >= 0.0)
         Width of the baseline.
 
     flip_below: (bool)
-        If True, glyphs below the x-axis (which correspond to negative
-        values in the matrix) will be flipped upside down.
+        If True, glyphs below the x-axis (which correspond to negative \n
+        values in the matrix) will be flipped upside down. \n
 
     shade_below: (float in [0,1])
-        The amount of shading underneath x-axis.
+        The amount of shading underneath x-axis. \n
 
     fade_below: (float in [0,1])
-        The amount of fading underneath x-axis.
+        The amount of fading underneath x-axis. \n
 
     vsep: (float > 0)
-        Amount of whitespace to leave between rendered glyphs. Unlike vpad,
-        vsep is NOT relative to glyph height. The vsep-sized margin between
-        glyphs on either side of the x-axis will always be centered on the
+        Amount of whitespace to leave between rendered glyphs. Unlike vpad, \n
+        vsep is NOT relative to glyph height. The vsep-sized margin between \n
+        glyphs on either side of the x-axis will always be centered on the \n
         x-axis.
 
     zorder: (int >=0)
@@ -104,9 +104,9 @@ class Logo:
         The axes object on which to draw the logo.
 
     draw_now: (bool)
-        If True, the logo is rendered immediately after it is specified.
-        Set to False if you wish to change the properties of any glyphs
-        after initial specification, e.g. by running
+        If True, the logo is rendered immediately after it is specified. \n
+        Set to False if you wish to change the properties of any glyphs \n
+        after initial specification, e.g. by running \n
         Logo.highlight_sequence().
 
     **kwargs:
