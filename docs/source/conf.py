@@ -24,11 +24,13 @@ print('Current working directory',os.getcwd())
 #sys.path.insert(0,'../../../')
 #sys.path.insert(1,'../../')
 
+'''
 sys.path.insert(0,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/docs/source')
 sys.path.insert(1,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/docs/source/../')
 sys.path.insert(2,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/docs/source/../../')
 sys.path.insert(3,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/docs/source/../../../')
 sys.path.insert(4,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/docs/source/../../../../')
+'''
 
 print('Printing files in folder latest...')
 #print(os.listdir('.'))
