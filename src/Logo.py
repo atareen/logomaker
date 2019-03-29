@@ -10,11 +10,14 @@ import pdb
 print('printing from Logo.py')
 
 # Import stuff from logomaker
-from logomaker.src.Glyph import Glyph
-from logomaker.src import colors as lm_color
-from logomaker.src.validate import validate_matrix, validate_probability_mat
-import logomaker.src.validate as validate
-from logomaker.src.error_handling import check, handle_errors
+
+from Glyph import Glyph
+
+#from logomaker.src.Glyph import Glyph
+#from logomaker.src import colors as lm_color
+#from logomaker.src.validate import validate_matrix, validate_probability_mat
+#import logomaker.src.validate as validate
+#from logomaker.src.error_handling import check, handle_errors
 
 chars_to_colors_dict = {
     tuple('ACGT'): 'classic',

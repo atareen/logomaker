@@ -12,6 +12,7 @@ import numpy as np
 # Create global font manager instance. This takes a second or two
 font_manager = FontManager()
 
+print('printing from GLYPH.py!')
 
 def list_font_families():
     """
