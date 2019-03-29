@@ -2,7 +2,8 @@
 
 print('printing from logomaker.py in directory latest')
 
-from logomaker.checkouts.latest.src.Logo import Logo
+#from logomaker.checkouts.latest.src.Logo import Logo
+import Logo
 
 #from logomaker.src.Logo import Logo
 #from logomaker.src.Glyph import Glyph

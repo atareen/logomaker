@@ -47,6 +47,7 @@ print('attempting to import logomaker-latest')
 #sys.path.insert(0,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/')
 #sys.path.insert(1,'/home/docs/checkouts/readthedocs.org/user_builds/')
 sys.path.insert(0,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/')
+sys.path.insert(0,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/src')
 
 import logomaker
 #import latest
