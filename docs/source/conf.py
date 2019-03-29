@@ -39,7 +39,7 @@ print('Printing files in folder latest...')
 #print(os.listdir('../../../.'))
 #print(os.listdir('../../../../.'))
 
-sys.path.append('../../../../../')
+#sys.path.append('../../../../../')
 print(os.listdir('/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/'))
 
 print('Printing files in folder user_builds...')
@@ -47,6 +47,10 @@ print('Printing files in folder user_builds...')
 print(os.listdir('/home/docs/checkouts/readthedocs.org/user_builds/'))
 
 print('attempting to import logomaker-latest')
+
+sys.path.insert(0,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/)
+sys.path.insert(1,'/home/docs/checkouts/readthedocs.org/user_builds/')
+
 import logomaker
 #import latest
 
