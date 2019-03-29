@@ -8,7 +8,7 @@ import pdb
 
 try:
     from logomaker.src.error_handling import check, handle_errors
-except
+except:
     from error_handling import check, handle_errors
 
 import matplotlib.cm
