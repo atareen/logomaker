@@ -3,10 +3,14 @@ import numpy as np
 import pandas as pd
 
 # Logomaker imports
-from logomaker.src.error_handling import check, handle_errors
-from logomaker.src.validate import validate_matrix, \
-    validate_probability_mat, \
-    validate_information_mat
+try:
+    from logomaker.src.error_handling import check, handle_errors
+    from logomaker.src.validate import validate_matrix, \
+        validate_probability_mat, \
+        validate_information_mat
+except:
+    from error_handling import check, handle_errors
+    from validate import validate_matrix, validate_probability_mat, validate_information_mat
 
 # Specifies built-in character alphabets
 ALPHABET_DICT = {

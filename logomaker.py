@@ -5,7 +5,6 @@ print('printing from logomaker.py in directory latest')
 # import paths for local install
 try:
 
-    print('importing from the try clause')
     from logomaker.src.Logo import Logo
     from logomaker.src.Glyph import Glyph
     from logomaker.src.Glyph import list_font_families

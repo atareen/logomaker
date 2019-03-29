@@ -12,7 +12,6 @@ print('printing from Logo.py')
 # Import stuff from logomaker
 
 try:
-    print('printing from Logo try clause')
     from logomaker.src.Glyph import Glyph
     from logomaker.src import colors as lm_color
     from logomaker.src.validate import validate_matrix, validate_probability_mat

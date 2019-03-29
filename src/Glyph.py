@@ -6,9 +6,11 @@ from matplotlib.colors import to_rgb, cnames
 import matplotlib.pyplot as plt
 import pdb
 
-print('printing from GLYPHXXX.py!')
+try:
+    from logomaker.src.error_handling import check, handle_errors
+except
+    from error_handling import check, handle_errors
 
-from logomaker.src.error_handling import check, handle_errors
 import matplotlib.cm
 import numpy as np
 
