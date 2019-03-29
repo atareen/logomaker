@@ -30,18 +30,23 @@ sys.path.insert(2,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/ch
 sys.path.insert(3,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/docs/source/../../../')
 sys.path.insert(4,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/docs/source/../../../../')
 
-print('Printing files...')
+print('Printing files in folder latest...')
 #print(os.listdir('.'))
 #print(os.listdir('../.'))
 #print(os.listdir('../../.'))
 #print(os.listdir('../../../.'))
 #print(os.listdir('../../../../.'))
 
+sys.path.append('../../')
 print(os.listdir('/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/'))
 
+print('Printing files in folder logomaker...')
+
+print(os.listdir('/home/docs/checkouts/readthedocs.org/user_builds/logomaker/'))
+
 print('attempting to import logomaker-latest')
-#import logomaker
-import latest
+import logomaker
+#import latest
 
 
 # -- Project information -----------------------------------------------------

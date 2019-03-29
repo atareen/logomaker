@@ -8,7 +8,7 @@ import pdb
 
 from six import string_types
 from matplotlib.colors import to_rgb, to_rgba
-from latest import ControlledError, check
+from logomaker.src.error_handling import check, handle_errors
 
 
 #
@@ -38,8 +38,8 @@ def _validate_number(name,
 
     except (ValueError, TypeError):
         value = default
-        message = "Cannot interpret value %s for parameter '%s' as number. " +\
-                  "Using default value %s instead."
+        message = "Cannot interpret message %s for parameter '%s' as number. " +\
+                  "Using default message %s instead."
         message = message % (repr(user), name, repr(default))
         warnings.warn(message, UserWarning)
 
@@ -47,7 +47,7 @@ def _validate_number(name,
     if not value > greater_than:
         value = default
         message = "Value %s for parameter '%s' is not greater than %s. " + \
-                  "Using default value %s instead."
+                  "Using default message %s instead."
         message = message % (repr(user), name, repr(greater_than),
                              repr(default))
         warnings.warn(message, UserWarning)
@@ -55,7 +55,7 @@ def _validate_number(name,
     elif not value >= greater_than_or_equal_to:
         value = default
         message = "Value %s for parameter '%s' is not greater or equal to %s." + \
-                  " Using default value %s instead."
+                  " Using default message %s instead."
         message = message % (repr(user), name, repr(greater_than_or_equal_to),
                              repr(default))
         warnings.warn(message, UserWarning)
@@ -63,7 +63,7 @@ def _validate_number(name,
     elif not value < less_than:
         value = default
         message = "Value %s for parameter '%s' is not less than %s. " + \
-                  "Using default value %s instead."
+                  "Using default message %s instead."
         message = message % (repr(user), name, repr(less_than),
                              repr(default))
         warnings.warn(message, UserWarning)
@@ -71,7 +71,7 @@ def _validate_number(name,
     elif not value <= less_than_or_equal_to:
         value = default
         message = "Value %s for parameter '%s' is not less or equal to %s. " + \
-                  "Using default value %s instead."
+                  "Using default message %s instead."
         message = message % (repr(user), name, repr(less_than_or_equal_to),
                              repr(default))
         warnings.warn(message, UserWarning)
@@ -79,7 +79,7 @@ def _validate_number(name,
     elif (in_set is not None) and not (value in in_set):
         value = default
         message = "Value %s for parameter '%s' is not within the set. " + \
-                  "of valid values %s. Using default value %s instead."
+                  "of valid values %s. Using default message %s instead."
         message = message % (repr(user), name, repr(in_set),
                              repr(default))
         warnings.warn(message, UserWarning)
@@ -100,7 +100,7 @@ def _validate_bool(name, user, default):
         else:
             user = default
             message = "Parameter '%s', if string, must be " + \
-                      "'True' or 'False'. Using default value %s instead."
+                      "'True' or 'False'. Using default message %s instead."
             message = message % (name, repr(default))
             warnings.warn(message, UserWarning)
 
@@ -109,11 +109,11 @@ def _validate_bool(name, user, default):
     if isinstance(user, bool):
         value = user
 
-    # If not, return default value and raise warning
+    # If not, return default message and raise warning
     else:
         value = default
-        message = "Parameter '%s' assigned a non-boolean value. " +\
-                  "Using default value %s instead."
+        message = "Parameter '%s' assigned a non-boolean message. " +\
+                  "Using default message %s instead."
         message = message % (name, repr(default))
         warnings.warn(message, UserWarning)
 
@@ -127,15 +127,15 @@ def _validate_str(name, user, default):
     try:
         value = str(user)
 
-    # If user value is not valid, set to default and issue warning
+    # If user message is not valid, set to default and issue warning
     except ValueError:
         value = default
-        message = "Cannot interpret value %s for parameter '%s' as string. " +\
-                  "Using default value %s instead."
+        message = "Cannot interpret message %s for parameter '%s' as string. " +\
+                  "Using default message %s instead."
         message = message % (repr(user), name, repr(default))
         warnings.warn(message, UserWarning)
 
-    # Return valid value to user
+    # Return valid message to user
     return value
 
 
@@ -148,21 +148,21 @@ def _validate_iupac(name, user, default):
     if not isinstance(user, string_types):
         value = default
         message = "Value %s for parameter '%s' is not a string. " + \
-                  "Using default value %s instead."
+                  "Using default message %s instead."
         message = message % (repr(user), name, repr(default))
 
     # Make sure string has nonzero length
     elif len(user) == 0:
         value = default
         message = "String %s, set for parameter '%s', is empty. " + \
-                  "Using default value %s instead."
+                  "Using default message %s instead."
         message = message % (repr(user), name, repr(default))
 
     # Make sure string contains valid characters
     elif not set(list(user.upper())) <= set(iupac_dict.keys()):
         value = default
         message = "String %s, set for parameter '%s', contains " + \
-                  "invalid characters. Using default value %s instead."
+                  "invalid characters. Using default message %s instead."
         message = message % (repr(user), name, repr(default))
 
     # Make sure string is all capitals
@@ -192,7 +192,7 @@ def _validate_filename(name, user, default):
         if not os.path.isfile(user):
             value = default
             message = "File %s passed for parameter '%s' does not exist. " +\
-                      "Using default value %s instead."
+                      "Using default message %s instead."
             message = message % (repr(user), name, repr(default))
 
         elif open(user, 'r'):
@@ -200,20 +200,20 @@ def _validate_filename(name, user, default):
         else:
             value = default
             message = "File %s passed for parameter '%s' cannot be opened." + \
-                      " Using default value %s instead."
+                      " Using default message %s instead."
             message = message % (repr(user), name, repr(default))
 
     except (ValueError,TypeError):
         value = default
         if message is None:
             message = "Value %s passed for parameter '%s' is invalid." + \
-                      " Using default value %s instead."
+                      " Using default message %s instead."
             message = message % (repr(user), name, repr(default))
 
     if message is not None:
         warnings.warn(message, UserWarning)
 
-    # Return valid value to user
+    # Return valid message to user
     return value
 
 
@@ -234,34 +234,40 @@ def _validate_color(name, user, default):
     # Otherwise, use default colorscheme
     else:
         value = default
-        message = "Improper value %s for parameter '%s'. " + \
-                  "Using default value %s instead."
+        message = "Improper message %s for parameter '%s'. " + \
+                  "Using default message %s instead."
         message = message % (repr(user), name, repr(default))
         warnings.warn(message, UserWarning)
 
-    # Return valid value to user
+    # Return valid message to user
     return value
 
 
+@handle_errors
 def validate_matrix(dataframe, allow_nan=False):
     """
     Runs checks to verify that df is indeed a motif dataframe.
     Returns a cleaned-up version of df if possible
     """
 
-    check(isinstance(dataframe,pd.DataFrame),
-          'Input Error: dataframe needs to be a valid pandas dataframe, dataframe entered: '+str(type(dataframe)))
+    check(isinstance(dataframe, pd.DataFrame),
+          'dataframe needs to be a valid pandas dataframe, dataframe entered: ' + str(type(dataframe)))
+
+    # Create copy of dataframe so that don't overwrite the user's data
+    dataframe = dataframe.copy()
+
+    check(isinstance(allow_nan,bool),'allow_nan = %s must be of type bool'%type(allow_nan))
 
     # Copy and preserve logomaker_type
     dataframe = dataframe.copy()
 
     if not allow_nan:
         # Make sure all entries are finite numbers
-        check(np.isfinite(dataframe.values).all(),'Input Error: some matrix elements are not finite.' + 'Set allow_nan=True to allow.')
+        check(np.isfinite(dataframe.values).all(),'some matrix elements are not finite.' + 'Set allow_nan=True to allow.')
 
     # Make sure the matrix has a finite number of rows and columns
-    check(dataframe.shape[0] >= 1, 'Input Error: matrix has zero rows.')
-    check(dataframe.shape[1] >= 1, 'Input Error: matrix has zero columns.')
+    check(dataframe.shape[0] >= 1, 'matrix has zero rows.')
+    check(dataframe.shape[1] >= 1, 'matrix has zero columns.')
 
     # Remove columns whose names aren't strings exactly 1 character long.
     # Warn user when doing so
@@ -280,17 +286,17 @@ def validate_matrix(dataframe, allow_nan=False):
             continue
 
         # Convert column name to simple string if possible
-        check(isinstance(col_name, string_types), 'Error: column name %s is not a string' % col_name)
+        check(isinstance(col_name, string_types), 'column name %s is not a string' % col_name)
         new_col_name = str(col_name)
 
         # If column name is not a single chracter, try extracting single character
         # after an underscore
         if len(new_col_name) != 1:
             new_col_name = new_col_name.split('_')[-1]
-            check((len(new_col_name)==1),'Error: could not extract single character from colum name %s'%col_name)
+            check((len(new_col_name)==1),'could not extract single character from colum name %s'%col_name)
 
         # Make sure that colun name is not a whitespace character
-        check(re.match('\S',new_col_name),'Error: column name "%s" is a whitespace charcter.'%repr(col_name))
+        check(re.match('\S',new_col_name),'column name "%s" is a whitespace charcter.'%repr(col_name))
 
         # Set revised column name
         dataframe.rename(columns={col_name:new_col_name}, inplace=True)
@@ -312,6 +318,7 @@ def validate_matrix(dataframe, allow_nan=False):
     return dataframe
 
 
+@handle_errors
 def validate_probability_mat(matrix):
     """
     Verifies that the df is indeed a probability matrix dataframe.
@@ -323,15 +330,20 @@ def validate_probability_mat(matrix):
     matrix = validate_matrix(matrix)
 
     # Make sure all values are non-negative
-    assert (all(matrix.values.ravel() >= 0)), \
-        'Error: not all values in df are >=0.'
+    #assert (all(matrix.values.ravel() >= 0)), \
+    #    'Error: not all values in df are >=0.'
+
+    check(all(matrix.values.ravel() >= 0),
+        'Error: not all values in df are >=0.')
 
     # Check to see if values sum to one
     sums = matrix.sum(axis=1).values
 
     # If any sums are close to zero, abort
-    assert not any(np.isclose(sums, 0.0)), \
-        'Error: some columns in matrix sum to nearly zero.'
+    #assert not any(np.isclose(sums, 0.0)), \
+    #    'Error: some columns in matrix sum to nearly zero.'
+    check(not any(np.isclose(sums, 0.0)),
+        'Error: some columns in matrix sum to nearly zero.')
 
     # If any sums are not close to one, renormalize all sums
     if not all(np.isclose(sums, 1.0)):
@@ -342,7 +354,7 @@ def validate_probability_mat(matrix):
     # Return data frame to user
     return matrix
 
-
+@handle_errors
 def validate_information_mat(matrix):
     """
     Verifies that the df is indeed an information matrix dataframe.
@@ -353,8 +365,10 @@ def validate_information_mat(matrix):
     matrix = validate_matrix(matrix)
 
     # Validate df values as info values
-    assert (all(matrix.values.ravel() >= 0)), \
-        'Error: not all values in df are >=0.'
+    #assert (all(matrix.values.ravel() >= 0)), \
+    #    'Error: not all values in df are >=0.'
+    check(all(matrix.values.ravel() >= 0),
+            'Error: not all values in df are >=0.')
 
     # Return data frame to user
     return matrix
