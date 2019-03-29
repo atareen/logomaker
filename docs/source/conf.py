@@ -39,7 +39,7 @@ print('Printing files in folder latest...')
 #print(os.listdir('../../../.'))
 #print(os.listdir('../../../../.'))
 
-sys.path.append('../../')
+sys.path.append('../../../../../')
 print(os.listdir('/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/'))
 
 print('Printing files in folder logomaker...')
