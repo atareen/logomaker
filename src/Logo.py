@@ -7,6 +7,8 @@ from matplotlib.colors import to_rgb, to_rgba
 import matplotlib.cm
 import pdb
 
+print('printing from Logo.py')
+
 # Import stuff from logomaker
 from logomaker.src.Glyph import Glyph
 from logomaker.src import colors as lm_color
