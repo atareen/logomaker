@@ -1,4 +1,7 @@
 # Classes / functions imported with logomaker
+
+print('printing from logomaker.py in directory latest')
+
 from logomaker.src.Logo import Logo
 from logomaker.src.Glyph import Glyph
 from logomaker.src.Glyph import list_font_families
