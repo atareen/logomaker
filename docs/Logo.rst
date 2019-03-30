@@ -7,5 +7,5 @@ Some static text in Logo.rst
 Parameters
 ----------
 
-.. autoclass:: logomaker.logomaker.src.Logo.Logo
+.. automodule:: logomaker.src.Logo
     :members:
