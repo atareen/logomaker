@@ -1,7 +1,7 @@
 print('priting from logomaker.py')
 
 # Classes / functions imported with logomaker
-from logomaker.src.Logo import Logo
+from src.Logo import Logo
 from logomaker.src.Logo import Logo
 from logomaker.src.Glyph import Glyph
 from logomaker.src.Glyph import list_font_families
