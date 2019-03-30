@@ -1,5 +1,5 @@
-Logo
-====
+Glyph
+=====
 
 Some static text in Glyph.rst!
 
