@@ -20,6 +20,8 @@ import sys
 sys.path.append('../')
 # -- Project information -----------------------------------------------------
 
+import logomaker
+
 project = 'logomaker'
 copyright = '2019, Ammar Tareen'
 author = 'Ammar Tareen'
