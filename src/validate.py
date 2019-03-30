@@ -8,7 +8,7 @@ import pdb
 
 from six import string_types
 from matplotlib.colors import to_rgb, to_rgba
-from logomaker.src.error_handling import check, handle_errors
+from src.error_handling import check, handle_errors
 
 
 #

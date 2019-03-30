@@ -7,14 +7,12 @@ from matplotlib.colors import to_rgb, to_rgba
 import matplotlib.cm
 import pdb
 
-print('PRITING FROM LOGO')
-
 # Import stuff from logomaker
-from logomaker.src.Glyph import Glyph
-from logomaker.src import colors as lm_color
-from logomaker.src.validate import validate_matrix, validate_probability_mat
-import logomaker.src.validate as validate
-from logomaker.src.error_handling import check, handle_errors
+from src.Glyph import Glyph
+from src import colors as lm_color
+from src.validate import validate_matrix, validate_probability_mat
+import src.validate as validate
+from src.error_handling import check, handle_errors
 
 chars_to_colors_dict = {
     tuple('ACGT'): 'classic',
