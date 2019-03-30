@@ -3,12 +3,8 @@ import numpy as np
 import pandas as pd
 from matplotlib.colors import to_rgb
 
-try:
-    from logomaker.src.error_handling import check
-    from logomaker.src.matrix import ALPHABET_DICT
-except:
-    from error_handling import check
-    from matrix import ALPHABET_DICT
+from logomaker.src.error_handling import check
+from logomaker.src.matrix import ALPHABET_DICT
 
 # COLOR_SCHEME_DICT provides a default set of logo colorschemes
 # that can be passed to the 'color_scheme' argument of Logo()

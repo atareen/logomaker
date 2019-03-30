@@ -7,32 +7,18 @@ from matplotlib.colors import to_rgb, to_rgba
 import matplotlib.cm
 import pdb
 
-print('printing from Logo.py')
-
 # Import stuff from logomaker
-
-try:
-    from logomaker.src.Glyph import Glyph
-    from logomaker.src import colors as lm_color
-    from logomaker.src.validate import validate_matrix, validate_probability_mat
-    import logomaker.src.validate as validate
-    from logomaker.src.error_handling import check, handle_errors
-except:
-    print('printing from Logo except clause')
-    from Glyph import Glyph
-    #from logomaker.src import colors as lm_color
-    import colors as lm_color
-    from validate import validate_matrix, validate_probability_mat
-    import validate as validate
-    from error_handling import check, handle_errors
-
+from logomaker.src.Glyph import Glyph
+from logomaker.src import colors as lm_color
+from logomaker.src.validate import validate_matrix, validate_probability_mat
+import logomaker.src.validate as validate
+from logomaker.src.error_handling import check, handle_errors
 
 chars_to_colors_dict = {
     tuple('ACGT'): 'classic',
     tuple('ACGU'): 'classic',
     tuple('ACDEFGHIKLMNPQRSTVWY'): 'hydrophobicity',
 }
-
 
 class Logo:
     """

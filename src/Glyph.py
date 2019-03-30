@@ -5,17 +5,13 @@ from matplotlib.font_manager import FontManager, FontProperties
 from matplotlib.colors import to_rgb, cnames
 import matplotlib.pyplot as plt
 import pdb
-
-try:
-    from logomaker.src.error_handling import check, handle_errors
-except:
-    from error_handling import check, handle_errors
-
+from logomaker.src.error_handling import check, handle_errors
 import matplotlib.cm
 import numpy as np
 
 # Create global font manager instance. This takes a second or two
 font_manager = FontManager()
+
 
 def list_font_families():
     """

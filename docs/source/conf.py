@@ -17,52 +17,18 @@
 # sys.path.insert(0, os.path.abspath('.'))
 
 import sys
-
-import os
-print('Current working directory',os.getcwd())
-
-#sys.path.insert(0,'../../../')
-#sys.path.insert(1,'../../')
-
-'''
-sys.path.insert(0,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/docs/source')
-sys.path.insert(1,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/docs/source/../')
-sys.path.insert(2,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/docs/source/../../')
-sys.path.insert(3,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/docs/source/../../../')
-sys.path.insert(4,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/docs/source/../../../../')
-'''
-
-print('Printing files in folder latest...')
-#print(os.listdir('.'))
-#print(os.listdir('../.'))
-#print(os.listdir('../../.'))
-#print(os.listdir('../../../.'))
-#print(os.listdir('../../../../.'))
-
-#sys.path.append('../../../../../')
-print(os.listdir('/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/'))
-
-print('attempting to import logomaker-latest')
-
-#sys.path.insert(0,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/')
-#sys.path.insert(1,'/home/docs/checkouts/readthedocs.org/user_builds/')
-sys.path.insert(0,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/')
-sys.path.insert(0,'/home/docs/checkouts/readthedocs.org/user_builds/logomaker/checkouts/latest/src')
-
-import logomaker
-#import latest
-
+sys.path.append('../../')
 
 # -- Project information -----------------------------------------------------
 
 project = 'logomaker'
-copyright = '2018, Ammar Tareen'
+copyright = '2019, Ammar Tareen'
 author = 'Ammar Tareen'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.11'
+release = '0.0.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -74,17 +40,7 @@ release = '0.11'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.coverage',
-    'numpydoc'
-]
-
-autodoc_mock_imports = ['validate',
-                        'Bio',
-                        'matplotlib.pyplot',
-                        ]
-
+extensions = ['sphinx.ext.autodoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -103,7 +59,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = 'English'
+language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -119,7 +75,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'bizstyle'
+html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -198,6 +154,3 @@ texinfo_documents = [
      author, 'logomaker', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-# -- Extension configuration -------------------------------------------------
