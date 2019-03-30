@@ -1,9 +1,5 @@
 numpy
-scipy
 pandas
-sklearn
-mpmath
 numpydoc
 matplotlib
-biopython
 sphinx_rtd_theme

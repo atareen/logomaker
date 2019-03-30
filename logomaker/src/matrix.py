@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 
 # Logomaker imports
-from src.error_handling import check, handle_errors
-from src.validate import validate_matrix, \
+from logomaker.src.error_handling import check, handle_errors
+from logomaker.src.validate import validate_matrix, \
     validate_probability_mat, \
     validate_information_mat
 
