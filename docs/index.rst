@@ -18,6 +18,7 @@ Documentation
    :maxdepth: 2
 
    Logo
+   Glyph
 
 Indices and tables
 ==================
