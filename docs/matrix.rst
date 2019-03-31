@@ -7,5 +7,5 @@ Some static text in matrix.rst!
 Parameters
 ----------
 
-.. automodule:: logomaker.transform_matrix
+.. autofunction:: logomaker.transform_matrix
     :members:
