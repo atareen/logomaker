@@ -1,5 +1,3 @@
-print('priting from logomaker.py')
-
 # Classes / functions imported with logomaker
 from logomaker.src.Logo import Logo
 from logomaker.src.Glyph import Glyph
@@ -16,4 +14,3 @@ from logomaker.src.validate import validate_information_mat
 
 # Useful variables for users to see
 from logomaker.src.colors import list_color_schemes
-print('at the end of init file')

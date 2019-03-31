@@ -19,6 +19,7 @@ Documentation
 
    Logo
    Glyph
+   matrix
 
 Indices and tables
 ==================
