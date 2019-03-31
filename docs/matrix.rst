@@ -7,4 +7,6 @@ Some static text in matrix.rst!
 Parameters
 ----------
 
-.. automodule:: logomaker.transform_matrix
+.. automodule:: logomaker.src.matrix.transform_matrix
+    :members:
+
