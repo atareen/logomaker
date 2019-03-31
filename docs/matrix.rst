@@ -1,12 +1,27 @@
 matrix
 ======
 
-Some static text in matrix.rst!
+Some static text in matrix.rst!!!
 
 
-Parameters
-----------
+Transform Matrix
+----------------
 
-.. automodule:: logomaker.src.matrix.transform_matrix
-    :members:
+.. autofunction:: logomaker.src.matrix.transform_matrix
+
+Sequence to Matrix
+------------------
+
+.. autofunction:: logomaker.src.matrix.sequence_to_matrix
+
+Saliency to Matrix
+------------------
+
+.. autofunction:: logomaker.src.matrix.saliency_to_matrix
+
+
+Alignment to Matrix
+-------------------
+
+.. autofunction:: logomaker.src.matrix.alignment_to_matrix
 
