@@ -20,6 +20,7 @@ chars_to_colors_dict = {
     tuple('ACDEFGHIKLMNPQRSTVWY'): 'hydrophobicity',
 }
 
+
 class Logo:
     """
     Logo represents a basic logo, drawn on a specified axes object
