@@ -47,7 +47,7 @@ Matrix Definitions
 
 A matrix is defined by a set of textual characters, a set of numerical positions, and a numerical
 quantity for every character-position pair. In what follows, we use the symbol :math:`i` to represent possible
-positions, and the symbol $c$ (or :math:`c'`) to represent possible characters.
+positions, and the symbol :math:`c` (or :math:`c'`) to represent possible characters.
 
 Within Python, each matrix is represented as a pandas data frame in which rows are indexed by positions
 and columns are named using the character each represents. Logomaker can also read and write matrices as
@@ -87,13 +87,25 @@ Counts matrix
 A counts matrix represent the number of occurrences of each character at each position within a sequence
 alignment (although the user can choose to exclude certain characters, e.g., '-' character representing gaps).
 Specifically, a counts matrix has entries $n_{ic}$ that represent the number of occurrences of character
-$c$ at position $i$. These $n_{ic}$ values are all required to be greater or equal to zero. Counts logos are
-assigned character heights corresponding to these $n_{ci}$ values. The y axis of such logos is labeled 'counts'
-and extends from 0 to $N$, where $N$ is the number of sequences in the alignment. Note that, Because certain
-characters might be excluded when computing $n_{ic}$ from an alignment, it is possible to have $\sum_c n_{ic} < N$ at
+:math:`c` at position :math:`i`. These :math:`n_{ic}` values are all required to be greater or equal to zero. Counts logos are
+assigned character heights corresponding to these :math:`n_{ci}` values. The y axis of such logos is labeled 'counts'
+and extends from 0 to :math:`N`, where :math:`N` is the number of sequences in the alignment. Note that, Because certain
+characters might be excluded when computing :math:`n_{ic}` from an alignment, it is possible to have `\sum_c n_{ic} < N` at
 some positions.
 
+******************
+Probability matrix
+******************
+
+A probability matrix represents the probability of observing each possible character at each possible position
+within a certain type of sequence. Probability matrix elements are denoted by $p_{ic}$ and can be estimated
+from a counts matrix via
+
 :math:`p_{ic} = \frac{n_{ic} + \lambda}{\sum_{c'} n_{ic'} + C \lambda}`
+
+where $C$ is the number of possible characters and $\lambda$ is a user-defined pseudocount.
+A probability logo has heights given by these $p_{ci}$ values. The y axis extends from 0 to 1
+and is labeled `probability'.
 
 :math:`w_{ic} = \log_2 \frac{p_{ic}}{b_{ic}}`
 
