@@ -137,9 +137,10 @@ by default.
 Tutorials
 ---------
 
+Jupyter tutorials with pseudo-code will go here.
 
 Classes and Functions Documentation
-===================================
+-----------------------------------
 
 .. toctree::
    :maxdepth: 2
