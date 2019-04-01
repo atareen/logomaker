@@ -67,9 +67,8 @@ and columns are named using the character each represents. Logomaker can also re
 text files. Any set of numerical positions can be used, as can any non-whitespace characters. Logomaker is
 agnostic to the set of characters used.
 
-*****
 Logos
-*****
+=====
 
 Any matrix can be represented as a logo in a straight-forward manner. Given a matrix,
 a corresponding logo is drawn by stacking  the unique characters on top of one another
@@ -81,9 +80,8 @@ whereas characters with heights less than zero are stacked below one another sta
 Logomaker provides the option of flipping characters with negative height upside down and/or darkening
 the color with which such characters are drawn.
 
-******************************
 Built-in matrix and logo types
-******************************
+==============================
 
 Although Logomaker will draw logos corresponding to any user-specified matrix, additional support
 is provided for matrices of five specific types: counts matrix, probability matrix, enrichment matrix,
@@ -93,9 +91,8 @@ sequence alignment supplied by the user. Methods to interconvert matrices of the
 Moreover, each of these five matrix types comes with its own logo style. These matrices and their corresponding
 logos are described in detail below.
 
-*************
 Counts matrix
-*************
+=============
 
 A counts matrix represent the number of occurrences of each character at each position within a sequence
 alignment (although the user can choose to exclude certain characters, e.g., '-' character representing gaps).
@@ -106,9 +103,8 @@ and extends from 0 to :math:`N`, where :math:`N` is the number of sequences in t
 characters might be excluded when computing :math:`n_{ic}` from an alignment, it is possible to have
 :math:`\sum_c n_{ic} < N` at some positions.
 
-******************
 Probability matrix
-******************
+==================
 
 A probability matrix represents the probability of observing each possible character at each possible position
 within a certain type of sequence. Probability matrix elements are denoted by :math:`p_{ic}` and can be estimated
@@ -120,12 +116,11 @@ where :math:`C` is the number of possible characters and :math:`\lambda` is a us
 A probability logo has heights given by these :math:`p_{ci}` values. The y axis extends from 0 to 1
 and is labeled 'probability'.
 
-***************************
 Enrichment or Weight matrix
-***************************
+===========================
 
 An enrichment matrix represent the relative likelihood of observing each character at each position
-relative to some user-specified 'background' model. Such matrices are sometimes referred to as position weight
+relative to some user-specified "background" model. Such matrices are sometimes referred to as position weight
 matrices (PWMs) or position-specific scoring matrices (PSSMs). The elements :math:`w_{ic}` of an
 enrichment matrix can be computed from a probability matrix (elements :math:`p_{ic}`) and a
 background matrix (also a probability matrix but denoted :math:`b_{ic}`) using the formula
@@ -141,6 +136,21 @@ every :math:`i`. Note that :math:`b_{ic}` will often not depend on $i$, but it d
 computation of enrichment scores in deep mutational scanning experiments. Enrichment logos have heights given
 by the :math:`w_{ci}` values, which can be either positive or negative. The y-axis is labeled ':math:`\log_2` enrichment'
 by default.
+
+Information matrix
+==================
+
+Information logos were described in the original 1990 paper of Schneider and Stephens cite{Schneider},
+and remain the most popular type of sequence logo. The entries :math:`I_{ic}`in the corresponding information matrices
+are given by
+
+:math:`I_{ci} = p_{ci} I_i,~~~I_i = \sum_c p_{ci} \log_2 \frac{p_{ci}}{b_{ci}}`
+
+The position-dependent (but not character dependent) quantity :math:`I_i` is called the "information content"
+of site :math:`i`, and the sum of these quantities, :math:`I = \sum_{i} I_i`, is the information content
+of the entire matrix. These information values :math`I_{ic}`  are nonnegative and are said to be in units of
+'bits' due to the use of :math:`\log_2` in Eq. ref{eq:prob_to_info}. A corresponding information logo is drawn
+using these :math:`I_{ic}` values as character heights, as well as a y-axis labeled  'information (bits)'.
 
 .. :math:`g_{ic} = \tilde{g}_{ic} - \frac{1}{C} \sum_{c'} \tilde{g}_{ic'} ,~~~\tilde{g}_{ic} = -\frac{1}{\alpha} \log \frac{p_{ic}}{b_{ic}}`
 
