@@ -118,7 +118,7 @@ def test_parameter_values(func,
 def test_logomaker_Logo():
 
     # df inputs that successfully execute when entered into Logo.
-    good_rnap_df = pd.read_csv('../src/data/rnap_tau_final_all.41.matrix.txt', delim_whitespace=True)
+    good_rnap_df = pd.read_csv('../data/rnap_tau_final_all.41.matrix.txt', delim_whitespace=True)
     random_df = pd.DataFrame(np.random.randint(0,3, size=(10, 4)), columns=list('ACGT'))
 
     # df inputs that fail when entered into Logo.
