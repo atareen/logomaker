@@ -42,6 +42,11 @@ manager. At the command line::
 The code for logomaker is open source and available on
 `GitHub <https://github.com/jbkinney/logomaker>`_.
 
+Tutorials
+---------
+
+:math:`\underline{x}=[  x_{1}, ...,  x_{n}]^{T}`
+
 
 Classes and Functions Documentation
 ===================================
