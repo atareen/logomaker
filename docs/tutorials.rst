@@ -2,7 +2,7 @@ Tutorials
 =========
 
 
-Make and enrichment logo
+Make an enrichment logo
 ~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
