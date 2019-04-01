@@ -45,6 +45,54 @@ The code for logomaker is open source and available on
 Matrix Definitions
 ------------------
 
+A matrix is defined by a set of textual characters, a set of numerical positions, and a numerical
+quantity for every character-position pair. In what follows, we use the symbol :math:`i` to represent possible
+positions, and the symbol $c$ (or :math:`c'`) to represent possible characters.
+
+Within Python, each matrix is represented as a pandas data frame in which rows are indexed by positions
+and columns are named using the character each represents. Logomaker can also read and write matrices as
+text files. Any set of numerical positions can be used, as can any non-whitespace characters. Logomaker is
+agnostic to the set of characters used.
+
+*****
+Logos
+*****
+
+Any matrix can be represented as a logo in a straight-forward manner. Given a matrix,
+a corresponding logo is drawn by stacking  the unique characters on top of one another
+at each specified position. Each character at each position is drawn with a height given
+by the value of the corresponding matrix element.
+
+Characters with positive heights are stacked on top of one another starting from a baseline value of 0,
+whereas characters with heights less than zero are stacked below one another starting from the baseline.
+Logomaker provides the option of flipping characters with negative height upside down and/or darkening
+the color with which such characters are drawn.
+
+******************************
+Built-in matrix and logo types
+******************************
+
+Although Logomaker will draw logos corresponding to any user-specified matrix, additional support
+is provided for matrices of five specific types: counts matrix, probability matrix, enrichment matrix,
+saliency matrix, and information matrix. Each matrix type directly or indirectly represents the marginal
+statistics of a sequence alignment, and LogoMaker can generate any one of these types of matrices from a
+sequence alignment supplied by the user. Methods to interconvert matrices of these types are also provided.
+Moreover, each of these five matrix types comes with its own logo style. These matrices and their corresponding
+logos are described in detail below.
+
+******************
+Counts matrix/logo
+******************
+
+A counts matrix represent the number of occurrences of each character at each position within a sequence
+alignment (although the user can choose to exclude certain characters, e.g., `-' character representing gaps).
+Specifically, a counts matrix has entries $n_{ic}$ that represent the number of occurrences of character :math:`c` at
+position :math:`i`. These :math:`n_{ic}` values are all required to be greater or equal to zero. Counts logos are
+assigned character heights corresponding to these :math:`n_{ci}` values. The y axis of such logos is labeled `counts'
+and extends from 0 to :math:`N`, where :math:`N` is the number of sequences in the alignment. Note that, Because certain
+characters might be excluded when computing :math:`n_{ic}` from an alignment, it is possible to have
+:math:`\sum_c n_{ic} < N` at some positions.
+
 :math:`p_{ic} = \frac{n_{ic} + \lambda}{\sum_{c'} n_{ic'} + C \lambda}`
 
 :math:`w_{ic} = \log_2 \frac{p_{ic}}{b_{ic}}`
