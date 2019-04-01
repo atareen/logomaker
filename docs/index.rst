@@ -80,6 +80,19 @@ sequence alignment supplied by the user. Methods to interconvert matrices of the
 Moreover, each of these five matrix types comes with its own logo style. These matrices and their corresponding
 logos are described in detail below.
 
+*************
+Counts matrix
+*************
+
+A counts matrix represent the number of occurrences of each character at each position within a sequence
+alignment (although the user can choose to exclude certain characters, e.g., '-' character representing gaps).
+Specifically, a counts matrix has entries $n_{ic}$ that represent the number of occurrences of character
+$c$ at position $i$. These $n_{ic}$ values are all required to be greater or equal to zero. Counts logos are
+assigned character heights corresponding to these $n_{ci}$ values. The y axis of such logos is labeled 'counts'
+and extends from 0 to $N$, where $N$ is the number of sequences in the alignment. Note that, Because certain
+characters might be excluded when computing $n_{ic}$ from an alignment, it is possible to have $\sum_c n_{ic} < N$ at
+some positions.
+
 :math:`p_{ic} = \frac{n_{ic} + \lambda}{\sum_{c'} n_{ic'} + C \lambda}`
 
 :math:`w_{ic} = \log_2 \frac{p_{ic}}{b_{ic}}`
