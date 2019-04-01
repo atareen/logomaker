@@ -90,26 +90,44 @@ Specifically, a counts matrix has entries $n_{ic}$ that represent the number of 
 :math:`c` at position :math:`i`. These :math:`n_{ic}` values are all required to be greater or equal to zero. Counts logos are
 assigned character heights corresponding to these :math:`n_{ci}` values. The y axis of such logos is labeled 'counts'
 and extends from 0 to :math:`N`, where :math:`N` is the number of sequences in the alignment. Note that, Because certain
-characters might be excluded when computing :math:`n_{ic}` from an alignment, it is possible to have `\sum_c n_{ic} < N` at
-some positions.
+characters might be excluded when computing :math:`n_{ic}` from an alignment, it is possible to have
+:math:`\sum_c n_{ic} < N` at some positions.
 
 ******************
 Probability matrix
 ******************
 
 A probability matrix represents the probability of observing each possible character at each possible position
-within a certain type of sequence. Probability matrix elements are denoted by $p_{ic}$ and can be estimated
+within a certain type of sequence. Probability matrix elements are denoted by :math:`p_{ic}` and can be estimated
 from a counts matrix via
 
 :math:`p_{ic} = \frac{n_{ic} + \lambda}{\sum_{c'} n_{ic'} + C \lambda}`
 
-where $C$ is the number of possible characters and $\lambda$ is a user-defined pseudocount.
-A probability logo has heights given by these $p_{ci}$ values. The y axis extends from 0 to 1
-and is labeled `probability'.
+where :math:`C` is the number of possible characters and $\lambda$ is a user-defined pseudocount.
+A probability logo has heights given by these :math:`p_{ci}` values. The y axis extends from 0 to 1
+and is labeled 'probability'.
+
+***************************
+Enrichment or Weight matrix
+***************************
+
+An enrichment matrix represent the relative likelihood of observing each character at each position
+relative to some user-specified 'background' model. Such matrices are sometimes referred to as position weight
+matrices (PWMs) or position-specific scoring matrices (PSSMs). The elements :math:`w_{ic}` of an
+enrichment matrix can be computed from a probability matrix (elements :math:`p_{ic}`) and a
+background matrix (also a probability matrix but denoted :math:`b_{ic}`) using the formula
 
 :math:`w_{ic} = \log_2 \frac{p_{ic}}{b_{ic}}`
 
+This equation can be inverted to give :math:`p_{ic}`:
+
 :math:`p_{ic} = \frac{b_{ic} 2^{w_{ic}}}{ \sum_{c'} b_{ic'} 2^{w_{ic'}} }`
+
+where the denominator is included to explicitly enforce the the requirement that $\sum_c p_{ic} = 1$ at
+every $i$. Note that $b_{ic}$ will often not depend on $i$, but it does vary with $i$ in some cases, such as
+computation of enrichment scores in deep mutational scanning experiments. Enrichment logos have heights given
+by the $w_{ci}$ values, which can be either positive or negative. The y-axis is labeled '$\log_2$ enrichment'
+by default.
 
 :math:`g_{ic} = \tilde{g}_{ic} - \frac{1}{C} \sum_{c'} \tilde{g}_{ic'} ,~~~\tilde{g}_{ic} = -\frac{1}{\alpha} \log \frac{p_{ic}}{b_{ic}}`
 
