@@ -30,8 +30,8 @@ Examples
 .. image:: _static/RNAP.png
    :scale: 30 %
 
-.. image:: _static/Najafi.png
-   :scale: 30 %
+.. image:: _static/najafi.png
+   :align: center
 
 
 Installation
