@@ -1,7 +1,7 @@
 matrix
 ======
 
-Some static text in matrix.rst!!!
+Logomaker provides multiple operations related to matrices. They are listed as follows.
 
 
 Transform Matrix
@@ -14,14 +14,13 @@ Sequence to Matrix
 
 .. autofunction:: logomaker.src.matrix.sequence_to_matrix
 
-Saliency to Matrix
-------------------
-
-.. autofunction:: logomaker.src.matrix.saliency_to_matrix
-
-
 Alignment to Matrix
 -------------------
 
 .. autofunction:: logomaker.src.matrix.alignment_to_matrix
+
+Saliency to Matrix
+------------------
+
+.. autofunction:: logomaker.src.matrix.saliency_to_matrix
 

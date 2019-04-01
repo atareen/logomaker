@@ -1,6 +1,6 @@
-=============================================================================
-Logomaker: Software for the visualization of sequence-function relationships
-=============================================================================
+=======================================================================
+Logomaker: a Python API for creating publication quality sequence logos
+=======================================================================
 
 *Written by Ammar Tareen, and Justin B. Kinney.*
 
@@ -24,11 +24,20 @@ incorporation into multi-panel figures.
 Examples
 --------
 
-.. image:: _static/Saliency.png
-   :scale: 30 %
+RNAP Enrichment
+===============
 
 .. image:: _static/RNAP.png
    :scale: 30 %
+
+Saliency
+========
+
+.. image:: _static/Saliency.png
+   :scale: 30 %
+
+Contribution to DBF Model
+=========================
 
 .. image:: _static/najafi1.png
    :align: center
@@ -90,7 +99,7 @@ Counts matrix
 
 A counts matrix represent the number of occurrences of each character at each position within a sequence
 alignment (although the user can choose to exclude certain characters, e.g., '-' character representing gaps).
-Specifically, a counts matrix has entries $n_{ic}$ that represent the number of occurrences of character
+Specifically, a counts matrix has entries :math:`n_{ic}` that represent the number of occurrences of character
 :math:`c` at position :math:`i`. These :math:`n_{ic}` values are all required to be greater or equal to zero. Counts logos are
 assigned character heights corresponding to these :math:`n_{ci}` values. The y axis of such logos is labeled 'counts'
 and extends from 0 to :math:`N`, where :math:`N` is the number of sequences in the alignment. Note that, Because certain
@@ -107,7 +116,7 @@ from a counts matrix via
 
 :math:`p_{ic} = \frac{n_{ic} + \lambda}{\sum_{c'} n_{ic'} + C \lambda}`
 
-where :math:`C` is the number of possible characters and $\lambda$ is a user-defined pseudocount.
+where :math:`C` is the number of possible characters and :math:`\lambda` is a user-defined pseudocount.
 A probability logo has heights given by these :math:`p_{ci}` values. The y axis extends from 0 to 1
 and is labeled 'probability'.
 
@@ -127,15 +136,15 @@ This equation can be inverted to give :math:`p_{ic}`:
 
 :math:`p_{ic} = \frac{b_{ic} 2^{w_{ic}}}{ \sum_{c'} b_{ic'} 2^{w_{ic'}} }`
 
-where the denominator is included to explicitly enforce the the requirement that $\sum_c p_{ic} = 1$ at
-every $i$. Note that $b_{ic}$ will often not depend on $i$, but it does vary with $i$ in some cases, such as
+where the denominator is included to explicitly enforce the the requirement that :math:`\sum_c p_{ic} = 1` at
+every :math:`i`. Note that :math:`b_{ic}` will often not depend on $i$, but it does vary with :math:`i` in some cases, such as
 computation of enrichment scores in deep mutational scanning experiments. Enrichment logos have heights given
-by the $w_{ci}$ values, which can be either positive or negative. The y-axis is labeled '$\log_2$ enrichment'
+by the :math:`w_{ci}` values, which can be either positive or negative. The y-axis is labeled ':math:`\log_2` enrichment'
 by default.
 
-:math:`g_{ic} = \tilde{g}_{ic} - \frac{1}{C} \sum_{c'} \tilde{g}_{ic'} ,~~~\tilde{g}_{ic} = -\frac{1}{\alpha} \log \frac{p_{ic}}{b_{ic}}`
+.. :math:`g_{ic} = \tilde{g}_{ic} - \frac{1}{C} \sum_{c'} \tilde{g}_{ic'} ,~~~\tilde{g}_{ic} = -\frac{1}{\alpha} \log \frac{p_{ic}}{b_{ic}}`
 
-:math:`p_{ci} = \frac{b_{ci} \exp [ - \alpha g_{ci} ] }{\sum_{c'} b_{c'i} \exp[ - \alpha g_{c'i} ] }`
+.. :math:`p_{ci} = \frac{b_{ci} \exp [ - \alpha g_{ci} ] }{\sum_{c'} b_{c'i} \exp[ - \alpha g_{c'i} ] }`
 
 
 Tutorials
@@ -152,6 +161,7 @@ Classes and Functions Documentation
    Logo
    Glyph
    matrix
+   validate
 
 Contact
 -------
