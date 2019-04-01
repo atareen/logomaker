@@ -42,10 +42,22 @@ manager. At the command line::
 The code for logomaker is open source and available on
 `GitHub <https://github.com/jbkinney/logomaker>`_.
 
+Matrix Definitions
+------------------
+
+:math:`p_{ic} = \frac{n_{ic} + \lambda}{\sum_{c'} n_{ic'} + C \lambda}`
+
+:math:`w_{ic} = \log_2 \frac{p_{ic}}{b_{ic}}`
+
+:math:`p_{ic} = \frac{b_{ic} 2^{w_{ic}}}{ \sum_{c'} b_{ic'} 2^{w_{ic'}} }`
+
+:math:`g_{ic} = \tilde{g}_{ic} - \frac{1}{C} \sum_{c'} \tilde{g}_{ic'} ,~~~\tilde{g}_{ic} = -\frac{1}{\alpha} \log \frac{p_{ic}}{b_{ic}}`
+
+:math:`p_{ci} = \frac{b_{ci} \exp [ - \alpha g_{ci} ] }{\sum_{c'} b_{c'i} \exp[ - \alpha g_{c'i} ] }`
+
+
 Tutorials
 ---------
-
-:math:`\underline{x}=[  x_{1}, ...,  x_{n}]^{T}`
 
 
 Classes and Functions Documentation
