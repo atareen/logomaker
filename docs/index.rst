@@ -86,7 +86,7 @@ Built-in matrix and logo types
 Although Logomaker will draw logos corresponding to any user-specified matrix, additional support
 is provided for matrices of five specific types: counts matrix, probability matrix, enrichment matrix,
 saliency matrix, and information matrix. Each matrix type directly or indirectly represents the marginal
-statistics of a sequence alignment, and LogoMaker can generate any one of these types of matrices from a
+statistics of a sequence alignment, and Logomaker can generate any one of these types of matrices from a
 sequence alignment supplied by the user. Methods to interconvert matrices of these types are also provided.
 Moreover, each of these five matrix types comes with its own logo style. These matrices and their corresponding
 logos are described in detail below.
@@ -160,7 +160,10 @@ using these :math:`I_{ic}` values as character heights, as well as a y-axis labe
 Tutorials
 ---------
 
-Jupyter tutorials with pseudo-code will go here.
+.. toctree::
+   :maxdepth: 2
+
+   tutorials
 
 Classes and Functions Documentation
 -----------------------------------
@@ -187,11 +190,3 @@ Other links:
 - `Kinney Lab <http://kinneylab.labsites.cshl.edu/>`_
 - `Simons Center for Quantitative Biology <https://www.cshl.edu/research/quantitative-biology/>`_
 - `Cold Spring Harbor Laboratory <https://www.cshl.edu/>`_
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
