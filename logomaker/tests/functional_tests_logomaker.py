@@ -204,8 +204,8 @@ test_logomaker_Logo()
 import subprocess
 #subprocess.call(['bash','determine_tests_failures.bash',str(global_fail_counter)])
 global_fail_counter = 10
-#subprocess.call(['bash','../../scripts/determine_tests_failures.bash',str(global_fail_counter)])
-subprocess.call(['bash','../../scripts/pre-commit.bash',str(global_fail_counter)])
+subprocess.call(['bash','../../scripts/determine_tests_failures.bash',str(global_fail_counter)])
+#subprocess.call(['bash','../../scripts/pre-commit.bash',str(global_fail_counter)])
 
 
 

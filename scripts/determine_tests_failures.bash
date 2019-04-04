@@ -16,5 +16,5 @@ else
 	echo $1
     echo "do NOT commit code"
     #echo "Failed!" && exit 1
-    false
+    command || exit
 fi
