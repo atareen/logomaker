@@ -4,11 +4,9 @@ echo "Running pre-commit hook"
 
 echo $1
 
-if [ -$1 "$var" ]
-then
-      echo "\$var is empty"
-else
-      echo "\$var is NOT empty"
+if [ -z "$1" ]
+  then
+    echo "No argument supplied"
 fi
 
 cd logomaker/tests
