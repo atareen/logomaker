@@ -2,6 +2,8 @@
 
 echo "Running pre-commit hook"
 
+echo $1
+
 if [ -$1 "$var" ]
 then
       echo "\$var is empty"
