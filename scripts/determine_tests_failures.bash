@@ -14,6 +14,5 @@ else
     echo "non-zero functional test failures"
     echo "not committing code"
     set -e
+    exit 1
 fi
-
-
