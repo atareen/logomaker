@@ -1,32 +1,26 @@
 #!/usr/bin/env bash
 
-if [ -z "$1" ]
-then
-    # "No argument supplied"
-    
-    echo "Running pre-commit hook"
-    
-    cd logomaker/tests
-	python functional_tests_logomaker.py
 
-else
+cd logomaker/tests
+python functional_tests_logomaker.py
 
-    echo 'checking whether to commit or not'
 
-	if [ "$1" == "0" ]; then
-	    echo "Commit hook passed!"
-	    echo 'Code should be committed...'
-	else
-    	echo "non-zero functional test failures: "
-		echo $1
-	    echo "do NOT commit code"
-	    false
-fi
+# check the output produces by running functional tests
+error_code=$(<output_code.txt)
+echo $error_code
 
-fi
+#if [ "$1" == "0" ]; then
+#	echo "Commit hook passed!"
+#	echo 'Code should be committed...'
+#else
+#	echo "non-zero functional test failures: "
+#	echo $1
+#	echo "do NOT commit code"
+#	false
+#fi	
 
 #$? stores exit value of the last command
-if [ $? -ne 0 ]; then
+if [ $error_code -ne 0 ]; then
 echo "Tests must pass before commit!"
 exit 1
 fi

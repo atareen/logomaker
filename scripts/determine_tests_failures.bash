@@ -7,4 +7,4 @@ cd "${0%/*}/.."
 # echo $1 # prints out first argument to bash script
 
 pwd
-echo $1 > scripts/output.txt
+echo $1 > scripts/output_code.txt
