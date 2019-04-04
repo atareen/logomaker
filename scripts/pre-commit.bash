@@ -2,7 +2,12 @@
 
 echo "Running pre-commit hook"
 
-echo $1
+if [ -$1 "$var" ]
+then
+      echo "\$var is empty"
+else
+      echo "\$var is NOT empty"
+fi
 
 cd logomaker/tests
 python functional_tests_logomaker.py
