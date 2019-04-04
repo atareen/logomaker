@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 
-echo "Running pre-commit hook"
-
-echo $1
-
 if [ -z "$1" ]
 then
     # "No argument supplied"
     
-    echo 'running python functional tests'
+    echo "Running pre-commit hook"
     
     cd logomaker/tests
 	python functional_tests_logomaker.py
