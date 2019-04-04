@@ -1,374 +1,158 @@
 from __future__ import division
 import numpy as np
 import pandas as pd
-import re
-import os
-import warnings
-import pdb
-
-from six import string_types
-from matplotlib.colors import to_rgb, to_rgba
 from logomaker.src.error_handling import check, handle_errors
 
 
-#
-# Private validation functions
-#
-
-def _validate_number(name,
-                     user,
-                     default,
-                     is_int=False,
-                     greater_than=-np.Inf,
-                     greater_than_or_equal_to=-np.Inf,
-                     less_than=np.Inf,
-                     less_than_or_equal_to=np.Inf,
-                     in_set=None):
-    """ Validates a floating point parameter. """
-
-    # Test whether parameter can be interpreted as a float
-    try:
-        # If converting to int
-        if is_int:
-            value = int(user)
-
-        # Otherwise, if converting to float
-        else:
-            value = float(user)
-
-    except (ValueError, TypeError):
-        value = default
-        message = "Cannot interpret message %s for parameter '%s' as number. " +\
-                  "Using default message %s instead."
-        message = message % (repr(user), name, repr(default))
-        warnings.warn(message, UserWarning)
-
-    # Test inequalities
-    if not value > greater_than:
-        value = default
-        message = "Value %s for parameter '%s' is not greater than %s. " + \
-                  "Using default message %s instead."
-        message = message % (repr(user), name, repr(greater_than),
-                             repr(default))
-        warnings.warn(message, UserWarning)
-
-    elif not value >= greater_than_or_equal_to:
-        value = default
-        message = "Value %s for parameter '%s' is not greater or equal to %s." + \
-                  " Using default message %s instead."
-        message = message % (repr(user), name, repr(greater_than_or_equal_to),
-                             repr(default))
-        warnings.warn(message, UserWarning)
-
-    elif not value < less_than:
-        value = default
-        message = "Value %s for parameter '%s' is not less than %s. " + \
-                  "Using default message %s instead."
-        message = message % (repr(user), name, repr(less_than),
-                             repr(default))
-        warnings.warn(message, UserWarning)
-
-    elif not value <= less_than_or_equal_to:
-        value = default
-        message = "Value %s for parameter '%s' is not less or equal to %s. " + \
-                  "Using default message %s instead."
-        message = message % (repr(user), name, repr(less_than_or_equal_to),
-                             repr(default))
-        warnings.warn(message, UserWarning)
-
-    elif (in_set is not None) and not (value in in_set):
-        value = default
-        message = "Value %s for parameter '%s' is not within the set. " + \
-                  "of valid values %s. Using default message %s instead."
-        message = message % (repr(user), name, repr(in_set),
-                             repr(default))
-        warnings.warn(message, UserWarning)
-
-    return value
-
-
-def _validate_bool(name, user, default):
-    """ Validates a boolean parameter parameter. """
-
-    # Convert to bool if string is passed
-    #if isinstance(user, basestring):
-    if isinstance(user, string_types):
-        if user == 'True':
-            user = True
-        elif user == 'False':
-            user = False
-        else:
-            user = default
-            message = "Parameter '%s', if string, must be " + \
-                      "'True' or 'False'. Using default message %s instead."
-            message = message % (name, repr(default))
-            warnings.warn(message, UserWarning)
-
-    # Test whether parameter is already a boolean
-    # (not just whether it can be interpreted as such)
-    if isinstance(user, bool):
-        value = user
-
-    # If not, return default message and raise warning
-    else:
-        value = default
-        message = "Parameter '%s' assigned a non-boolean message. " +\
-                  "Using default message %s instead."
-        message = message % (name, repr(default))
-        warnings.warn(message, UserWarning)
-
-    return value
-
-
-def _validate_str(name, user, default):
-    """ Validates a string parameter. """
-
-    # Test whether parameter can be interpreted as a string
-    try:
-        value = str(user)
-
-    # If user message is not valid, set to default and issue warning
-    except ValueError:
-        value = default
-        message = "Cannot interpret message %s for parameter '%s' as string. " +\
-                  "Using default message %s instead."
-        message = message % (repr(user), name, repr(default))
-        warnings.warn(message, UserWarning)
-
-    # Return valid message to user
-    return value
-
-
-def _validate_iupac(name, user, default):
-    """ Validates an IUPAC string """
-
-    message = None
-
-    # Check that user input is a string
-    if not isinstance(user, string_types):
-        value = default
-        message = "Value %s for parameter '%s' is not a string. " + \
-                  "Using default message %s instead."
-        message = message % (repr(user), name, repr(default))
-
-    # Make sure string has nonzero length
-    elif len(user) == 0:
-        value = default
-        message = "String %s, set for parameter '%s', is empty. " + \
-                  "Using default message %s instead."
-        message = message % (repr(user), name, repr(default))
-
-    # Make sure string contains valid characters
-    elif not set(list(user.upper())) <= set(iupac_dict.keys()):
-        value = default
-        message = "String %s, set for parameter '%s', contains " + \
-                  "invalid characters. Using default message %s instead."
-        message = message % (repr(user), name, repr(default))
-
-    # Make sure string is all capitals
-    elif any([c == c.lower() for c in list(user)]):
-        value = user.upper()
-        message = "String %s, set for parameter '%s', contains lowercase " + \
-                  "characters. Using capitalized characters instead."
-        message = message % (repr(user), name)
-
-    # If all tests pass, use user input
-    else:
-        value = user
-
-    if message is not None:
-        warnings.warn(message, UserWarning)
-
-    return value
-
-
-def _validate_filename(name, user, default):
-    """ Validates a string parameter. """
-
-    # Test whether file exists and can be opened
-    message = None
-    try:
-
-        if not os.path.isfile(user):
-            value = default
-            message = "File %s passed for parameter '%s' does not exist. " +\
-                      "Using default message %s instead."
-            message = message % (repr(user), name, repr(default))
-
-        elif open(user, 'r'):
-            value = user
-        else:
-            value = default
-            message = "File %s passed for parameter '%s' cannot be opened." + \
-                      " Using default message %s instead."
-            message = message % (repr(user), name, repr(default))
-
-    except (ValueError,TypeError):
-        value = default
-        if message is None:
-            message = "Value %s passed for parameter '%s' is invalid." + \
-                      " Using default message %s instead."
-            message = message % (repr(user), name, repr(default))
-
-    if message is not None:
-        warnings.warn(message, UserWarning)
-
-    # Return valid message to user
-    return value
-
-
-def _validate_color(name, user, default):
-    """ Tests whether user input can be interpreted as an RGBA color. """
-
-    # Check whether any of the following lines of code execute without error
-    try:
-        to_rgba(user)
-        is_valid = True
-    except ValueError:
-        is_valid = False
-
-    # If so, then colorscheme is valid
-    if is_valid:
-        value = user
-
-    # Otherwise, use default colorscheme
-    else:
-        value = default
-        message = "Improper message %s for parameter '%s'. " + \
-                  "Using default message %s instead."
-        message = message % (repr(user), name, repr(default))
-        warnings.warn(message, UserWarning)
-
-    # Return valid message to user
-    return value
-
-
 @handle_errors
-def validate_matrix(dataframe, allow_nan=False):
+def validate_matrix(df, allow_nan=False):
     """
-    Runs checks to verify that df is indeed a motif dataframe.
-    Returns a cleaned-up version of df if possible
+    Checks to make sure that the input dataframe, df, represents a valid
+    matrix, i.e., an object that can be displayed as a logo.
+
+    parameters
+    ----------
+
+    df: (dataframe)
+        A pandas dataframe where each row represents an (integer) position
+        and each column represents to a (single) character.
+
+    allow_nan: (bool)
+        Whether to allow NaN entries in the matrix.
+
+    returns
+    -------
+    out_df: (dataframe)
+        A cleaned-up version of df (if possible).
     """
 
-    check(isinstance(dataframe, pd.DataFrame),
-          'dataframe needs to be a valid pandas dataframe, dataframe entered: ' + str(type(dataframe)))
+    check(isinstance(df, pd.DataFrame),
+          'out_df needs to be a valid pandas out_df, ' 
+          'out_df entered: %s' % type(df))
 
-    # Create copy of dataframe so that don't overwrite the user's data
-    dataframe = dataframe.copy()
+    # Create copy of df so we don't overwrite the user's data
+    out_df = df.copy()
 
-    check(isinstance(allow_nan,bool),'allow_nan = %s must be of type bool'%type(allow_nan))
-
-    # Copy and preserve logomaker_type
-    dataframe = dataframe.copy()
+    check(isinstance(allow_nan, bool),
+          'allow_nan must be of type bool; is type %s.' % type(allow_nan))
 
     if not allow_nan:
         # Make sure all entries are finite numbers
-        check(np.isfinite(dataframe.values).all(),'some matrix elements are not finite.' + 'Set allow_nan=True to allow.')
+        check(np.isfinite(out_df.values).all(),
+              'some matrix elements are not finite. ' 
+              'Set allow_nan=True to allow this.')
 
     # Make sure the matrix has a finite number of rows and columns
-    check(dataframe.shape[0] >= 1, 'matrix has zero rows.')
-    check(dataframe.shape[1] >= 1, 'matrix has zero columns.')
+    check(out_df.shape[0] >= 1, 'df has zero rows. Needs multiple rows.')
+    check(out_df.shape[1] >= 1, 'df has zero columns. Needs multiple columns.')
 
-    # Remove columns whose names aren't strings exactly 1 character long.
-    # Warn user when doing so
-    cols = dataframe.columns
-    for col in cols:
-        if not isinstance(col, string_types) or (len(col) != 1):
-            del dataframe[col]
-            message = ('Matrix has invalid column name "%s". This column ' +
-                       'has been removed.') % col
-            warnings.warn(message, UserWarning)
+    # Check that all column names are strings and have length 1
+    for i, col in enumerate(out_df.columns):
+        check(isinstance(col, str),
+              'column number %d is of type %s; must be a str' % (i, col))
+        check(len(col) == 1,
+              'column %d is %s and has length %d; ' % (i, repr(col), len(col))
+              + 'must have length 1.')
 
-    cols = dataframe.columns
-    for i, col_name in enumerate(cols):
-        # Ok to have a 'pos' column
-        if col_name == 'pos':
-            continue
-
-        # Convert column name to simple string if possible
-        check(isinstance(col_name, string_types), 'column name %s is not a string' % col_name)
-        new_col_name = str(col_name)
-
-        # If column name is not a single chracter, try extracting single character
-        # after an underscore
-        if len(new_col_name) != 1:
-            new_col_name = new_col_name.split('_')[-1]
-            check((len(new_col_name)==1),'could not extract single character from colum name %s'%col_name)
-
-        # Make sure that colun name is not a whitespace character
-        check(re.match('\S',new_col_name),'column name "%s" is a whitespace charcter.'%repr(col_name))
-
-        # Set revised column name
-        dataframe.rename(columns={col_name:new_col_name}, inplace=True)
-
-    # If there is a pos column, make that the index
-    if 'pos' in cols:
-        dataframe['pos'] = dataframe['pos'].astype(int)
-        dataframe.set_index('pos', drop=True, inplace=True)
-
-    # Remove name from index column
-    dataframe.index.names = [None]
-
-    # Alphabetize character columns
-    char_cols = list(dataframe.columns)
+    # Sort columns alphabetically
+    char_cols = list(out_df.columns)
     char_cols.sort()
-    dataframe = dataframe[char_cols]
+    out_df = out_df[char_cols]
 
-    # Return cleaned-up df
-    return dataframe
+    # Name out_df.index as 'pos'
+    out_df.index.name = 'pos'
+
+    # Try casting df.index as type int
+    try:
+        int_index = out_df.index.astype(int)
+    except TypeError:
+        check(False,
+              'could not convert df.index to type int. Check that '
+              'all positions have integer numerical values.')
+
+    # Make sure that df.index values have not changed
+    check(all(int_index == out_df.index),
+          'could not convert df.index values to int without changing'
+          'some values. Make sure that df.index values are integers.')
+
+    # Check that all index values are unique
+    check(len(set(out_df.index)) == len(out_df.index),
+          'not all values of df.index are unique. Make sure all are unique.')
+
+    # Return cleaned-up out_df
+    return out_df
 
 
 @handle_errors
-def validate_probability_mat(matrix):
+def validate_probability_mat(df):
     """
-    Verifies that the df is indeed a probability matrix dataframe.
-    Renormalizes df with Warning if it is not already normalized.
-    Throws an error of df cannot be reliably normalized.
+    Verifies that the input dataframe df indeed represents a
+    probability matrix. Renormalizes df with a text warning if it is not
+    already normalized. Throws an error if df cannot be reliably normalized.
+
+    parameters
+    ----------
+
+    df: (dataframe)
+        A pandas dataframe where each row represents an (integer) position
+        and each column represents to a (single) character.
+
+    returns
+    -------
+    prob_df: (dataframe)
+        A cleaned-up and normalized version of df (if possible).
     """
 
-    # Validate as motif
-    matrix = validate_matrix(matrix)
+    # Validate as a matrix. Make sure this contains no NaN values
+    prob_df = validate_matrix(df, allow_nan=False)
 
     # Make sure all values are non-negative
-    #assert (all(matrix.values.ravel() >= 0)), \
-    #    'Error: not all values in df are >=0.'
-
-    check(all(matrix.values.ravel() >= 0),
-        'Error: not all values in df are >=0.')
+    check(all(prob_df.values.ravel() >= 0),
+          'not all values in df are >=0.')
 
     # Check to see if values sum to one
-    sums = matrix.sum(axis=1).values
+    sums = prob_df.sum(axis=1).values
 
     # If any sums are close to zero, abort
-    #assert not any(np.isclose(sums, 0.0)), \
-    #    'Error: some columns in matrix sum to nearly zero.'
     check(not any(np.isclose(sums, 0.0)),
-        'Error: some columns in matrix sum to nearly zero.')
+          'some columns in prob_df sum to nearly zero.')
 
     # If any sums are not close to one, renormalize all sums
     if not all(np.isclose(sums, 1.0)):
-        print('Warning: Row sums in probability matrix are not close to 1. ' +
+        print('in validate_probability_mat(): '
+              'Row sums in df are not close to 1. '
               'Reormalizing rows...')
-        matrix.loc[:, :] = matrix.values / sums[:, np.newaxis]
+        prob_df.loc[:, :] = prob_df.values / sums[:, np.newaxis]
 
-    # Return data frame to user
-    return matrix
+    # Return validated probability matrix to user
+    return prob_df
+
 
 @handle_errors
-def validate_information_mat(matrix):
+def validate_information_mat(df):
     """
-    Verifies that the df is indeed an information matrix dataframe.
-    Returns a cleaned-up version of df if possible
+    Verifies that the input dataframe df indeed represents an
+    information matrix.
+
+    parameters
+    ----------
+
+    df: (dataframe)
+        A pandas dataframe where each row represents an (integer) position
+        and each column represents to a (single) character.
+
+    returns
+    -------
+    info_df: (dataframe)
+        A cleaned-up version of df (if possible).
     """
 
-    # Validate as motif
-    matrix = validate_matrix(matrix)
+    # Validate as a matrix. Make sure this contains no NaN values
+    info_df = validate_matrix(df, allow_nan=False)
 
-    # Validate df values as info values
-    #assert (all(matrix.values.ravel() >= 0)), \
-    #    'Error: not all values in df are >=0.'
-    check(all(matrix.values.ravel() >= 0),
-            'Error: not all values in df are >=0.')
+    # Validate all values in info_matrix are nonnegative
+    check(all(info_df.values.ravel() >= 0),
+          'not all values in df are >=0.')
 
-    # Return data frame to user
-    return matrix
+    # Return validated information matrix to user
+    return info_df

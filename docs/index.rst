@@ -14,7 +14,7 @@ Logomaker: a Python API for creating publication quality sequence logos
    :alt: Najafi recreated
    :align: right
 
-Logomaker is a Python application programming interface (API) for generating publication-quality sequence logos.
+Logomaker is an awesome Python application programming interface (API) for generating publication-quality sequence logos.
 Sequence logos are a popular way of representing a variety of sequence-function relationships.
 Currently available Python applications for making sequence logos are optimized only for specific
 experiments, and thus are limited in their usage.Logomaker can generate
@@ -27,8 +27,8 @@ incorporation into multi-panel figures.
    :maxdepth: 2
    :caption: Contents:
 
-Examples
---------
+Logomaker can make highly customizable sequence logos
+-----------------------------------------------------
 
 RNAP Enrichment
 ===============
@@ -41,6 +41,11 @@ Saliency
 
 .. image:: _static/Saliency.png
    :scale: 30 %
+
+Probability
+===========
+
+.. image:: _static/tutorial_images/probability_logo.png
 
 Installation
 ------------
@@ -139,9 +144,9 @@ by default.
 Information matrix
 ==================
 
-Information logos were described in the original 1990 paper of Schneider and Stephens cite{Schneider},
-and remain the most popular type of sequence logo. The entries :math:`I_{ic}`in the corresponding information matrices
-are given by
+Information logos were described in the original 1990 paper of Schneider and Stephens cite(Schneider),
+and remain the most popular type of sequence logo. The entries :math:`I_{ic}`in the corresponding information
+matrices are given by
 
 :math:`I_{ci} = p_{ci} I_i,~~~I_i = \sum_c p_{ci} \log_2 \frac{p_{ci}}{b_{ci}}`
 
