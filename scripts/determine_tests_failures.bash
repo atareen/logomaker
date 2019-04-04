@@ -14,6 +14,6 @@ if [ "$1" == "0" ]; then
 else
     echo "non-zero functional test failures"
 	echo $1
-    echo "not committing code"
+    echo "do NOT commit code"
     echo "Failed!" && exit 1
 fi
