@@ -26,4 +26,8 @@ echo $error_code
 if [ $error_code -ne 0 ]; then
 echo "Tests must pass before commit!"
 exit 1
+
+else 
+echo "Tests passed, will commit."
+
 fi
