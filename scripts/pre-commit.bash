@@ -14,17 +14,15 @@ else
     echo 'checking whether to commit or not'
 
 	if [ "$1" == "0" ]; then
-		echo $1
 	    echo "Commit hook passed!"
 	    echo 'Code should be committed...'
 	else
-    	echo "non-zero functional test failures"
+    	echo "non-zero functional test failures: "
 		echo $1
 	    echo "do NOT commit code"
     	echo "Failed!" 
-	    exit 1
+    	set -e
 fi
-
 
 fi
 
