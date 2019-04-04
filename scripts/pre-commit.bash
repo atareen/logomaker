@@ -20,16 +20,13 @@ else
     	echo "non-zero functional test failures: "
 		echo $1
 	    echo "do NOT commit code"
-    	echo "Failed!" 
-    	set -e
+	    false
 fi
 
 fi
 
-
-
-# $? stores exit value of the last command
-#if [ $? -ne 0 ]; then
-# echo "Tests must pass before commit!"
-# exit 1
-#fi
+#$? stores exit value of the last command
+if [ $? -ne 0 ]; then
+echo "Tests must pass before commit!"
+exit 1
+fi
