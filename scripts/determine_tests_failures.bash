@@ -9,11 +9,11 @@ cd "${0%/*}/.."
 
 if [ "$1" == "0" ]; then
     echo "no failures"
+    echo 'Code should be committed...'
 else
     echo "non-zero functional test failures"
     echo "not committing code"
     set -e
-    exit 1
 fi
 
-echo 'Code should be committed...'
+
