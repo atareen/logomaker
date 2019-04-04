@@ -6,7 +6,7 @@ python functional_tests_logomaker.py
 
 
 # check the output produces by running functional tests
-error_code=$(<output_code.txt)
+error_code=$(<scripts/output_code.txt)
 echo $error_code
 
 #if [ "$1" == "0" ]; then
