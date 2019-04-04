@@ -2,6 +2,8 @@
 
 echo "Running pre-commit hook"
 
+echo $1
+
 cd logomaker/tests
 python functional_tests_logomaker.py
 
