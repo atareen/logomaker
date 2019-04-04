@@ -6,6 +6,8 @@ python functional_tests_logomaker.py
 
 echo 'about to read error code file'
 
+cd ..
+
 # check the output produces by running functional tests
 error_code=$(<scripts/output_code.txt)
 echo $error_code
