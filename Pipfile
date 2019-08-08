@@ -10,6 +10,7 @@ pytest = "*"
 matplotlib = "*"
 numpy = "*"
 pandas = "*"
+logomaker = "*"
 
 [requires]
 python_version = "3.6"
