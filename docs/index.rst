@@ -43,6 +43,16 @@ This command will also print out the code used to generate the logo.
 We note that the logo shown here is from Figure 1B of Tareen and Kinney (2019) [#Tareen2019]_, and that the other logos in Figure 1 can be generated in a similar manner.
 
 
+Tutorial
+--------
+
+A tutorial for Logomaker is provided via a series of `Jupyter notebooks <https://jupyter.org/>`_.
+Each notebook focuses on a different aspect of the Logomaker functionality. To run each tutorial
+interactively, click the binder badge below.
+
+.. image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/atareen/logomaker/master?filepath=logomaker%2Ftutorials
+
 Resources
 ---------
 
