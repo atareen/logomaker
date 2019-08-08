@@ -4,9 +4,7 @@ import pandas as pd
 
 # Logomaker imports
 from logomaker.src.error_handling import check, handle_errors
-from logomaker.src.validate import validate_matrix, \
-    validate_probability_mat, \
-    validate_information_mat
+from logomaker.src.validate import validate_matrix
 
 # Specifies built-in character alphabets
 ALPHABET_DICT = {
@@ -157,9 +155,9 @@ def transform_matrix(df,
           (to_type, MATRIX_TYPES))
 
     # validate background
-    check(isinstance(background, (type([]), np.ndarray)) or
+    check(isinstance(background, (type([]), np.ndarray, pd.DataFrame)) or
           (background is None),
-          'type(background) = %s must be None or of type list or array' %
+          'type(background) = %s must be None or array-like or a dataframe.' %
           type(background))
 
     # validate pseudocount
@@ -273,7 +271,7 @@ def _counts_mat_to_probability_mat(counts_df, pseudocount=1.0):
     prob_df = _normalize_matrix(prob_df)
 
     # Validate and return
-    prob_df = validate_probability_mat(prob_df)
+    prob_df = validate_matrix(prob_df, matrix_type='probability')
     return prob_df
 
 
@@ -283,7 +281,7 @@ def _probability_mat_to_weight_mat(prob_df, background=None):
     """
 
     # Validate matrix before use
-    prob_df = validate_probability_mat(prob_df)
+    prob_df = validate_matrix(prob_df, matrix_type='probability')
 
     # Get background matrix
     bg_df = _get_background_mat(prob_df, background)
@@ -317,7 +315,7 @@ def _weight_mat_to_probability_mat(weight_df, background=None):
     prob_df = _normalize_matrix(prob_df)
 
     # Validate and return
-    prob_df = validate_probability_mat(prob_df)
+    prob_df = validate_matrix(prob_df, matrix_type='probability')
     return prob_df
 
 
@@ -327,7 +325,7 @@ def _probability_mat_to_information_mat(prob_df, background=None):
     """
 
     # Validate matrix before use
-    prob_df = validate_probability_mat(prob_df)
+    prob_df = validate_matrix(prob_df, matrix_type='probability')
 
     # Get background matrix
     bg_df = _get_background_mat(prob_df, background)
@@ -341,7 +339,7 @@ def _probability_mat_to_information_mat(prob_df, background=None):
     info_df.loc[:, :] = fg_vals * info_vec[:, np.newaxis]
 
     # Validate and return
-    info_df = validate_information_mat(info_df)
+    info_df = validate_matrix(info_df, matrix_type='information')
     return info_df
 
 
@@ -351,7 +349,7 @@ def _information_mat_to_probability_mat(info_df, background=None):
     """
 
     # Validate matrix before use
-    info_df = validate_information_mat(info_df)
+    info_df = validate_matrix(info_df, matrix_type='information')
 
     # Get background matrix
     bg_df = _get_background_mat(info_df, background)
@@ -368,7 +366,7 @@ def _information_mat_to_probability_mat(info_df, background=None):
     prob_df = _normalize_matrix(info_df)
 
     # Validate and return
-    prob_df = validate_probability_mat(prob_df)
+    prob_df = validate_matrix(prob_df, matrix_type='probability')
     return prob_df
 
 
@@ -396,7 +394,7 @@ def _normalize_matrix(df):
     prob_df.loc[:, :] = df.values / sums[:, np.newaxis]
 
     # Validate and return probability matrix
-    prob_df = validate_probability_mat(prob_df)
+    prob_df = validate_matrix(prob_df, matrix_type='probability')
     return prob_df
 
 
@@ -461,13 +459,15 @@ def _get_background_mat(df, background):
         bg_df = _normalize_matrix(bg_df)
 
     # validate as probability matrix
-    bg_df = validate_probability_mat(bg_df)
+    bg_df = validate_matrix(bg_df, matrix_type='probability')
     return bg_df
 
 
 @handle_errors
 def alignment_to_matrix(sequences,
+                        counts=None,
                         to_type='counts',
+                        background=None,
                         characters_to_ignore='.-',
                         center_weights=False,
                         pseudocount=1.0):
@@ -479,9 +479,20 @@ def alignment_to_matrix(sequences,
     sequences: (list of strings)
         A list of sequences, all of which must be the same length
 
+    counts: (None or list of numbers)
+        If not None, must be a list of numbers the same length os sequences,
+        containing the (nonnegative) number of times that each sequence was
+        observed. If None, defaults to 1.
+
     to_type: (str)
         The type of matrix to output. Must be 'counts', 'probability',
         'weight', or 'information'
+
+    background: (array, or df)
+        Specification of background probabilities. If array, should be the
+        same length as df.columns and correspond to the probability of each
+        column's character. If df, should be a probability matrix the same
+        shape as df.
 
     characters_to_ignore: (str)
         Characters to ignore within sequences. This is often needed when
@@ -502,8 +513,8 @@ def alignment_to_matrix(sequences,
     # validate inputs
 
     # Make sure sequences is list-like
-    check(isinstance(sequences, (list, tuple, set, np.ndarray)),
-          'sequences must be a list, tuple, set, or np.ndarray.')
+    check(isinstance(sequences, (list, tuple, np.ndarray, pd.Series)),
+          'sequences must be a list, tuple, np.ndarray, or pd.Series.')
     sequences = list(sequences)
 
     # Make sure sequences has at least 1 element
@@ -513,12 +524,40 @@ def alignment_to_matrix(sequences,
     check(all(isinstance(seq, str) for seq in sequences),
           'sequences must all be of type string')
 
+    # validate characters_to_ignore
+    check(isinstance(characters_to_ignore, str),
+          'type(seq) = %s must be of type str' % type(characters_to_ignore))
+
+    # validate center_weights
+    check(isinstance(center_weights, bool),
+          'type(center_weights) = %s; must be bool.' % type(center_weights))
+
     # Get sequence length
     L = len(sequences[0])
 
     # Make sure all sequences are the same length
     check(all([len(s) == L for s in sequences]),
           'all elements of sequences must have the same length.')
+
+    # validate counts as list-like
+    check(isinstance(counts, (list, tuple, np.ndarray, pd.Series)) or
+          (counts is None),
+          'counts must be None or a list, tuple, np.ndarray, or pd.Series.')
+
+    # make sure counts has the same length as sequences
+    if counts is None:
+        counts = np.ones(len(sequences))
+    else:
+        check(len(counts) == len(sequences),
+              'counts must be the same length as sequences;'
+              'len(counts) = %d; len(sequences) = %d' %
+              (len(counts), len(sequences)))
+
+    # validate background
+    check(isinstance(background, (type([]), np.ndarray, pd.DataFrame)) or
+          (background is None),
+          'type(background) = %s must be None or array-like or a dataframe.' %
+          type(background))
 
     # Define valid types
     valid_types = MATRIX_TYPES.copy()
@@ -539,15 +578,17 @@ def alignment_to_matrix(sequences,
     index = list(range(L))
     counts_df = pd.DataFrame(data=0, columns=columns, index=index)
 
-    # Sum of the number of occurrances of each character at each position
+    # Sum of the number of occurrences of each character at each position
     for c in columns:
-        counts_df.loc[:, c] = (char_array == c).astype(float).sum(axis=0).T
+        tmp_mat = (char_array == c).astype(float) * counts[:, np.newaxis]
+        counts_df.loc[:, c] = tmp_mat.sum(axis=0).T
 
     # Convert counts matrix to matrix of requested type
     out_df = transform_matrix(counts_df,
                               from_type='counts',
                               to_type=to_type,
-                              pseudocount=pseudocount)
+                              pseudocount=pseudocount,
+                              background=background)
 
     # Center values only if center_weights is True and to_type is 'weight'
     if center_weights and to_type == 'weight':
@@ -607,6 +648,10 @@ def sequence_to_matrix(seq,
     # validate seq
     check(isinstance(seq, str),
           'type(seq) = %s must be of type str' % type(seq))
+
+    # validate center_weights
+    check(isinstance(center_weights, bool),
+          'type(center_weights) = %s; must be bool.' % type(center_weights))
 
     # If cols is None, set to list of unique characters in sequence
     if cols is None:
@@ -715,15 +760,15 @@ def saliency_to_matrix(seq, values, cols=None, alphabet=None):
     parameters
     ----------
 
-    seq: (str)
+    seq: (str or array-like list of single characters)
         sequence for which values matrix is constructed
 
-    values: (array)
+    values: (array-like list of numbers)
         array of values values for each character in sequence
 
     cols: (str or array-like or None)
         The characters to use for the matrix columns. If None, cols is
-        constructed from the unqiue characters in seq. Overriden by alphabet
+        constructed from the unqiue characters in seq. Overridden by alphabet
         and is_iupac.
 
     alphabet: (str or None)
@@ -737,12 +782,24 @@ def saliency_to_matrix(seq, values, cols=None, alphabet=None):
 
     """
 
+    # try to convert seq to str; throw exception if fail
+    if isinstance(seq, (list, np.ndarray, pd.Series)):
+        try:
+            seq = ''.join([str(x) for x in seq])
+        except:
+            check(False, 'could not convert %s to type str' % repr(str))
+    else:
+        try:
+            seq = str(seq)
+        except:
+            check(False, 'could not convert %s to type str' % repr(str))
+
     # validate seq
     check(isinstance(seq, str),
           'type(seq) = %s must be of type str' % type(seq))
 
-    # validate background: check that it is a list or array
-    check(isinstance(values, (type([]), np.ndarray)),
+    # validate values: check that it is a list or array
+    check(isinstance(values, (type([]), np.ndarray, pd.Series)),
           'type(values) = %s must be of type list' % type(values))
 
     # cast values as a list just to be sure what we're working with
@@ -762,6 +819,12 @@ def saliency_to_matrix(seq, values, cols=None, alphabet=None):
         cols_types = (str, list, set, np.ndarray)
         check(isinstance(cols, cols_types),
               'cols = %s must be None or a string, set, list, or np.ndarray')
+
+        # perform additional checks to validate cols
+        check(len(set(cols))==len(set(seq)),
+              'length of set of unique characters must be equal for "cols " and "seq"')
+        check(set(cols) == set(seq),
+              'unique characters for "cols" and "seq" must be equal.')
 
     # If alphabet is specified, override cols
     if alphabet is not None:

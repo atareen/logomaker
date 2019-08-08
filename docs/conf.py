@@ -23,25 +23,25 @@ sys.path.append('../')
 import logomaker
 
 project = 'logomaker'
-copyright = '2019, Ammar Tareen'
-author = 'Ammar Tareen'
+copyright = '2019, Ammar Tareen and Justin B. Kinney'
+author = 'Ammar Tareen and Justin B. Kinney'
 
 # The short X.Y version
-version = ''
+version = '0.8'
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '0.8'
 
 
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-# needs_sphinx = '1.0'
+needs_sphinx = '1.7.3' #no, this doesnt solve the **kwargs problem
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc','numpydoc']
+extensions = ['sphinx.ext.autodoc', 'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -76,8 +76,8 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#html_theme = 'alabaster'
-html_theme = 'bizstyle'
+html_theme = 'sphinx_rtd_theme'
+#html_theme = 'bizstyle'
 
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -86,10 +86,33 @@ html_theme = 'bizstyle'
 #
 # html_theme_options = {}
 
+html_theme_options = {
+    'canonical_url': 'https://logomaker.readthedocs.io',
+    #'analytics_id': 'UA-XXXXXXX-1',  #  Provided by Google in your dashboard
+    'logo_only': True,
+    'display_version': True,
+    'prev_next_buttons_location': 'none', #'bottom',
+    'style_external_links': False,
+    #'vcs_pageview_mode': '',
+    'style_nav_header_background': 'white',
+    # Toc options
+    'collapse_navigation': False,
+    'sticky_navigation': True,
+    'navigation_depth': 3,
+    'includehidden': True,
+    'titles_only': False
+}
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+html_logo = '_static/logo.png'
+
+# to customize CSS
+# def setup(app):
+#     app.add_stylesheet('my_theme.css')
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -133,7 +156,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'logomaker.tex', 'logomaker Documentation',
-     'Ammar Tareen', 'manual'),
+     'Ammar Tareen and Justin B. Kinney', 'manual'),
 ]
 
 

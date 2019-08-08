@@ -1,115 +1,121 @@
 from __future__ import division
 import numpy as np
 import pandas as pd
+
+# explicitly set a matplotlib backend if called from python to avoid the
+# 'Python is not installed as a framework... error'
+import sys
+if sys.version_info[0] == 2:
+    import matplotlib
+    matplotlib.use('TkAgg')
+
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-from matplotlib.colors import to_rgb, to_rgba
-import matplotlib.cm
-import pdb
+from matplotlib.axes import Axes
 
 # Import stuff from logomaker
 from logomaker.src.Glyph import Glyph
-from logomaker.src import colors as lm_color
-from logomaker.src.validate import validate_matrix, validate_probability_mat
-import logomaker.src.validate as validate
+from logomaker.src.validate import validate_matrix
 from logomaker.src.error_handling import check, handle_errors
-
-chars_to_colors_dict = {
-    tuple('ACGT'): 'classic',
-    tuple('ACGU'): 'classic',
-    tuple('ACDEFGHIKLMNPQRSTVWY'): 'hydrophobicity',
-}
+from logomaker.src.colors import get_color_dict, get_rgb
+from logomaker.src.matrix import transform_matrix
 
 
 class Logo:
     """
     Logo represents a basic logo, drawn on a specified axes object
-    using a specified matrix.
+    using a specified matrix, which is supplied as a pandas dataframe.
 
     attributes
     ----------
 
-    matrix: (pd.DataFrame)
-        A matrix specifying character heights and positions. Note that
-        positions index rows while characters index columns.
+    df: (pd.DataFrame)
+        A matrix specifying character heights and positions. Rows correspond
+        to positions while columns correspond to characters. Column names
+        must be single characters and row indices must be integers.
 
-    colors: (str, dict, or array-like with length 3 or 4)
-        Face color of logo characters. Default is 'gray'. Here and in
-        what follows a variable of type 'color' can take a variety of message
-        types.
-         - (str) A Logomaker color scheme in which the color is determined
-             by the specific character being drawn. Options are,
-             + For DNA/RNA: 'classic', 'grays', 'base_paring'.
-             + For protein: 'hydrophobicity', 'chemistry', 'charge'.
-         - (str) A built-in matplotlib color name  such as 'k' or 'tomato'
-         - (list) An RGB color (3 floats in interval [0,1]) or RGBA color
-             (4 floats in interval [0,1]).
-         - (dict) A dictionary mapping of characters to color_scheme, in which
-             case the color will depend  on the character being drawn.
-             E.g., {'A': 'green','C': [ 0.,  0.,  1.], 'G': 'y',
-             'T': [ 1.,  0.,  0.,  0.5]}
+    color_scheme: (str, dict, or array with length 3)
+        Specification of logo colors. Default is 'gray'. Can take a variety of
+        forms.
+         - (str) A built-in Logomaker color scheme in which the color of each
+         character is determined that character's identity. Options are,
+             + For DNA/RNA: 'classic', 'grays', or 'base_paring'.
+             + For protein: 'hydrophobicity', 'chemistry', or 'charge'.
+         - (str) A built-in matplotlib color name such as 'k' or 'tomato'
+         - (list) An RGB array, i.e., 3 floats with values in the interval [0,1]
+         - (dict) A dictionary that maps characters to colors, E.g.,
+            {'A': 'blue',
+             'C': 'yellow',
+             'G': 'green',
+             'T': 'red'}
 
     font_name: (str)
-        The 'font_name' parameter to pass to FontProperties() when creating
-        Glyphs.
+        The character font to use when rendering the logo. For a list of
+        valid font names, run logomaker.list_font_names().
 
     stack_order: (str)
-        Must be 'big_on_top', 'small_on_top', or 'fixed. If 'big_on_top',
-        stack glyphs away from x-axis in order of increasing absolute message.
+        Must be 'big_on_top', 'small_on_top', or 'fixed'. If 'big_on_top',
+        stack characters away from x-axis in order of increasing absolute value.
         If 'small_on_top', stack glyphs away from x-axis in order of
-        decreasing absolute message. If 'fixed', stack glyphs from top to bottom
-        in the order that characters appear in the data frame. If 'flipped',
-        stack glyphs in the opposite order as 'fixed'.
+        decreasing absolute value. If 'fixed', stack glyphs from top to bottom
+        in the order that characters appear in the data frame.
 
     center_values: (bool)
         If True, the stack of characters at each position will be centered
-        around zero. This is accomplished by subtracting the mean message
+        around zero. This is accomplished by subtracting the mean value
         in each row of the matrix from each element in that row.
 
     baseline_width: (float >= 0.0)
-        Width of the baseline.
+        Width of the logo baseline, drawn at value 0.0 on the y-axis.
 
     flip_below: (bool)
-        If True, glyphs below the x-axis (which correspond to negative
+        If True, characters below the x-axis (which correspond to negative
         values in the matrix) will be flipped upside down.
 
+    shade_below: (float in [0,1])
+        The amount of shading to use for characters drawn below the x-axis.
+        Larger numbers correspond to more shading (i.e., darker characters).
+
+    fade_below: (float in [0,1])
+        The amount of fading to use for characters drawn below the x-axis.
+        Larger numbers correspond to more fading (i.e., more transparent
+        characters).
+
     fade_probabilities: (bool)
-        If True, the glyphs in each stack will then be assigned an alpha value
-        equal to their height. Note: this option only makes sense if df is a
+        If True, the characters in each stack will be assigned an alpha value
+        equal to their height. This option only makes sense if df is a
         probability matrix. For additional customization, use
         Logo.fade_glyphs_in_probability_logo().
 
-    shade_below: (float in [0,1])
-        The amount of shading underneath x-axis.
-
-    fade_below: (float in [0,1])
-        The amount of fading underneath x-axis.
+    vpad: (float in [0,1])
+        The whitespace to leave above and below each character within that
+        character's bounding box. Note that, if vpad > 0, the height of the
+        character's bounding box (and not of the character itself) will
+        correspond to values in df.
 
     vsep: (float >= 0)
-        Amount of whitespace to leave between rendered glyphs. Unlike vpad,
-        vsep is NOT relative to glyph height. The vsep-sized margin between
-        glyphs on either side of the x-axis will always be centered on the
-        x-axis.
+        Amount of whitespace to leave between the bounding boxes of rendered
+        characters. Unlike vpad, vsep is NOT relative to character height.
 
-    show_spines: (bool)
-        Whether should be shown on all four sides of the logo. If set to either
-        True or false, will automatically set draw_now=True.
-        For additional customization of spines, use Logo.style_spines().
+    alpha: (float in [0,1])
+        Opacity to use when rendering characters. Note that, if this is used
+        together with fade_below or fade_probabilities, alpha will multiply
+        existing opacity values.
 
-    zorder: (int >=0)
-        The order in which things are drawn.
-
-    figsize: (number, number):
-        The default figure size for logos; only needed if ax is not supplied.
+    show_spines: (None or bool)
+        Whether a box should be drawn around the logo.  For additional
+        customization of spines, use Logo.style_spines().
 
     ax: (matplotlib Axes object)
-        The axes object on which to draw the logo.
+        The matplotlb Axes object on which the logo is drawn.
 
-    draw_now: (bool)
-        If True, the logo is rendered immediately after it is specified.
-        Set to False if you wish to change the properties of any glyphs
-        after initial specification, e.g. by running
-        Logo.highlight_sequence().
+    zorder: (int >=0)
+        This governs what other objects drawn on ax will appear in front or
+        behind the rendered logo.
+
+    figsize: ([float, float]):
+        The default figure size for the rendered logo; only used if ax is
+        not supplied by the user.
 
     **kwargs:
         Additional key word arguments to send to the Glyph constructor.
@@ -127,12 +133,13 @@ class Logo:
                  shade_below=0.0,
                  fade_below=0.0,
                  fade_probabilities=False,
+                 vpad=0.0,
                  vsep=0.0,
+                 alpha=1.0,
                  show_spines=None,
+                 ax=None,
                  zorder=0,
                  figsize=(10, 2.5),
-                 ax=None,
-                 draw_now=True,
                  **kwargs):
 
         # set class attributes
@@ -146,382 +153,206 @@ class Logo:
         self.shade_below = shade_below
         self.fade_below = fade_below
         self.fade_probabilities = fade_probabilities
+        self.vpad = vpad
         self.vsep = vsep
+        self.alpha = alpha
         self.show_spines = show_spines
         self.zorder = zorder
         self.figsize = figsize
         self.ax = ax
-        self.draw_now = draw_now
 
-        # Register logo as NOT having been drawn
+        # save other keyword arguments
+        self.glyph_kwargs = kwargs
+
+        # register logo as NOT having been drawn
+        # This is changed to True after all Glyphs have been rendered
         self.has_been_drawn = False
 
         # perform input checks to validate attributes
         self._input_checks()
 
-        # Compute length
+        # compute length
         self.L = len(self.df)
 
-        # Get list of characters
-        self.cs = np.array([str(c) for c in self.df.columns])
+        # get list of characters
+        self.cs = np.array([c for c in self.df.columns])
         self.C = len(self.cs)
 
-        # Get list of positions
-        self.ps = np.array([int(p) for p in self.df.index])
+        # get color dictionary
+        # NOTE: this validates color_scheme; not self._input_checks()
+        self.rgb_dict = get_color_dict(self.color_scheme, self.cs)
 
-        # Set color_scheme by identifying default or otherwise setting to gray
-        if color_scheme is None:
-            key = tuple(self.cs)
-            color_scheme = chars_to_colors_dict.get(key, 'gray')
-        self.color_scheme = color_scheme
+        # get list of positions
+        self.ps = np.array([p for p in self.df.index])
 
-        # If fade_probabilities is True, make df a probability matrix
-        if fade_probabilities:
-            self.df = validate_probability_mat(self.df)
-
-        # Save other attributes
-        self.ax = ax
-        self.center_values = center_values
-        self.flip_below = flip_below
-        self.vsep = vsep
-        self.zorder = zorder
-        self.figsize = tuple(figsize)
-        self.glyph_kwargs = kwargs
-
-        # Note: Logo does NOT expect df to change after it is passed
-        # to the constructor. But one can change character attributes
-        # before drawing.
-
-        # Set flag for whether Logo has been drawn
-        self.has_been_drawn = False
-
-        # Fill NaN values of matrix_df with zero
+        # center matrix if requested
         if self.center_values:
-            self.df.loc[:, :] = self.df.values - \
-                                self.df.values.mean(axis=1)[:, np.newaxis]
+            self.df = transform_matrix(self.df, center_values=True)
 
-        # Compute color dictionary
-        self.rgb_dict = lm_color._get_color_dict(
-                                    color_scheme=self.color_scheme,
-                                    chars=self.cs)
+        # create axes if not specified by user
+        if self.ax is None:
+            fig, ax = plt.subplots(1, 1, figsize=self.figsize)
+            self.ax = ax
 
-        # Compute characters.
+        # save figure as attribute
+        self.fig = ax.figure
+
+        # compute characters
         self._compute_glyphs()
 
-        # Style glyphs below x-axis
+        # style glyphs below x-axis
         self.style_glyphs_below(shade=self.shade_below,
                                 fade=self.fade_below,
-                                draw_now=self.draw_now,
-                                ax=self.ax)
+                                flip=self.flip_below)
 
-        # Fade glyphs by value if requested
+        # fade glyphs by value if requested
         if self.fade_probabilities:
             self.fade_glyphs_in_probability_logo(v_alpha0=0,
-                                                 v_alpha1=1,
-                                                 draw_now=self.draw_now)
+                                                 v_alpha1=1)
 
-        # Either show or hide spines based on self.show_spines
-        # Note: if show_spines is not None, logo must be drawn now.
-        if self.show_spines is not None:
-            self.style_spines(visible=self.show_spines)
+        # draw
+        self.draw()
 
-        # Draw now if requested
-        if self.draw_now:
-            self.draw()
 
     def _input_checks(self):
-
         """
-        check input parameters in the Logo constructor for correctness
+        Validate parameters passed to the Logo constructor EXCEPT for
+        color_scheme; that is validated in the Logo constructor
         """
 
-        # Validate dataframe
+        # validate dataframe
         self.df = validate_matrix(self.df)
+
+        # CANNOT validate color_scheme here; this is done in Logo constructor.
+
+        # validate that font_name is a str
+        check(isinstance(self.font_name, str),
+              'type(font_name) = %s must be of type str' % type(self.font_name))
+
+        # validate stack_order
+        valid_stack_orders = {'big_on_top', 'small_on_top', 'fixed'}
+        check(self.stack_order in valid_stack_orders,
+              'stack_order = %s; must be in %s.' %
+              (self.stack_order, valid_stack_orders))
 
         # check that center_values is a boolean
         check(isinstance(self.center_values, bool),
-              'type(center_values) = %s; must be of type bool ' % type(self.center_values))
-
-
-        # # check that color scheme is valid
-        # if self.color_scheme is not None:
-        #
-        #     # if color scheme is specified as a string, check that string message maps
-        #     # to a valid matplotlib color scheme
-        #
-        #     if type(self.color_scheme) == str:
-        #
-        #         # get allowed list of matplotlib color schemes
-        #
-        #         valid_color_strings = list(matplotlib.cm.cmap_d.keys())
-        #         valid_color_strings.extend(['classic', 'grays', 'base_paring','hydrophobicity', 'chemistry', 'charge'])
-        #
-        #         check(self.color_scheme in valid_color_strings,
-        #               # 'color_scheme = %s; must be in %s' % (self.color_scheme, str(valid_color_strings)))
-        #               'color_scheme = %s; is an invalid color scheme. Valid choices include classic, chemistry, grays. '
-        #               'A full list of valid color schemes can be found by '
-        #               'printing list(matplotlib.cm.cmap_d.keys()). ' % self.color_scheme)
-        #
-        #     # otherwise limit the allowed types to tuples, lists, dicts
-        #     else:
-        #         check(isinstance(self.color_scheme,(tuple,list,dict)),
-        #               'type(color_scheme) = %s; must be of type (tuple,list,dict) ' % type(self.color_scheme))
-        #
-        #         # check that RGB values are between 0 and 1 is
-        #         # color_scheme is a list or tuple
-        #
-        #         if type(self.color_scheme) == list or type(self.color_scheme) == tuple:
-        #
-        #             check(all(i <= 1.0 for i in self.color_scheme),
-        #                   'Values of color_scheme array must be between 0 and 1')
-        #
-        #             check(all(i >= 0.0 for i in self.color_scheme),
-        #                   'Values of color_scheme array must be between 0 and 1')
+              'type(center_values) = %s; must be of type bool.' %
+              type(self.center_values))
 
         # check baseline_width is a number
-        check(isinstance(self.baseline_width,(int,float)),
-              'type(baseline_width) = %s must be of type number' %(type(self.baseline_width)))
+        check(isinstance(self.baseline_width, (int, float)),
+              'type(baseline_width) = %s must be of type number' %
+              (type(self.baseline_width)))
 
         # check baseline_width >= 0.0
         check(self.baseline_width >= 0.0,
-              'baseline_width = %s must be >= 0.0' % (self.baseline_width))
+              'baseline_width = %s must be >= 0.0' % self.baseline_width)
 
-        # check that stack_order is valid
-        check(self.stack_order in {'big_on_top', 'small_on_top', 'fixed', 'flipped'},
-              'stack_order = %s; must be "big_on_top", "small_on_top", "fixed", "flipped".' % self.stack_order)
-
-        # check that flip_below is a boolean
+        # check that flip_below is boolean
         check(isinstance(self.flip_below, bool),
-            'type(flip_below) = %s; must be of type bool ' % type(self.flip_below))
+              'type(flip_below) = %s; must be of type bool ' %
+              type(self.flip_below))
 
-        # validate shade_below
+        # validate that shade_below is a number
         check(isinstance(self.shade_below, (float, int)),
-              'type(shade_below) = %s must be of type float' % type(self.shade_below))
+              'type(shade_below) = %s must be of type float' %
+              type(self.shade_below))
 
-        # ensure that shade_below is between 0 and 1
-        check(0.0 <= self.shade_below <= 1.0, 'shade_below must be between 0 and 1')
+        # validate that shade_below is between 0 and 1
+        check(0.0 <= self.shade_below <= 1.0,
+              'shade_below must be between 0 and 1')
 
-        # validate fade_below
+        # validate that fade_below is a number
         check(isinstance(self.fade_below, (float, int)),
-              'type(fade_below) = %s must be of type float' % type(self.fade_below))
+              'type(fade_below) = %s must be of type float' %
+              type(self.fade_below))
 
-        # ensure that fade_below is between 0 and 1
-        check(0.0 <= self.fade_below <= 1.0, 'fade_below must be between 0 and 1')
+        # validate that fade_below is between 0 and 1
+        check(0.0 <= self.fade_below <= 1.0,
+              'fade_below must be between 0 and 1')
 
-        # ensure fade_probabilities is of type bool
+        # validate that fade_probabilities is boolean
         check(isinstance(self.fade_probabilities, bool),
-              'type(fade_probabilities) = %s; must be of type bool ' % type(self.fade_probabilities))
+              'type(fade_probabilities) = %s; must be of type bool '
+              % type(self.fade_probabilities))
 
-        # validate vsep
+        # validate that vpad is a number
+        check(isinstance(self.vpad, (float, int)),
+              'type(vpad) = %s must be of type float' % type(self.vpad))
+
+        # validate that vpad is between 0 and 1
+        check(0.0 <= self.vpad <= 1.0, 'vpad must be between 0 and 1')
+
+        # validate that vsep is a number
         check(isinstance(self.vsep, (float, int)),
-              'type(vsep) = %s; must be of type float or int ' % type(self.vsep))
+              'type(vsep) = %s; must be of type float or int ' %
+              type(self.vsep))
 
-        check(self.vsep >= 0, "vsep = %d must be greater than 0 " % self.vsep)
+        # validate that vsep is >= 0
+        check(self.vsep >= 0,
+              "vsep = %d must be greater than 0 " % self.vsep)
 
-        # validate show_spines is a bool if its not none
-        if self.show_spines is not None:
-            check(isinstance(self.show_spines,bool), 'type(show_spines) = %s must be of type bool'%self.show_spines)
+        # validate that alpha is a number
+        check(isinstance(self.alpha, (float, int)),
+              'type(alpha) = %s must be of type float' % type(self.alpha))
+
+        # validate that alpha is between 0 and 1
+        check(0.0 <= self.alpha <= 1.0, 'alpha must be between 0 and 1')
+
+        # validate show_spines is None or boolean
+        check(isinstance(self.show_spines, bool) or (self.show_spines is None),
+              'show_spines = %s; show_spines must be None or boolean.'
+              % repr(self.show_spines))
+
+        # validate ax
+        check(isinstance(self.ax, Axes) or (self.ax is None),
+              'ax = %s; ax must be None or a matplotlib.Axes object.' %
+              repr(self.ax))
 
         # validate zorder
-        check(isinstance(self.zorder, int),
-              'type(zorder) = %s; must be of type or int ' % type(self.zorder))
+        check(isinstance(self.zorder, (float, int)),
+              'type(zorder) = %s; zorder must be a number.' %
+              type(self.zorder))
 
-        # the following check needs to be fixed based on whether the calling function
-        # is the constructor, draw_baseline, or style_glyphs_below.
-        # check(self.zorder >= 0, "zorder = %d must be greater than 0 " % self.zorder)
+        # validate that figsize is array=like
+        check(isinstance(self.figsize, (tuple, list, np.ndarray)),
+              'type(figsize) = %s; figsize must be array-like.' %
+              type(self.figsize))
+        self.figsize = tuple(self.figsize) # Just to pin down variable type.
 
-        # validate figsize
-        check(isinstance(self.figsize, (tuple, list)),
-              'type(figsize) = %s; must be of type (tuple,list) ' % type(self.figsize))
+        # validate length of figsize
+        check(len(self.figsize) == 2, 'figsize must have length two.')
 
-        check(len(self.figsize) == 2, 'The figsize array must have two elements')
-
-        check(all([isinstance(n, (int,float)) for n in self.figsize]),
-              'all elements of figsize array must be of type int')
-
-        check(all(i > 0 for i in self.figsize),
-              'Values of figsize array must be > 0')
-
-        # validate ax. Need to go over this in code review
-        #check(isinstance(self.ax,(None,matplotlib.axes._base._AxesBase)),
-              #'ax needs to be None or a valid matplotlib axis object')
-
-        # check that draw_now is a boolean
-        check(isinstance(self.draw_now, bool),
-              'type(draw_now) = %s; must be of type bool ' % type(self.draw_now))
-
-        ### after this point, the function will check inputs that are not part of the constructor. ###
-        ### so checking the existence of an attribute will become necessary. ###
-
-        # validate fade
-        if(hasattr(self,'fade')):
-            check(isinstance(self.fade,(float,int)), 'type(fade) = %s must be of type float' % type(self.fade))
-
-            # ensure that fade is between 0 and 1
-            check(self.fade <= 1.0 and self.fade >= 0, 'fade must be between 0 and 1')
-
-        # validate shade
-        if (hasattr(self, 'shade')):
-            check(isinstance(self.shade, (float, int)), 'type(shade) = %s must be of type float' % type(self.shade))
-
-            # ensure that fade is between 0 and 1
-            check(self.shade <= 1.0 and self.shade >= 0, 'shade must be between 0 and 1')
-
-        if (hasattr(self, 'sequence')):
-            check(isinstance(self.sequence, str), 'type(sequence) = %s must be of type str' % type(self.sequence))
-
-        # validate p
-        if (hasattr(self, 'p')):
-            check(isinstance(self.p, int), 'type(p) = %s must be of type int' % type(self.p))
-
-        # validate c
-        if (hasattr(self, 'c')):
-            check(isinstance(self.c, str), 'type(c) = %s must be of type str' % type(self.c))
-
-        # validate spines
-        if(hasattr(self,'spines')):
-            check(isinstance(self.spines, (tuple, list)),
-                  'type(spines) = %s; must be of type (tuple,list) ' % type(self.spines))
-
-            # check if items of spines are valid if tuple
-            valid_spines_tuple = ('top', 'bottom', 'left', 'right')
-            if(isinstance(self.spines,tuple)):
-
-                # ensure elements of spines are valid:
-                # the following code checks if spines is a subset of a the valid spines choices.
-                check(set(self.spines) <= set(valid_spines_tuple),
-                      'choice of spine not valid, valid choices include: '+str(valid_spines_tuple))
-
-            # check if items of spines are valid if list
-            valid_spines_list = ['top', 'bottom', 'left', 'right']
-
-            # ensure elements of spines are valid:
-            # the following code checks if spines is a subset of a the valid spines choices.
-            if (isinstance(self.spines, list)):
-                check(set(self.spines) <= set(valid_spines_list),
-                      'choice of spine not valid, valid choices include:'+str(valid_spines_list))
-
-        # validate visible
-        if(hasattr(self,'visible')):
-            check(isinstance(self.visible,bool),
-                  'type(visible) = %s; must be of type bool ' % type(self.visible))
-
-        # validate linewidth
-        if(hasattr(self,'linewidth')):
-
-            check(isinstance(self.linewidth,(float,int)),
-                  'type(linewidth) = %s; must be of type float ' % type(self.linewidth))
-
-            check(self.linewidth>=0,'linewidth must be >= 0')
-
-        # validate bounds
-        if(hasattr(self,'bounds')):
-
-            if self.bounds is not None :
-                # check that bounds are of valid type
-                bounds_types = (list, tuple, np.ndarray)
-                check(isinstance(self.bounds, bounds_types),
-                      'type(bounds) = %s; must be one of %s' % (type(self.bounds), bounds_types))
-
-                # bounds has right length
-                check(len(self.bounds) == 2,
-                      'len(bounds) = %d; must be %d' %(len(self.bounds), 2))
-
-                # ensure that elements of bounds are numbers
-                check(isinstance(self.bounds[0],(float,int)) & isinstance(self.bounds[1],(float,int)),
-                      'bounds = %s; entries must be numbers' %repr(self.bounds))
-
-                # bounds entries must be sorted
-                check(self.bounds[0] < self.bounds[1],
-                      'bounds = %s; entries must be sorted' %repr(self.bounds))
-
-        # validate anchor
-        if(hasattr(self,'anchor')):
-            check(isinstance(self.anchor,int),'type(anchor) = %s must be of type int' % type(self.anchor))
-
-        # validate spacing
-        if (hasattr(self, 'spacing')):
-            check(isinstance(self.spacing, int), 'type(spacing) = %s must be of type int' % type(self.spacing))
-
-            check(self.spacing>0, 'spacing must be > 0')
-
-        # validate fmt
-        if(hasattr(self,'fmt')):
-            check(isinstance(self.fmt,str),'type(fmt) = %s must be of type str' % type(self.fmt))
-
-        # validate rotation
-        if (hasattr(self, 'rotation')):
-            check(isinstance(self.rotation, (float, int)),
-                      'type(rotation) = %s; must be of type float or int ' % type(self.rotation))
-
-        # validate alpha0
-        if(hasattr(self,'v_alpha0')):
-            check(isinstance(self.v_alpha0, (float, int)),
-                  'type(v_alpha0) = %s must be a number' % type(self.v_alpha0))
-
-            # ensure that v_alpha0 is between 0 and 1
-            check(self.v_alpha0 <= 1.0 and self.v_alpha0 >= 0, 'v_alpha0 must be between 0 and 1')
-
-        # validate alpha1
-        if (hasattr(self, 'v_alpha1')):
-            check(isinstance(self.v_alpha1, (float, int)),
-                  'type(v_alpha1) = %s must be a number' % type(self.v_alpha1))
-
-            # ensure that v_alpha1 is between 0 and 1
-            check(self.v_alpha1 <= 1.0 and self.v_alpha1 >= 0, 'v_alpha1 must be between 0 and 1')
-
-        # validate pmin
-        if(hasattr(self,'pmin')):
-            check(isinstance(self.pmin, (float, int)),
-                  'type(pmin) = %s must be a number' % type(self.pmin))
-
-        # validate pmax
-        if (hasattr(self, 'pmax')):
-            check(isinstance(self.pmax, (float, int)),
-                  'type(pmax) = %s must be a number' % type(self.pmax))
-
-        # validate padding
-        if (hasattr(self, 'padding')):
-            check(isinstance(self.padding, (float, int)),
-                  'type(padding) = %s must be a number' % type(self.padding))
-
-            check(self.padding>-0.5,'padding must be > -0.5')
-
-        # validate floor
-        if (hasattr(self, 'floor')):
-            if(self.floor is not None):
-                check(isinstance(self.floor, (float, int)),
-                      'type(floor) = %s must be a number' % type(self.floor))
-
-        # validate ceiling
-        if (hasattr(self, 'ceiling')):
-            if(self.ceiling is not None):
-                check(isinstance(self.ceiling, (float, int)),
-                      'type(ceiling) = %s must be a number' % type(self.ceiling))
-
-        # validate saliency
-        #if (hasattr(self, 'saliency')):
-        #    check(isinstance(self.saliency, type([])),
-        #          'type(saliency) = %s must be a list' % type(self.saliency))
-
-
+        # validate that each element of figsize is a number
+        check(all([isinstance(n, (int, float)) and n > 0
+                   for n in self.figsize]),
+              'all elements of figsize array must be numbers > 0.')
 
     @handle_errors
-    def style_glyphs(self, colors=None, draw_now=True, ax=None, **kwargs):
+    def style_glyphs(self,
+                     color_scheme=None,
+                     **kwargs):
         """
-        Modifies the properties of all glyphs in a logo.
+        Modifies the properties of all characters in a Logo.
 
-        parameter
-        ---------
+        parameters
+        ----------
 
-        color_scheme: (color scheme)
-            Color specification for glyphs. See logomaker.Logo for details.
-
-        draw_now: (bool)
-            Whether to re-draw modified logo on current Axes.
-
-        ax: (matplotlib Axes object)
-            New axes, if any, on which to draw logo if draw_now=True.
+        color_scheme: (str, dict, or array with length 3)
+            Specification of logo colors. Default is 'gray'. Can take a variety of
+            forms.
+             - (str) A built-in Logomaker color scheme in which the color of each
+             character is determined that character's identity. Options are,
+                 + For DNA/RNA: 'classic', 'grays', or 'base_paring'.
+                 + For protein: 'hydrophobicity', 'chemistry', or 'charge'.
+             - (str) A built-in matplotlib color name such as 'k' or 'tomato'
+             - (list) An RGB array, i.e., 3 floats with values in the interval [0,1]
+             - (dict) A dictionary that maps characters to colors, E.g.,
+                {'A': 'blue',
+                 'C': 'yellow',
+                 'G': 'green',
+                 'T': 'red'}
 
         **kwargs:
             Keyword arguments to pass to Glyph.set_attributes()
@@ -531,98 +362,84 @@ class Logo:
         None
         """
 
-        # set attributes
-        self.color_scheme = colors
-        self.draw_now = draw_now
+        # validate color_scheme and get dict representation;
+        # set as self.rgb_dict, i.e., change the Logo's self-identified
+        # color scheme
+        if color_scheme is not None:
+            self.color_scheme = color_scheme
+            self.rgb_dict = get_color_dict(self.color_scheme, self.cs)
 
-        # Update ax if axes are provided by the user.
-        self._update_ax(ax)
+        # update glyph-specific attributes if they are passed as kwargs
+        for key in ['zorder', 'vpad', 'font_name']:
+            if key in kwargs.keys():
+                self.__dict__[key] = kwargs[key]
 
-        self._input_checks()
-
-        # Reset color_scheme if provided
-        if colors is not None:
-            self.color_scheme = colors
-
-            # the following case represents an error that may occur if a user accidentally runs
-            # style glyphs before running the logo constructor. The following check puts out a
-            # clean message, no need for stack-trace. hasattr checks if self has attribute cs.
-            check(hasattr(self,'cs'), 'Characters entered into style glyphs are None, please ensure'
-                                   ' Logo ran correctly before running style_glyphs')
-
-            self.rgb_dict = lm_color._get_color_dict(
-                                    color_scheme=self.color_scheme,
-                                    chars=self.cs)
-
-        # Record zorder if this is provided
-        if 'zorder' in kwargs.keys():
-            self.zorder = kwargs['zorder']
-
-        # Modify all glyphs
+        # modify all glyphs
         for g in self.glyph_list:
 
-            # Set each glyph attribute
+            # add color to kwargs dict, but only if user is updating color
+            if color_scheme is not None:
+                kwargs['color'] = self.rgb_dict[g.c]
+
+            # set each glyph attribute
             g.set_attributes(**kwargs)
-
-            # If color_scheme is not None, this should override
-            if colors is not None:
-                this_color = self.rgb_dict[g.c]
-                g.set_attributes(color=this_color)
-
-        # Draw now if requested
-        if draw_now:
-            self.draw()
 
     @handle_errors
     def fade_glyphs_in_probability_logo(self,
-                                        v_alpha0=0,
-                                        v_alpha1=1,
-                                        draw_now=True,
-                                        ax=None):
+                                        v_alpha0=0.0,
+                                        v_alpha1=1.0):
 
         """
-        Fades glyphs in probability logo according to message
+        Fades glyphs in probability logo according to value.
 
-        parameter
-        ---------
+        parameters
+        ----------
 
-        v_alpha0 / v_alpha1: (number in [0,1])
-            Matrix values marking alpha=0 and alpha=1
-
-        draw_now: (bool)
-            Whether to readraw modified logo on current Axes.
-
-        ax: (matplotlib Axes object)
-            New axes, if any, on which to draw logo if draw_now=True.
+        v_alpha0, v_alpha1: (number in [0,1])
+            Matrix values marking values that are rendered using
+            alpha=0 and alpha=1, respectively. These values must satisfy
+            v_alpha0 < v_alpha1.
 
         returns
         -------
         None
          """
 
-        # set attributes
-        self.v_alpha0 = v_alpha0
-        self.v_alpha1 = v_alpha1
-        self.draw_now = draw_now
+        # validate alpha0
+        check(isinstance(v_alpha0, (float, int)),
+              'type(v_alpha0) = %s must be a number' %
+              type(v_alpha0))
 
-        # validate inputs
-        self._input_checks()
+        # ensure that v_alpha0 is between 0 and 1
+        check(0.0 <= v_alpha0 <= 1.0,
+              'v_alpha0 must be between 0 and 1; value is %f.' % v_alpha0)
 
-        # Update ax if axes are provided by the user.
-        self._update_ax(ax)
+        # validate alpha1
+        check(isinstance(v_alpha1, (float, int)),
+              'type(v_alpha1) = %s must be a number' %
+              type(v_alpha1))
 
-        # Make sure matrix is a probability matrix
-        self.df = validate_probability_mat(self.df)
+        # ensure that v_alpha1 is between 0 and 1
+        check(0.0 <= v_alpha1 <= 1.0,
+              'v_alpha1 must be between 0 and 1; value is %f' % v_alpha1)
 
-        # Iterate over all positions and characters
+        # check that v_alpha0 < v_alpha1
+        check(v_alpha0 < v_alpha1,
+              'must have v_alpha0 < v_alpha1;'
+              'here, v_alpha0 = %f and v_alpha1 = %f' % (v_alpha0, v_alpha1))
+
+        # make sure matrix is a probability matrix
+        self.df = validate_matrix(self.df, matrix_type='probability')
+
+        # iterate over all positions and characters
         for p in self.ps:
             for c in self.cs:
 
-                # Grab both glyph and message
+                # grab both glyph and value
                 v = self.df.loc[p, c]
                 g = self.glyph_df.loc[p, c]
 
-                # Compute new alpha
+                # compute new alpha
                 if v <= v_alpha0:
                     alpha = 0
                 elif v >= v_alpha1:
@@ -633,119 +450,129 @@ class Logo:
                 # Set glyph attributes
                 g.set_attributes(alpha=alpha)
 
-        # Draw now if requested
-        if draw_now:
-            self.draw()
-
     @handle_errors
     def style_glyphs_below(self,
+                           color=None,
+                           alpha=None,
                            shade=0.0,
                            fade=0.0,
-                           flip=True,
-                           draw_now=True,
-                           ax=None,
+                           flip=None,
                            **kwargs):
 
         """
-        Modifies the properties of all glyphs below the x-axis in a logo.
+        Modifies the properties of all characters drawn below the x-axis.
 
-        parameter
-        ---------
+        parameters
+        ----------
 
-        shade: (float)
-            The amount of shading underneath x-axis. Range is [0,1]
+        color: (color specification)
+            Color to use before shade is applied.
 
-        fade: (float)
-            The amount of fading underneath x-axis .Range is [0,1]
+        alpha: (number in [0,1])
+            Opacity to use when rendering characters, before fade is applied.
+
+        shade: (number in [0,1])
+            The amount to shade characters below the x-axis.
+
+        fade: (number in [0,1])
+            The amount to fade characters below the x-axis.
 
         flip: (bool)
-            If True, the glyph will be rendered flipped upside down.
-
-        ax: (matplotlib Axes object)
-            The axes object on which to draw the logo.
-
-        draw_now: (bool)
-            If True, the logo is rendered immediately after it is specified.
-            Set to False if you wish to change the properties of any glyphs
-            after initial specification, e.g. by running
-            Logo.highlight_sequence().
+            If True, characters below the x-axis will be flipped upside down.
 
         **kwargs:
-            Keyword arguments to pass to Glyph.set_attributes()
+            Keyword arguments to pass to Glyph.set_attributes(), but only
+            for characters below the x-axis.
 
         returns
         -------
         None
         """
 
-        # set attributes
-        self.shade = shade
-        self.fade = fade
-        self.flip = flip
-        self.draw_now = draw_now
+        # validate color and transform to RBG
+        if color is not None:
+            color = get_rgb(color)
 
-        # Update ax if axes are provided by the user.
-        self._update_ax(ax)
+        # validate alpha
+        if alpha is not None:
+            # check alpha is a number
+            check(isinstance(alpha, (float, int)),
+                  'type(alpha) = %s must be a float or int' %
+                  type(alpha))
+            self.alpha = float(alpha)
 
-        # validate inputs
-        self._input_checks()
+            # check 0 <= alpha <= 1.0
+            check(0 <= alpha <= 1.0,
+                  'alpha must be between 0.0 and 1.0 (inclusive)')
 
-        # the following two checks ensure that the attributes cs and ps exist,
-        # this could throw an error in jupyter notebooks if a user ran this function
-        # with an incorrectly run Logo object.
+        # validate shade
+        check(isinstance(shade, (float, int)),
+              'type(shade) = %s must be a number' %
+              type(shade))
 
-        check(hasattr(self, 'cs'), 'Characters entered into are None, please ensure'
-                                   ' Logo ran correctly before running style_glyphs_below')
+        # ensure that v_alpha0 is between 0 and 1
+        check(0.0 <= shade <= 1.0,
+              'shade must be between 0 and 1; value is %f.' % shade)
 
-        check(hasattr(self, 'ps'), 'positions entered into are None, please ensure'
-                                   ' Logo ran correctly before running style_glyphs_below')
+        # validate fade
+        check(isinstance(fade, (float, int)),
+              'type(fade) = %s must be a number' %
+              type(fade))
 
-        # Iterate over all positions and characters
+        # ensure that fade is between 0 and 1
+        check(0.0 <= fade <= 1.0,
+              'fade must be between 0 and 1; value is %f' % fade)
+
+        # check that flip is a boolean
+        if flip is not None:
+            check(isinstance(flip, (bool)),
+                  'type(flip) = %s; must be of type bool ' %
+                  type(flip))
+
+        # iterate over all positions and characters
         for p in self.ps:
             for c in self.cs:
 
-                # If matrix message is < 0
+                # check if matrix value is < 0
                 v = self.df.loc[p, c]
                 if v < 0:
 
-                    #  Get glyph
+                    # get glyph
                     g = self.glyph_df.loc[p, c]
 
-                    # Modify color and alpha
-                    color = np.array(g.color) * (1.0 - shade)
-                    alpha = g.alpha * (1.0 - fade)
+                    # modify color
+                    if color is None:
+                        this_color = get_rgb(g.color)
+                    else:
+                        this_color = color
 
-                    # Set glyph attributes
-                    g.set_attributes(color=color,
-                                     alpha=alpha,
+                    # modify alpha
+                    if alpha is None:
+                        this_alpha = g.alpha
+                    else:
+                        this_alpha = alpha
+
+                    # set glyph attributes
+                    g.set_attributes(color=this_color*(1.0 - shade),
+                                     alpha=this_alpha*(1.0 - fade),
                                      flip=flip,
                                      **kwargs)
 
-        # Draw now if requested
-        if draw_now:
-            self.draw()
-
     @handle_errors
-    def style_single_glyph(self, p, c, draw_now=False, ax=None, **kwargs):
+    def style_single_glyph(self, p, c, **kwargs):
         """
-        Modifies the properties of a component glyph in a logo.
+        Modifies the properties of a single character in Logo.
 
-        parameter
-        ---------
+        parameters
+        ----------
 
-        p: (number)
-            Position of modified glyph. Must index a row in the matrix passed
+        p: (int)
+            Position of modified glyph. Must index a row in the matrix df passed
             to the Logo constructor.
 
-        c: (str)
-            Character of modified glyph. Must index a column in the matrix
+        c: (str of length 1)
+            Character to modify. Must be the name of a column in the matrix df
             passed to the Logo constructor.
-
-        draw_now: (bool)
-            Whether to readraw modified logo on current Axes.
-
-        ax: (matplotlib Axes object)
-            New axes, if any, on which to draw logo if draw_now=True.
 
         **kwargs:
             Keyword arguments to pass to Glyph.set_attributes()
@@ -755,52 +582,45 @@ class Logo:
         None
         """
 
-        # set attributes
-        self.p = p
-        self.c = c
-        self.draw_now = draw_now
-        self.ax = ax
+        # validate p is an integer
+        check(isinstance(p, int),
+              'type(p) = %s must be of type int' % type(p))
 
-        # validate inputs
-        self._input_checks()
+        # check p is a valid position
+        check(p in self.glyph_df.index,
+              'p=%s is not a valid position' % p)
 
-        # Update ax if axes are provided by the user.
-        self._update_ax(ax)
+        # validate c is a str
+        check(isinstance(c, str),
+              'type(c) = %s must be of type str' % type(c))
 
-        check(self.p in self.glyph_df.index,'Error: p=%s is not a valid position' % p)
-        check(self.c in self.glyph_df.columns,'Error: c=%s is not a valid character' % c)
+        # validate that c has length 1
+        check(len(c) == 1,
+              'c = %s; must have length 1.' % repr(c))
+
+        # check c is a valid character
+        check(c in self.glyph_df.columns,
+              'c=%s is not a valid character' % c)
 
         # Get glyph from glyph_df
         g = self.glyph_df.loc[p, c]
-        g.set_attributes(**kwargs)
 
-        # using true will draw the entire logo one glyph at a time.
-        # causes big slow down. I don't if it's good to keep this call here.
-        if draw_now:
-            self.draw()
+        # update glyph attributes
+        g.set_attributes(**kwargs)
 
     @handle_errors
     def style_glyphs_in_sequence(self,
                                  sequence,
-                                 draw_now=True,
-                                 ax=None,
                                  **kwargs):
         """
-        Highlights a specified sequence by changing the parameters of the
-        glyphs at each corresponding position in that sequence. To use this,
-        first run constructor with draw_now=False.
+        Restyles the glyphs in a specific sequence.
 
         parameters
         ----------
         sequence: (str)
             A string the same length as the logo, specifying which character
-            to highlight at each position.
-
-        draw_now: (bool)
-            Whether to readraw modified logo on current Axes.
-
-        ax: (matplotlib Axes object)
-            New axes, if any, on which to draw logo if draw_now=True.
+            to restyle at each position. Characters in sequence that are not
+            in the columns of the Logo's df are ignored.
 
         **kwargs:
             Keyword arguments to pass to Glyph.set_attributes()
@@ -810,43 +630,36 @@ class Logo:
         None
         """
 
-        self.sequence = sequence
-        self.draw_now = draw_now
+        # validate sequence is a string
+        check(isinstance(sequence, str),
+              'type(sequence) = %s must be of type str' % type(sequence))
 
-        # validate input
-        self._input_checks()
+        # validate sequence has correct length
+        check(len(sequence) == self.L,
+              'sequence to restyle (length %d) ' % len(sequence) +
+              'must have same length as logo (length %d).' % self.L)
 
-        # Update Axes if axes are provided by the user.
-        self._update_ax(ax)
-
-        check(len(self.sequence) == self.L,
-              'Error: sequence to highlight does not have same length as logo.')
-
-        # For each position in the logo...
+        # for each position in the logo...
         for i, p in enumerate(self.glyph_df.index):
 
-            # Get character to highlight
-            c = self.sequence[i]
+            # get character to highlight
+            c = sequence[i]
 
-            # Modify the glyph corresponding character c at position p
-            # Only modify if c is a valid character. If not, ignore position
+            # modify the glyph corresponding character c at position p.
+            # only modify if c is a valid character; if not, ignore position
             if c in self.cs:
                 self.style_single_glyph(p, c, **kwargs)
-
-        # Draw now
-        if draw_now:
-            self.draw()
 
     @handle_errors
     def highlight_position(self, p, **kwargs):
 
         """
-        ** Can only modify Axes that has already been set. **
+        Draws a rectangular box highlighting a specific position.
 
         parameters
         ----------
         p: (int)
-            Single position to highlight
+            Single position to highlight.
 
         **kwargs:
             Other parameters to pass to highlight_position_range()
@@ -856,23 +669,21 @@ class Logo:
         None
         """
 
-        # set attributes
-        self.p = p
+        # validate p
+        check(isinstance(p, int),
+              'type(p) = %s must be of type int' % type(p))
 
-        # validate inputs
-        self._input_checks()
+        # to avoid highlighting positions outside of the logo
+        #check(0 <= p < len(self.df),
+        #      'position p is invalid, must be between 0 and %d' %len(self.df))
 
-        # If not yet drawn, draw
-        if not self.has_been_drawn:
-            self.draw()
-
-        #assert self.has_been_drawn, \
-        #    'Error: Cannot call this function until Log0 has been drawn.'
-
+        # pass the buck to highlight_position_range
         self.highlight_position_range(pmin=p, pmax=p, **kwargs)
 
     @handle_errors
-    def highlight_position_range(self, pmin, pmax,
+    def highlight_position_range(self,
+                                 pmin,
+                                 pmax,
                                  padding=0.0,
                                  color='yellow',
                                  edgecolor=None,
@@ -881,86 +692,102 @@ class Logo:
                                  zorder=-2,
                                  **kwargs):
         """
-        Highlights multiple positions
-        ** Can only modify Axes that has already been set. **
+        Draws a rectangular box highlighting multiple positions within the Logo
 
         parameters
         ----------
-        pmin: (number)
+        pmin: (int)
             Lowest position to highlight.
             
-        pmax: (number)
+        pmax: (int)
             Highest position to highlight.
             
         padding: (number >= -0.5)
-            Amount of padding on either side of highlighted positions to add.
+            Amount of padding to add on the left and right sides of highlight.
             
-        color: (matplotlib color)
-            Matplotlib color.
+        color: (None or matplotlib color)
+            Color to use for highlight. Can be a named matplotlib color or
+            an RGB array.
+
+        edgecolor: (None or matplotlib color)
+            Color to use for highlight box edges. Can be a named matplotlib
+            color or an RGB array.
             
-        floor: (number)
-            Lower-most extent of highlight. If None, is set to Axes ymin.
+        floor: (None number)
+            Lowest y-axis extent of highlight box. If None, is set to
+            ymin of the Axes object.
             
-        ceiling: (number)
-            Upper-most extent of highlight. If None, is set to Axes ymax.
+        ceiling: (None or number)
+            Highest y-axis extent of highlight box. If None, is set to
+            ymax of the Axes object.
             
         zorder: (number)
-            Placement of highlight rectangle in Axes z-stack.
-
-        **kwargs:
-            Other parmeters to pass to highlight_single_position
+            This governs which other objects drawn on ax will appear in front or
+            behind of the highlight. Logo characters are, by default, drawn in
+            front of the highlight box.
 
         returns
         -------
         None
         """
 
-        # set attributes
-        self.pmin = pmin
-        self.pmax = pmax
-        self.padding = padding
-        self.color = color
-        self.edgecolor = edgecolor
-        self.floor = floor
-        self.ceiling = ceiling
-        self.zorder = zorder
-
-        # validate inputs
-        self._input_checks()
-
-        if (hasattr(self, 'has_been_drawn')):
-            check(self.has_been_drawn == True, 'Cannot call this function until Logo has been drawn.')
-
-        #assert self.has_been_drawn, \
-        #    'Error: Cannot call this function until Log0 has been drawn.'
-
-        # If floor or ceiling have not been specified, using Axes ylims
+        # get ymin and ymax from Axes object
         ymin, ymax = self.ax.get_ylim()
+
+        # validate pmin
+        check(isinstance(pmin, (float, int)),
+              'type(pmin) = %s must be a number' % type(pmin))
+
+        # validate pmax
+        check(isinstance(pmax, (float, int)),
+              'type(pmax) = %s must be a number' % type(pmax))
+
+        # Make sure pmin <= pmax
+        check(pmin <= pmax,
+              'pmin <= pmax not satisfied.')
+
+        # validate that padding is a valid number
+        check(isinstance(padding, (float, int)) and padding >= -0.5,
+              'padding = %s must be a number >= -0.5' % repr(padding))
+
+        # validate color
+        if color is not None:
+            color = get_rgb(color)
+
+        # validate edegecolor
+        if edgecolor is not None:
+            edgecolor = get_rgb(edgecolor)
+
+        # validate floor and set to ymin if None
         if floor is None:
             floor = ymin
+        else:
+            check(isinstance(floor, (float, int)),
+                  'type(floor) = %s must be a number' % type(floor))
+
+        # validate ceiling and set to ymax if None
         if ceiling is None:
             ceiling = ymax
+        else:
+            check(isinstance(ceiling, (float, int)),
+                  'type(ceiling) = %s must be a number' % type(ceiling))
 
-        #assert floor < ceiling, \
-        #    'Error: floor < ceiling not satisfied.'
-        check(floor < ceiling,'Error: floor < ceiling not satisfied.')
+        # now that floor and ceiling are set, validate that floor <= ceiling
+        check(floor <= ceiling,
+              'must have floor <= ceiling; as is, floor = %f, ceiling = %s' %
+              (floor, ceiling))
 
+        # validate zorder
+        check(isinstance(zorder, (float, int)),
+              'type(zorder) = %s; must a float or int.' % type(zorder))
 
-        # Set coordinates of rectangle
-        #assert pmin <= pmax, \
-        #    'Error: pmin <= pmax not satisfied.'
-        check(pmin <= pmax, 'pmin <= pmax not satisfied.')
-
-        #assert padding >= -0.5, \
-        #    'Error: padding >= -0.5 not satisfied'
-        check(padding >= -0.5,'Error: padding >= -0.5 not satisfied')
-
+        # compute coordinates of highlight rectangle
         x = pmin - .5 - padding
         y = floor
         width = pmax - pmin + 1 + 2*padding
-        height = ceiling-floor
+        height = ceiling - floor
 
-        # Draw rectangle
+        # specify rectangle
         patch = Rectangle(xy=(x, y),
                           width=width,
                           height=height,
@@ -968,6 +795,8 @@ class Logo:
                           edgecolor=edgecolor,
                           zorder=zorder,
                           **kwargs)
+
+        # add rectangle to Axes
         self.ax.add_patch(patch)
 
     @handle_errors
@@ -977,43 +806,44 @@ class Logo:
                       linewidth=0.5,
                       **kwargs):
         """
-        Draws a line along the x-axis.
-        ** Can only modify Axes that has already been set. **
+        Draws a horizontal line along the x-axis.
 
         parameters
         ----------
 
         zorder: (number)
-            The z-stacked location where the baseline is drawn
+            This governs what other objects drawn on ax will appear in front or
+            behind the baseline. Logo characters are, by default, drawn in front
+            of the baseline.
 
         color: (matplotlib color)
-            Color to use for the baseline
+            Color to use for the baseline. Can be a named matplotlib color or an
+            RGB array.
 
-        linewidth: (float >= 0)
-            Width of the baseline
+        linewidth: (number >= 0)
+            Width of the baseline.
 
         **kwargs:
             Additional keyword arguments to be passed to ax.axhline()
-
 
         returns
         -------
         None
         """
 
-        # set attributes
-        self.zorder = zorder
-        self.color = color
-        self.linewidth = linewidth
+        # validate zorder
+        check(isinstance(zorder, (float, int)),
+              'type(zorder) = %s; must a float or int.' % type(zorder))
 
-        # validate inputs
-        self._input_checks()
+        # validate color
+        color = get_rgb(color)
 
-        if (hasattr(self, 'has_been_drawn')):
-            check(self.has_been_drawn == True, 'Cannot call this function until Logo has been drawn.')
+        # validate that linewidth is a number
+        check(isinstance(linewidth, (float, int)),
+              'type(linewidth) = %s; must be a number ' % type(linewidth))
 
-        #assert self.has_been_drawn, \
-        #    'Error: Cannot call this function until Log0 has been drawn.'
+        # validate that linewidth >= 0
+        check(linewidth >= 0, 'linewidth must be >= 0')
 
         # Render baseline
         self.ax.axhline(zorder=zorder,
@@ -1030,7 +860,6 @@ class Logo:
                      **kwargs):
         """
         Formats and styles tick marks along the x-axis.
-        ** Can only modify Axes that has already been set. **
 
         parameters
         ----------
@@ -1052,25 +881,29 @@ class Logo:
         **kwargs:
             Additional keyword arguments to be passed to ax.set_xticklabels()
 
-
         returns
         -------
         None
         """
 
-        # set attributes
-        self.anchor = anchor
-        self.spacing = spacing
-        self.fmt = fmt
-        self.rotation = rotation
+        # validate anchor
+        check(isinstance(anchor, int),
+              'type(anchor) = %s must be of type int' % type(anchor))
 
-        # validate input
-        self._input_checks()
+        # validate spacing
+        check(isinstance(spacing, int) and spacing > 0,
+              'spacing = %s must be an int > 0' % repr(spacing))
 
-        if (hasattr(self, 'has_been_drawn')):
-            check(self.has_been_drawn == True, 'Error: Cannot call this function until Logo has been drawn.')
+        # validate fmt
+        check(isinstance(fmt, str),
+              'type(fmt) = %s must be of type str' % type(fmt))
 
-        # Get list of positions, ps, that spans all those in matrix_df
+        # validate rotation
+        check(isinstance(rotation, (float, int)),
+              'type(rotation) = %s; must be of type float or int ' %
+              type(rotation))
+
+        # Get list of positions that span all positions in the matrix df
         p_min = min(self.ps)
         p_max = max(self.ps)
         ps = np.arange(p_min, p_max+1)
@@ -1087,55 +920,93 @@ class Logo:
     def style_spines(self,
                      spines=('top', 'bottom', 'left', 'right'),
                      visible=True,
-                     linewidth=1.0,
                      color='black',
+                     linewidth=1.0,
                      bounds=None):
         """
-        Turns spines on an off.
-        ** Can only modify Axes that has already been set. **
+        Styles the spines of the Axes object in which the logo is drawn.
+        Note: "spines" refers to the edges of the Axes bounding box.
 
         parameters
         ----------
 
         spines: (tuple of str)
-            Specifies which of the four spines to modify. Default lists
-            all possible entries.
+            Specifies which of the four spines to modify. The default value
+            for this parameter lists all four spines.
 
         visible: (bool)
-            Whether or not a spine is drawn.
+            Whether to show or not show the spines listed in the parameter
+            spines.
 
         color: (matplotlib color)
-            Spine color.
+            Color of the spines. Can be a named matplotlib color or an
+            RGB array.
 
         linewidth: (float >= 0)
-            Spine width.
+            Width of lines used to draw the spines.
 
-        bounds: ([float, float])
-            Specifies the upper- and lower-bounds of a spine.
-
-        **kwargs:
-            Additional keyword arguments to be passed to ax.axhline()
+        bounds: (None or [float, float])
+            If not None, specifies the values between which a spine (or spines)
+            will be drawn.
 
         returns
         -------
         None
         """
 
-        # set attributes
-        self.spines = spines
-        self.visible = visible
-        self.linewidth = linewidth
-        self.color = color
-        self.bounds = bounds
+        # clear the self.show_spines attribute;
+        # the user calling this means they want to override this attribute
+        self.show_spines = None
 
-        # validate inputs
-        self._input_checks()
+        # validate that spines is a set-like object
+        check(isinstance(spines, (tuple, list, set)),
+              'type(spines) = %s; must be of type (tuple, list, set) ' %
+              type(spines))
+        spines = set(spines)
 
-        # Draw if logo has not yet been drawn
-        if not self.has_been_drawn:
-            self.draw()
+        # validate that spines is a subset of a the valid spines choices
+        valid_spines = {'top', 'bottom', 'left', 'right'}
+        check(spines <= valid_spines,
+              'spines has invalid entry; valid entries are: %s' %
+              repr(valid_spines))
 
-        # Iterate over all spines
+        # validate visible
+        check(isinstance(visible, bool),
+              'type(visible) = %s; must be of type bool ' %
+              type(visible))
+
+        # validate that linewidth is a number
+        check(isinstance(linewidth, (float, int)),
+              'type(linewidth) = %s; must be a number ' % type(linewidth))
+
+        # validate that linewidth >= 0
+        check(linewidth >= 0, 'linewidth must be >= 0')
+
+        # validate color
+        color = get_rgb(color)
+
+        # validate bounds. If not None, validate entries.
+        if bounds is not None:
+
+            # check that bounds are of valid type
+            bounds_types = (list, tuple, np.ndarray)
+            check(isinstance(bounds, bounds_types),
+                  'type(bounds) = %s; must be one of %s' % (
+                  type(bounds), bounds_types))
+
+            # check that bounds has right length
+            check(len(bounds) == 2,
+                  'len(bounds) = %d; must be %d' % (len(bounds), 2))
+
+            # ensure that elements of bounds are numbers
+            check(all([isinstance(bound, (float, int)) for bound in bounds]),
+                  'bounds = %s; all entries must be numbers' % repr(bounds))
+
+            # bounds entries must be sorted
+            check(bounds[0] < bounds[1],
+                  'bounds = %s; must have bounds[0] < bounds[1]' % repr(bounds))
+
+        # iterate over all spines
         for name, spine in self.ax.spines.items():
 
             # If name is in the set of spines to modify
@@ -1149,76 +1020,66 @@ class Logo:
                 if bounds is not None:
                     spine.set_bounds(bounds[0], bounds[1])
 
-    def draw(self, ax=None):
+    def draw(self, clear=False):
         """
-        Draws glyphs on the axes object 'ax' provided to the Logo
-        constructor
+        Draws characters in Logo.
 
         parameters
         ----------
-        None
+
+        clear: (bool)
+            If True, Axes will be cleared before logo is drawn.
 
         returns
         -------
         None
         """
 
-        # Update ax
-        self._update_ax(ax)
+        # validate clear
+        check(isinstance(clear, bool),
+              'type(clear) = %s; must be of type bool ' %
+              type(clear))
 
-        # If ax is still None, create figure
-        if self.ax is None:
-            fig, ax = plt.subplots(1, 1, figsize=self.figsize)
-            self.ax = ax
+        # clear previous content from ax if requested
+        if clear:
+            self.ax.clear()
 
-        # Clear previous content from ax
-        self.ax.clear()
+            # draw each glyph
+            for g in self.glyph_list:
+                g.draw()
 
-        # Flag that this logo has not been drawn
-        self.has_been_drawn = False
-
-        # Draw each glyph
-        for g in self.glyph_list:
-            g.draw(self.ax)
-
-        # Flag that this logo has indeed been drawn
-        self.has_been_drawn = True
-
-        # Draw baseline
+        # draw baseline
         self.draw_baseline(linewidth=self.baseline_width)
 
-        # Set xlims
+        # set xlims
         xmin = min([g.p - .5*g.width for g in self.glyph_list])
         xmax = max([g.p + .5*g.width for g in self.glyph_list])
         self.ax.set_xlim([xmin, xmax])
 
-        # Set ylims
+        # set ylims
         ymin = min([g.floor for g in self.glyph_list])
         ymax = max([g.ceiling for g in self.glyph_list])
         self.ax.set_ylim([ymin, ymax])
 
-    def _update_ax(self, ax):
-        """ Reset ax if user has passed a new one."""
-        if ax is not None:
-            self.ax = ax
+        # style spines if requested
+        if self.show_spines is not None:
+            self.style_spines(visible=self.show_spines)
 
     def _compute_glyphs(self):
         """
         Specifies the placement and styling of all glyphs within the logo.
-        Note that glyphs can later be changed after this is called but before
-        draw() is called.
         """
         # Create a dataframe of glyphs
         glyph_df = pd.DataFrame()
-        vsep = self.vsep
 
         # For each position
         for p in self.ps:
 
-            # Get values at this position
+            # get values at this position
             vs = np.array(self.df.loc[p, :])
 
-            # Sort values and corresponding characters as desired
+            # Sort values according to the order in which the user
+            # wishes the characters to be stacked
             if self.stack_order == 'big_on_top':
                 ordered_indices = np.argsort(vs)
 
@@ -1226,26 +1087,23 @@ class Logo:
                 tmp_vs = np.zeros(len(vs))
                 indices = (vs != 0)
                 tmp_vs[indices] = 1.0/vs[indices]
-
                 ordered_indices = np.argsort(tmp_vs)
+
             elif self.stack_order == 'fixed':
                 ordered_indices = np.array(range(len(vs)))[::-1]
 
-            elif self.stack_order == 'flipped':
-                ordered_indices = np.array(range(len(vs)))
-
             else:
-                assert False, 'This should not be possible.'
+                assert False, 'This line of code should never be called.'
 
             # Reorder values and characters
             vs = vs[ordered_indices]
             cs = [str(c) for c in self.cs[ordered_indices]]
 
             # Set floor
-            floor = sum((vs - vsep) * (vs < 0)) + vsep/2.0
+            floor = sum((vs - self.vsep) * (vs < 0)) + self.vsep/2.0
 
             # For each character
-            for n, v, c in zip(range(self.C), vs, cs):
+            for v, c in zip(vs, cs):
 
                 # Set ceiling
                 ceiling = floor + abs(v)
@@ -1263,16 +1121,17 @@ class Logo:
                               ceiling=ceiling,
                               color=this_color,
                               flip=flip,
-                              draw_now=False,
                               zorder=self.zorder,
                               font_name=self.font_name,
+                              alpha=self.alpha,
+                              vpad=self.vpad,
                               **self.glyph_kwargs)
 
                 # Add glyph to glyph_df
                 glyph_df.loc[p, c] = glyph
 
                 # Raise floor to current ceiling
-                floor = ceiling + vsep
+                floor = ceiling + self.vsep
 
         # Set glyph_df attribute
         self.glyph_df = glyph_df

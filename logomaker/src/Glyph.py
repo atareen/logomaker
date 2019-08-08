@@ -1,3 +1,10 @@
+# explicitly set a matplotlib backend if called from python to avoid the
+# 'Python is not installed as a framework... error'
+import sys
+if sys.version_info[0] == 2:
+    import matplotlib
+    matplotlib.use('TkAgg')
+
 from matplotlib.textpath import TextPath
 from matplotlib.patches import PathPatch
 from matplotlib.transforms import Affine2D, Bbox
@@ -6,11 +13,17 @@ from matplotlib.colors import to_rgb
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from logomaker.src.error_handling import check, handle_errors
-import matplotlib.cm
+from logomaker.src.colors import get_rgb
 import numpy as np
 
 # Create global font manager instance. This takes a second or two
 font_manager = FontManager()
+
+# Create global list of valid font weights
+VALID_FONT_WEIGHT_STRINGS = [
+    'ultralight', 'light', 'normal', 'regular', 'book',
+    'medium', 'roman', 'semibold', 'demibold', 'demi',
+    'bold', 'heavy', 'extra bold', 'black']
 
 
 def list_font_names():
@@ -111,10 +124,9 @@ class Glyph:
     alpha: (number in [0,1])
         Opacity of the rendered Glyph.
 
-    draw_now: (bool)
-        If True, the Glyph is rendered immediately after it is specified.
-        Set to False if you wish to change the properties of this Glyph
-        after initial specification and before rendering.
+    figsize: ([float, float]):
+        The default figure size for the rendered glyph; only used if ax is
+        not supplied by the user.
     """
 
     @handle_errors
@@ -136,7 +148,7 @@ class Glyph:
                  mirror=False,
                  zorder=None,
                  alpha=1,
-                 draw_now=True):
+                 figsize=(1, 1)):
 
         # Set attributes
         self.p = p
@@ -151,18 +163,23 @@ class Glyph:
         self.zorder = zorder
         self.dont_stretch_more_than = dont_stretch_more_than
         self.alpha = alpha
-        self.color = to_rgb(color)
+        self.color = color
         self.edgecolor = edgecolor
         self.edgewidth = edgewidth
         self.font_name = font_name
         self.font_weight = font_weight
+        self.figsize = figsize
 
         # Check inputs
         self._input_checks()
 
-        # Draw now if requested
-        if draw_now:
-            self.draw()
+        # If ax is not set, set to current axes object
+        if self.ax is None:
+            fig, ax = plt.subplots(1, 1, figsize=self.figsize)
+            self.ax = ax
+
+        # Make patch
+        self._make_patch()
 
     def set_attributes(self, **kwargs):
         """
@@ -173,44 +190,36 @@ class Glyph:
         **kwargs:
             Attributes and their values.
         """
+
+        # remove drawn patch
+        if (self.patch is not None) and (self.patch.axes is not None):
+            self.patch.remove()
+
+        # set each attribute passed by user
         for key, value in kwargs.items():
 
-            # If key corresponds to a color, convert to rgb
+            # if key corresponds to a color, convert to rgb
             if key in ('color', 'edgecolor'):
                 value = to_rgb(value)
 
-            # Save variable name
+            # save variable name
             self.__dict__[key] = value
 
-    def draw(self, ax=None):
+        # remake patch
+        self._make_patch()
+
+    def draw(self):
         """
         Draws Glyph given current parameters.
 
         parameters
         ----------
-
-        ax: (matplotlib Axes object)
-            The axes object on which to draw the Glyph.
+        None.
 
         returns
         -------
         None.
         """
-
-        # Make patch
-        self.patch = self._make_patch()
-
-        # If user passed ax, use that
-        if ax is not None:
-
-            # Check to make sure ax is a matplotlib Axes object
-            check(isinstance(ax, Axes),
-                  'ax is not a matplotlib Axes object')
-            self.ax = ax
-
-        # If ax is not set, set to current axes object
-        if self.ax is None:
-            self.ax = plt.gca()
 
         # Draw character
         if self.patch is not None:
@@ -219,15 +228,15 @@ class Glyph:
     def _make_patch(self):
         """
         Returns an appropriately scaled patch object corresponding to
-        the Glyph. Note: Does not add this patch to an axes object;
-        that is done by draw().
+        the Glyph.
         """
 
         # Set height
         height = self.ceiling - self.floor
 
-        # If height is zero, just return none
+        # If height is zero, set patch to None and return None
         if height == 0.0:
+            self.patch = None
             return None
 
         # Set bounding box for character,
@@ -262,7 +271,7 @@ class Glyph:
 
         # If need to mirror char, do it within tmp_path
         if self.mirror:
-            transformation = Affine2D().scale(sx=-11, sy=1)
+            transformation = Affine2D().scale(sx=-1, sy=1)
             tmp_path = transformation.transform_path(tmp_path)
 
         # Get bounding box for temporary character and max_stretched_character
@@ -302,15 +311,15 @@ class Glyph:
         char_path = transformation.transform_path(tmp_path)
 
         # Convert char_path to a patch, which can now be drawn on demand
-        patch = PathPatch(char_path,
-                          facecolor=self.color,
-                          zorder=self.zorder,
-                          alpha=self.alpha,
-                          edgecolor=self.edgecolor,
-                          linewidth=self.edgewidth)
+        self.patch = PathPatch(char_path,
+                               facecolor=self.color,
+                               zorder=self.zorder,
+                               alpha=self.alpha,
+                               edgecolor=self.edgecolor,
+                               linewidth=self.edgewidth)
 
-        # Return patch representing the Glyph
-        return patch
+        # add patch to axes
+        self.ax.add_patch(self.patch)
 
     def _input_checks(self):
 
@@ -318,14 +327,15 @@ class Glyph:
         check input parameters in the Logo constructor for correctness
         """
 
+        from numbers import Number
+        # validate p
+        check(isinstance(int(self.p), (float, int)),
+              'type(p) = %s must be a number' % type(self.p))
+
         # check c is of type str
         check(isinstance(self.c, str),
               'type(c) = %s; must be of type str ' %
               type(self.c))
-
-        # validate p
-        check(isinstance(int(self.p), (float, int)),
-              'type(p) = %s must be a number' % type(self.p))
 
         # validate floor
         check(isinstance(self.floor, (float, int)),
@@ -337,24 +347,49 @@ class Glyph:
               'type(ceiling) = %s must be a number' % type(self.ceiling))
         self.ceiling = float(self.ceiling)
 
-        # Check floor < ceiling
+        # check floor <= ceiling
         check(self.floor <= self.ceiling,
               'must have floor <= ceiling. Currently, '
               'floor=%f, ceiling=%f' % (self.floor, self.ceiling))
 
-        # Check ax
+        # check ax
         check((self.ax is None) or isinstance(self.ax, Axes),
               'ax must be either a matplotlib Axes object or None.')
 
-        # check that flip is a boolean
-        check(isinstance(self.flip, (bool, np.bool_)),
-              'type(flip) = %s; must be of type bool ' % type(self.flip))
-        self.flip = bool(self.flip)
+        # validate width
+        check(isinstance(self.width, (float, int)),
+              'type(width) = %s; must be of type float or int ' %
+              type(self.width))
+        check(self.width > 0, "width = %d must be > 0 " %
+              self.width)
 
-        # check that mirror is a boolean
-        check(isinstance(self.mirror, (bool, np.bool_)),
-              'type(mirror) = %s; must be of type bool ' % type(self.mirror))
-        self.mirror = bool(self.mirror)
+        # validate vpad
+        check(isinstance(self.vpad, (float, int)),
+              'type(vpad) = %s; must be of type float or int ' %
+              type(self.vpad))
+        check(0 <=self.vpad <1, "vpad = %d must be >= 0 and < 1 " %
+              self.vpad)
+
+        # validate font_name
+        check(isinstance(self.font_name, str),
+              'type(font_name) = %s must be of type str' % type(self.font_name))
+
+        # check font_weight
+        check(isinstance(self.font_weight, (str, int)),
+              'type(font_weight) = %s should either be a string or an int' %
+              (type(self.font_weight)))
+        if isinstance(self.font_weight, str):
+            check(self.font_weight in VALID_FONT_WEIGHT_STRINGS,
+                  'font_weight must be one of %s' % VALID_FONT_WEIGHT_STRINGS)
+        elif isinstance(self.font_weight, int):
+            check(0 <= self.font_weight <= 1000,
+                  'font_weight must be in range [0,1000]')
+
+        # check color safely
+        self.color = get_rgb(self.color)
+
+        # validate edgecolor safely
+        self.edgecolor = get_rgb(self.edgecolor)
 
         # Check that edgewidth is a number
         check(isinstance(self.edgewidth, (float, int)),
@@ -364,15 +399,6 @@ class Glyph:
         # Check that edgewidth is nonnegative
         check(self.edgewidth >= 0,
               ' edgewidth must be >= 0; is %f' % self.edgewidth)
-
-        # Check alpha is a number
-        check(isinstance(self.alpha, (float, int)),
-              'type(alpha) = %s must be a number' % type(self.alpha))
-        self.alpha = float(self.alpha)
-
-        # Check 0 <= alpha <= 1.0
-        check(0 <= self.alpha <= 1.0,
-              'alpha must be between 0.0 and 1.0 (inclusive)')
 
         # check dont_stretch_more_than is of type str
         check(isinstance(self.dont_stretch_more_than, str),
@@ -385,81 +411,44 @@ class Glyph:
               'currently len(dont_stretch_more_than)=%d' %
               len(self.dont_stretch_more_than))
 
-        ################# END OF CODE REVIEW ###########################
+        # check that flip is a boolean
+        check(isinstance(self.flip, (bool, np.bool_)),
+              'type(flip) = %s; must be of type bool ' % type(self.flip))
+        self.flip = bool(self.flip)
 
-        # check that color scheme is valid
-        valid_color_strings = list(matplotlib.cm.cmap_d.keys())
-        valid_color_strings.extend(['classic', 'grays', 'base_paring', 'hydrophobicity', 'chemistry', 'charge'])
-
-        if self.color is not None:
-
-            # if color scheme is specified as a string, check that string message maps
-            # to a valid matplotlib color scheme
-
-            if type(self.color) == str:
-
-                # get allowed list of matplotlib color schemes
-                check(self.color in valid_color_strings,
-                      # 'color_scheme = %s; must be in %s' % (self.color_scheme, str(valid_color_strings)))
-                      'color_scheme = %s; is an invalid color scheme. Valid choices include classic, chemistry, grays. '
-                      'A full list of valid color schemes can be found by '
-                      'printing list(matplotlib.cm.cmap_d.keys()). ' % self.color)
-
-            # otherwise limit the allowed types to tuples, lists, dicts
-            else:
-                check(isinstance(self.color,(tuple,list,dict)),
-                      'type(color_scheme) = %s; must be of type (tuple,list,dict) ' % type(self.color))
-
-                # check that RGB values are between 0 and 1 is
-                # color_scheme is a list or tuple
-
-                if type(self.color) == list or type(self.color) == tuple:
-
-                    check(all(i <= 1.0 for i in self.color),
-                          'Values of color_scheme array must be between 0 and 1')
-
-                    check(all(i >= 0.0 for i in self.color),
-                          'Values of color_scheme array must be between 0 and 1')
-
-        # validate edgecolor
-        check(self.edgecolor in list(matplotlib.colors.cnames.keys()),
-              # 'color_scheme = %s; must be in %s' % (self.color_scheme, str(valid_color_strings)))
-              'edgecolor = %s; is an invalid color scheme. Valid choices include blue, black, silver. '
-              'A full list of valid color schemes can be found by '
-              'printing list(matplotlib.color_scheme.cnames.keys()). ' % self.edgecolor)
-
-        # validate width
-        check(isinstance(self.width, (float, int)),
-              'type(width) = %s; must be of type float or int ' % type(self.width))
-
-        check(self.width >= 0, "width = %d must be greater than 0 " % self.width)
-
-        # validate vpad
-        check(isinstance(self.vpad, (float, int)),
-              'type(vpad) = %s; must be of type float or int ' % type(self.vpad))
-
-        check(self.vpad >= 0, "vpad = %d must be greater than 0 " % self.vpad)
+        # check that mirror is a boolean
+        check(isinstance(self.mirror, (bool, np.bool_)),
+              'type(mirror) = %s; must be of type bool ' % type(self.mirror))
+        self.mirror = bool(self.mirror)
 
         # validate zorder
-        if(self.zorder is not None):
-            check(isinstance(self.zorder, int),
-                  'type(zorder) = %s; must be of type or int ' % type(self.zorder))
+        if self.zorder is not None :
+            check(isinstance(self.zorder, (float, int)),
+                  'type(zorder) = %s; must be of type float or int ' %
+                  type(self.zorder))
 
-        # validate font_name
-        check(isinstance(self.font_name, str),
-              'type(font_name) = %s must be of type str' % type(self.font_name))
+        # Check alpha is a number
+        check(isinstance(self.alpha, (float, int)),
+              'type(alpha) = %s must be a float or int' %
+              type(self.alpha))
+        self.alpha = float(self.alpha)
 
-        check(self.font_name in list_font_names(),
-              'Invalid choice for font_name. For a list of valid choices, please call logomaker.list_font_names().')
+        # Check 0 <= alpha <= 1.0
+        check(0 <= self.alpha <= 1.0,
+              'alpha must be between 0.0 and 1.0 (inclusive)')
 
-        check(isinstance(self.font_weight,(str,int)), 'type(font_weight) = %s  should either be a string or an int'%(type(self.font_weight)))
+        # validate that figsize is array=like
+        check(isinstance(self.figsize, (tuple, list, np.ndarray)),
+              'type(figsize) = %s; figsize must be array-like.' %
+              type(self.figsize))
+        self.figsize = tuple(self.figsize) # Just to pin down variable type.
 
-        if(type(self.font_weight)==str):
-            valid_font_weight_strings = [ 'ultralight', 'light','normal', 'regular', 'book',
-                                          'medium', 'roman', 'semibold', 'demibold', 'demi',
-                                          'bold', 'heavy', 'extra bold', 'black']
-            check(self.font_weight in valid_font_weight_strings, 'font must be one of %s'%valid_font_weight_strings)
+        # validate length of figsize
+        check(len(self.figsize) == 2, 'figsize must have length two.')
 
-        elif(type(self.font_weight)==int):
-            check(self.font_weight>=0 and self.font_weight<=1000, 'font_weight must be in range [0,1000]')
+        # validate that each element of figsize is a number
+        check(all([isinstance(n, (int, float)) and n > 0
+                   for n in self.figsize]),
+              'all elements of figsize array must be numbers > 0.')
+
 

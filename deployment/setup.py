@@ -5,14 +5,15 @@ def readme():
         return f.read()
 
 setup(name='logomaker',
-      version='0.0.1',
+      version='0.8.0',
       description='Package for making Sequence Logos',
       long_description=readme(),
       classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2.7',
-        'Topic :: Text Processing :: Linguistic',
+        'Programming Language :: Python :: 3.6',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
       ],
       keywords='Sequence Logos',
       url='http://logomaker.readthedocs.io',
@@ -23,7 +24,7 @@ setup(name='logomaker',
       include_package_data=True,
       install_requires=[
         'numpy',
-		'matplotlib',
-		'pandas',
+		'matplotlib>=2.2.2',
+		'pandas'
       ],
       zip_safe=False)
